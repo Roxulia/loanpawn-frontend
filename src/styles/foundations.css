@@ -1,0 +1,67 @@
+:root {
+  --color-1 : #133F9F;
+  --color-2 : #00062D;
+  --color-3 : #90AEC2;
+  --color-4 : #FDC316;
+  --color-5 : #D88A00;
+  --color-6 : #FEEB98;
+  --color-background:#fafafa;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F9F9F9;
+  --color-primary: #FDC316;
+  --color-primary-hover: #D88A00;
+  --color-on-primary: #00062D;
+  --color-accent: #133F9F;
+  --color-accent-hover: #90AEC2;
+  --color-text-primary: #00062D;
+  --color-text-secondary: #03003D;
+  --color-border: #90AEC2;
+  --color-success: #16A34A;
+  --color-warning: #F5A700;
+  --color-danger: #DC2626;
+  --color-danger-hover: #8b0606;
+  --color-info: #2563EB;
+  --color-overlay: rgb(10 10 10 / 48%);
+  --color-sidebar-text: #FEEB98;
+  --color-sidebar-text-active: #00062D;
+  --color-sidebar-divider: rgb(255 255 255 / 16%);
+  --color-danger-surface: rgb(220 38 38 / 8%);
+  --color-danger-border: rgb(220 38 38 / 24%);
+
+  --font-family-sans: Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.5rem;
+  --radius-full: 999px;
+
+  --shadow-elevated: 0 1rem 2rem rgb(10 10 10 / 8%);
+
+  --size-control-height: 2.5rem;
+  --size-sidebar-width: 16.75rem;
+  --size-brand-mark: 2.5rem;
+  --size-topbar-height: 4.5rem;
+  --size-page-header-max: 48.75rem;
+  --size-auth-panel-max: 28.75rem;
+  --size-card-min: 15rem;
+
+  --breakpoint-mobile-max: 39.9375rem;
+  --breakpoint-tablet-max: 64rem;
+}

@@ -1,0 +1,22 @@
+import type { TenantUser } from '../../dataobjects/tenant/auth'
+import type { StaffFormState } from './components/staffFormModel'
+
+export function getUserRoleName(user: TenantUser) {
+  return user.roleName ?? user.role_name ?? 'Staff'
+}
+
+export function staffToForm(user: TenantUser): StaffFormState {
+  return {
+    address: user.address ?? '',
+    email: user.email ?? '',
+    name: user.name,
+    nrc: user.nrc,
+    phone: user.phone,
+    status: user.status,
+    update_key: user.update_key ?? user.updateKey,
+  }
+}
+
+export function formatValue(value?: string | number | null) {
+  return value === undefined || value === null || value === '' ? '-' : String(value)
+}

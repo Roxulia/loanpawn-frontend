@@ -1,0 +1,192 @@
+import { apiClient } from '../../../services/http/apiClient'
+
+type TenantAuth = {
+  token?: string
+  tenantCode?: string
+}
+
+type IdempotentRequestOptions = {
+  idempotencyKey?: string
+}
+
+type DataResponse<TData> = {
+  data: TData
+  message?: string
+}
+
+type MessageResponse = {
+  message: string
+}
+
+export type SlipCustomer = {
+  id?: number
+  name?: string
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  note?: string | null
+}
+
+export type SlipCollateralItem = {
+  id: number
+  code?: string
+  update_key?: number
+  type: string
+  name: string
+  description?: string | null
+  brand_name?: string | null
+  estimated_value?: string | number
+  material_type_name?: string | null
+  kyat?: string | number
+  pal?: string | number
+  yway?: string | number
+  item_status?: string
+  quantity?: number
+  minimum_retail_price?: string | number
+}
+
+export type LoanContractSlip = {
+  id: number
+  update_key?: number
+  slip_no: string
+  customer?: SlipCustomer | null
+  customer_id?: number
+  loan_amount: string | number
+  interest_rate: string | number
+  interest_type_id?: number | null
+  interest_type_name?: string | null
+  created_date?: string
+  expire_date?: string
+  status: string
+  notes?: string | null
+  expiry_quota?: number
+  expiry_quota_type?: string
+  items?: SlipCollateralItem[]
+  created_at?: string | null
+}
+
+export type LoanContractSlipListPage = {
+  items: LoanContractSlip[]
+  current_page?: number
+  currentPage?: number
+  last_page?: number
+  lastPage?: number
+  per_page?: number
+  perPage?: number
+  total: number
+}
+
+export type InterestType = {
+  id: number
+  name: string
+  code?: string
+}
+
+export type MaterialType = {
+  id: number
+  name: string
+  code?: string
+}
+
+export type SlipCollateralPayload = {
+  type: 'Normal' | 'Jewellery'
+  name: string
+  description?: string
+  brand_name?: string
+  estimated_value?: number
+  material_type_id?: number
+  kyat?: number
+  pal?: number
+  yway?: number
+  contains_gemstones?: boolean
+  gemstone_details?: GemstoneDetailsPayload
+  quantity?: number
+  minimum_retail_price?: number
+  item_status?: string
+}
+
+export type GemstoneDetailsPayload = {
+  type?: string
+  weight?: string
+  quantity?: number
+  grade?: string
+}
+
+export type SlipCreatePayload = {
+  customer: {
+    name: string
+    email?: string
+    phone?: string
+    address?: string
+    note?: string
+  }
+  collateral_items: SlipCollateralPayload[]
+  loan_amount: number
+  interest_rate: number
+  interest_type_id: number
+  expiry_quota: number
+  expiry_quota_type: string
+  notes?: string
+}
+
+function authOptions(auth: TenantAuth = {}) {
+  return {
+    tenantCode: auth.tenantCode,
+    token: auth.token,
+  }
+}
+
+export const slipService = {
+  listSlips(params: { page?: number; perPage?: number } = {}, auth?: TenantAuth) {
+    const searchParams = new URLSearchParams()
+
+    if (params.page !== undefined) {
+      searchParams.set('page', String(params.page))
+    }
+
+    if (params.perPage !== undefined) {
+      searchParams.set('per_page', String(params.perPage))
+    }
+
+    const query = searchParams.toString()
+
+    return apiClient.get<DataResponse<LoanContractSlipListPage>>(
+      `/tenant/loan-contract-slips${query ? `?${query}` : ''}`,
+      authOptions(auth),
+    )
+  },
+
+  createSlip(payload: SlipCreatePayload, auth?: TenantAuth, options: IdempotentRequestOptions = {}) {
+    return apiClient.post<DataResponse<LoanContractSlip>>('/tenant/loan-contract-slips', payload, {
+      ...authOptions(auth),
+      idempotencyKey: options.idempotencyKey,
+    })
+  },
+
+  getSlip(slipNo: string, auth?: TenantAuth) {
+    return apiClient.get<DataResponse<LoanContractSlip>>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
+  },
+
+  deleteSlip(slipNo: string, auth?: TenantAuth) {
+    return apiClient.delete<MessageResponse>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
+  },
+
+  previewSlipDocument(slipNo: string,paperType:string, auth?: TenantAuth) {
+    return apiClient.get<string>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}/document/preview`, {
+      ...authOptions(auth),
+      params: {
+        orientation: 'portrait',
+        paper_type: paperType,
+      },
+      responseType: 'text',
+    })
+  },
+
+  listInterestTypes(auth?: TenantAuth) {
+    return apiClient.get<DataResponse<InterestType[]>>('/tenant/interest-types', authOptions(auth))
+  },
+
+  listMaterialTypes(auth?: TenantAuth) {
+    return apiClient.get<DataResponse<MaterialType[]>>('/tenant/material-types', authOptions(auth))
+  },
+}
