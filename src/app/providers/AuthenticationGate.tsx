@@ -26,8 +26,8 @@ export function AuthenticationGate({ children }: { children: ReactNode }) {
 
     tenantAuthService
       .me()
-      .then((response) => {
-        setCurrentUser(response.data)
+      .then((user) => {
+        setCurrentUser(user)
         setAuthStatus('authenticated')
       })
       .catch(() => {

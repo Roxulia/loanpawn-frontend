@@ -5,11 +5,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 type MessageResponse = {
   message: string
 }
@@ -77,22 +72,22 @@ export const customerService = {
 
     const query = searchParams.toString()
 
-    return apiClient.get<DataResponse<TenantCustomerListPage>>(
+    return apiClient.get<TenantCustomerListPage>(
       `/tenant/customers${query ? `?${query}` : ''}`,
       authOptions(auth),
     )
   },
 
   createCustomer(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<DataResponse<TenantCustomerUpsertResult>>('/tenant/customers', payload, authOptions(auth))
+    return apiClient.post<TenantCustomerUpsertResult>('/tenant/customers', payload, authOptions(auth))
   },
 
   getCustomer(tenantCustomerCode: string, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<TenantCustomer>>(`/tenant/customers/${encodeURIComponent(tenantCustomerCode)}`, authOptions(auth))
+    return apiClient.get<TenantCustomer>(`/tenant/customers/${encodeURIComponent(tenantCustomerCode)}`, authOptions(auth))
   },
 
   updateCustomer(tenantCustomerCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<DataResponse<TenantCustomer>>(`/tenant/customers/${encodeURIComponent(tenantCustomerCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantCustomer>(`/tenant/customers/${encodeURIComponent(tenantCustomerCode)}`, payload, authOptions(auth))
   },
 
   deleteCustomer(tenantCustomerCode: string, auth?: TenantAuth) {

@@ -10,11 +10,6 @@ type IdempotentRequestOptions = {
   idempotencyKey?: string
 }
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 export type RedemptionDetail = {
   id: number
   updateKey?: number
@@ -141,27 +136,27 @@ export const redemptionService = {
 
     const query = searchParams.toString()
 
-    return apiClient.get<DataResponse<RedemptionListPage>>(
+    return apiClient.get<RedemptionListPage>(
       `/tenant/redemptions${query ? `?${query}` : ''}`,
       authOptions(auth),
     )
   },
 
   calculate(slipNo: string, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<RedemptionCalculationResult>>(
+    return apiClient.get<RedemptionCalculationResult>(
       `/tenant/redemptions/${encodeURIComponent(slipNo)}/calculate`,
       authOptions(auth),
     )
   },
 
   create(payload: RedemptionCreatePayload, auth?: TenantAuth, options: IdempotentRequestOptions = {}) {
-    return apiClient.post<DataResponse<RedemptionDetail>>('/tenant/redemptions', payload, {
+    return apiClient.post<RedemptionDetail>('/tenant/redemptions', payload, {
       ...authOptions(auth),
       idempotencyKey: options.idempotencyKey,
     })
   },
 
   getRecord(slipNumber: string, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<RedemptionDetail>>(`/tenant/redemption-records/${encodeURIComponent(slipNumber)}`, authOptions(auth))
+    return apiClient.get<RedemptionDetail>(`/tenant/redemption-records/${encodeURIComponent(slipNumber)}`, authOptions(auth))
   },
 }

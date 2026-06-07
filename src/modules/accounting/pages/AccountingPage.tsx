@@ -108,10 +108,10 @@ export function AccountingPage() {
         tenantResourceService.listOutgoingAccounting({ page: outgoingPage, perPage }),
       ])
 
-      setIncoming(incomingResponse.data.items)
-      setOutgoing(outgoingResponse.data.items)
-      setIncomingMeta(readPageMeta(incomingResponse.data))
-      setOutgoingMeta(readPageMeta(outgoingResponse.data))
+      setIncoming(incomingResponse.items)
+      setOutgoing(outgoingResponse.items)
+      setIncomingMeta(readPageMeta(incomingResponse))
+      setOutgoingMeta(readPageMeta(outgoingResponse))
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load today transactions.')
     } finally {
@@ -139,8 +139,8 @@ export function AccountingPage() {
         perPage,
         startDate,
       })
-      setLedger(response.data)
-      setLedgerPage(getPageValue(response.data, 'currentPage', 'current_page', page))
+      setLedger(response)
+      setLedgerPage(getPageValue(response, 'currentPage', 'current_page', page))
     } catch (ledgerError) {
       setError(ledgerError instanceof Error ? ledgerError.message : 'Unable to generate ledger.')
     } finally {

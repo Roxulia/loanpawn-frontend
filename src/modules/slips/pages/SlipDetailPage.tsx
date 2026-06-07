@@ -22,7 +22,7 @@ export function SlipDetailPage() {
 
     try {
       const response = await slipService.getSlip(nextSlipNo)
-      setSlip(response.data)
+      setSlip(response)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load loan slip.')
     } finally {

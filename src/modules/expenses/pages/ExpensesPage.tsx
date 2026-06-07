@@ -147,7 +147,7 @@ function ExpenseFormFields({
     tenantResourceService.listExpenseTypes()
       .then((response) => {
         if (isMounted) {
-          setExpenseTypes(response.data)
+          setExpenseTypes(response)
         }
       })
       .catch(() => {

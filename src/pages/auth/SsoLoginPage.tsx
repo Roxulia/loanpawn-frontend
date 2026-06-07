@@ -33,19 +33,17 @@ export function SsoLoginPage() {
       tenant_code: tenantCode,
       token,
     })
-      .then(async (response) => {
-        const tenantResponse = await tenantResolverService.resolveByCode(response.data.tenant_code)
+      .then(async (session) => {
+        const tenantResponse = await tenantResolverService.resolveByCode(session.tenant_code)
 
-        if ('data' in tenantResponse && tenantResponse.data) {
-          setTenantResolution({
-            status: 'resolved',
-            subdomain: tenantResponse.data.subdomain ?? null,
-            tenant: tenantResponse.data,
-            error: null,
-          })
-        }
+        setTenantResolution({
+          status: 'resolved',
+          subdomain: tenantResponse.subdomain ?? null,
+          tenant: tenantResponse,
+          error: null,
+        })
 
-        setSession(response.data)
+        setSession(session)
         navigate(routePaths.dashboard, { replace: true })
       })
       .catch((caught) => {

@@ -42,7 +42,7 @@ export function InterestPaymentsPage() {
 
     try {
       const response = await interestService.listHistory({ page, perPage })
-      const pageData = response.data
+      const pageData = response
       const nextItems = pageData.items ?? []
       const nextPerPage = pageData.per_page ?? pageData.perPage ?? perPage
 
@@ -82,8 +82,8 @@ export function InterestPaymentsPage() {
 
     try {
       const response = await interestService.calculate(slipNo.trim())
-      setCalculation(response.data)
-      setNotice(`Interest calculated for slip ${getSlipNo(response.data) || slipNo.trim()}.`)
+      setCalculation(response)
+      setNotice(`Interest calculated for slip ${getSlipNo(response) || slipNo.trim()}.`)
     } catch (calculateError) {
       setCalculation(null)
       setError(calculateError instanceof Error ? calculateError.message : 'Unable to calculate interest.')
@@ -136,7 +136,7 @@ export function InterestPaymentsPage() {
       setPaymentAmount('')
       setRecordDebt(false)
       setCalculation(null)
-      setPaymentResult(response.data)
+      setPaymentResult(response)
       setNotice('Interest payment processed successfully.')
       if (activeTab === 'history') {
         await loadHistory(1)

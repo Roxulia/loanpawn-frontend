@@ -108,7 +108,7 @@ export function SlipsPage() {
 
     try {
       const response = await slipService.listSlips({ page, perPage })
-      const pageData = response.data
+      const pageData = response
       const nextItems = pageData.items ?? []
 
       setSlips(nextItems)
@@ -124,11 +124,11 @@ export function SlipsPage() {
 
   useEffect(() => {
     void slipService.listInterestTypes()
-      .then((response) => setInterestTypes(response.data ?? []))
+      .then((response) => setInterestTypes(response ?? []))
       .catch(() => setInterestTypes([]))
 
     void slipService.listMaterialTypes()
-      .then((response) => setMaterialTypes(response.data ?? []))
+      .then((response) => setMaterialTypes(response ?? []))
       .catch(() => setMaterialTypes([]))
   }, [])
 
@@ -189,10 +189,10 @@ export function SlipsPage() {
       })
 
       resetForm()
-      setNotice(`Loan slip ${response.data.slip_no} created successfully.`)
+      setNotice(`Loan slip ${response.slip_no} created successfully.`)
 
       if (shouldPrintAfterCreate) {
-        openPrintDialog(response.data)
+        openPrintDialog(response)
       }
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : 'Unable to create loan slip.')

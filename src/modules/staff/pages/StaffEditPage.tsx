@@ -45,8 +45,8 @@ export function StaffEditPage() {
 
     try {
       const response = await staffService.getUser(code)
-      setForm(staffToForm(response.data))
-      setSelectedPermissions((response.data.permissions ?? []) as PermissionCode[])
+      setForm(staffToForm(response))
+      setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
     } catch (loadError) {
       setPageError(loadError instanceof Error ? loadError.message : 'Unable to load staff account.')
     } finally {
@@ -114,7 +114,7 @@ export function StaffEditPage() {
       const selectedPermissionSet = new Set(selectedPermissions)
       const payload = Object.fromEntries(permissionCodes.map((permission) => [permission, selectedPermissionSet.has(permission)]))
       const response = await staffService.updatePermissions(staffCode, payload)
-      setSelectedPermissions((response.data.permissions ?? []) as PermissionCode[])
+      setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
       setNotice('Permissions updated.')
     } catch (saveError) {
       setPageError(saveError instanceof Error ? saveError.message : 'Unable to update permissions.')

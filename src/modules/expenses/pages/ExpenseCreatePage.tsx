@@ -33,7 +33,7 @@ export function ExpenseCreatePage() {
     tenantResourceService.listExpenseTypes()
       .then((response) => {
         if (isMounted) {
-          setExpenseTypes(response.data)
+          setExpenseTypes(response)
         }
       })
       .catch((loadError) => {

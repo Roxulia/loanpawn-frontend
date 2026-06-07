@@ -3,11 +3,6 @@ import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { apiClient } from '../../../services/http/apiClient'
 import type { PermissionCode } from '../../auth'
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 type MessageResponse = {
   message: string
 }
@@ -27,23 +22,23 @@ export type StaffPermissionPayload = Partial<Record<PermissionCode, boolean>>
 
 export const staffService = {
   listUsers() {
-    return apiClient.get<DataResponse<PaginatedResult<TenantUser>>>('/tenant/users')
+    return apiClient.get<PaginatedResult<TenantUser>>('/tenant/users')
   },
 
   createUser(payload: StaffPayload) {
-    return apiClient.post<DataResponse<TenantUser>>('/tenant/users', payload)
+    return apiClient.post<TenantUser>('/tenant/users', payload)
   },
 
   getUser(userCode: string) {
-    return apiClient.get<DataResponse<TenantUser>>(`/tenant/users/${encodeURIComponent(userCode)}`)
+    return apiClient.get<TenantUser>(`/tenant/users/${encodeURIComponent(userCode)}`)
   },
 
   updateUser(userCode: string, payload: StaffPayload) {
-    return apiClient.put<DataResponse<TenantUser>>(`/tenant/users/${encodeURIComponent(userCode)}`, payload)
+    return apiClient.put<TenantUser>(`/tenant/users/${encodeURIComponent(userCode)}`, payload)
   },
 
   updatePermissions(userCode: string, payload: StaffPermissionPayload) {
-    return apiClient.put<DataResponse<TenantUser>>(`/tenant/users/${encodeURIComponent(userCode)}/permissions`, payload)
+    return apiClient.put<TenantUser>(`/tenant/users/${encodeURIComponent(userCode)}/permissions`, payload)
   },
 
   resetPasswordToDefault(userCode: string, payload: { logoutFromAll?: boolean } = {}) {

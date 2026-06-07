@@ -8,11 +8,6 @@ import { ConfirmDialog, DataTable, ModalForm, type DataTableColumn } from '../..
 import type { PaginatedResult } from '../../dataobjects/common/api'
 import { usePermissions, type PermissionCode } from '../auth'
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 type FinanceFormValue = string | boolean
 export type FinanceFormState = Record<string, FinanceFormValue>
 export type FinanceFormErrors<TForm extends FinanceFormState> = Partial<Record<keyof TForm, string>>
@@ -31,7 +26,7 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
   getSearchText: (item: TItem) => string
   initialForm: TForm
   itemToForm: (item: TItem) => TForm
-  list: (params: { page: number; perPage: number }) => Promise<DataResponse<PaginatedResult<TItem>>>
+  list: (params: { page: number; perPage: number }) => Promise<PaginatedResult<TItem>>
   listPermission: PermissionCode
   modalTitle: (mode: 'create' | 'edit') => string
   renderForm: (
@@ -100,7 +95,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
 
     try {
       const response = await config.list({ page, perPage })
-      const pageData = response.data
+      const pageData = response
 
       setItems(pageData.items)
       setCurrentPage(getPageValue(pageData, 'currentPage', 'current_page', 1))
@@ -177,7 +172,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
 
     try {
       const response = await config.save(mode, form, editingItem)
-      const savedItem = getResponseData<TItem>(response)
+      const savedItem = response as TItem | null
 
       if (savedItem) {
         if (mode === 'create') {
@@ -369,12 +364,4 @@ function getPageValue<TItem>(
   const withOptionalKeys = pageData as PaginatedResult<TItem> & Partial<Record<typeof camelKey | typeof snakeKey, number>>
 
   return withOptionalKeys[camelKey] ?? withOptionalKeys[snakeKey] ?? fallback
-}
-
-function getResponseData<TItem>(response: unknown) {
-  if (response && typeof response === 'object' && 'data' in response) {
-    return (response as { data?: TItem }).data ?? null
-  }
-
-  return null
 }

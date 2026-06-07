@@ -32,7 +32,7 @@ export function StaffListPage() {
 
     try {
       const response = await staffService.listUsers()
-      setUsers(response.data.items)
+      setUsers(response.items)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load staff users.')
     } finally {
