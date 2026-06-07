@@ -45,7 +45,7 @@ export function CollateralListPage() {
 
     try {
       const response = await collateralService.listCollateral({ page, perPage, search })
-      const pageData = response.data
+      const pageData = response
 
       setItems(pageData.items)
       setCurrentPage(getPageValue(pageData, 'currentPage', 'current_page', 1))

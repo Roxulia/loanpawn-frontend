@@ -5,8 +5,3 @@ export type TenantResolveState =
   | { status: 'loading'; subdomain: string | null; tenant: null; error: null }
   | { status: 'resolved'; subdomain: string | null; tenant: TenantDetail; error: null }
   | { status: 'failed'; subdomain: string | null; tenant: null; error: string }
-
-export type TenantResolveResponse = {
-  data: TenantDetail
-  message?: string
-}

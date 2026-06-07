@@ -42,22 +42,12 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
     })
     tenantResolverService
       .resolveTenant()
-      .then((response) => {
-        if ('data' in response && response.data) {
-          setTenantResolution({
-            status: 'resolved',
-            subdomain,
-            tenant: response.data,
-            error: null,
-          })
-          return
-        }
-
+      .then((tenant) => {
         setTenantResolution({
-          status: 'failed',
+          status: 'resolved',
           subdomain,
-          tenant: null,
-          error: response.message ?? 'Tenant could not be resolved.',
+          tenant,
+          error: null,
         })
       })
       .catch((error: unknown) => {

@@ -101,8 +101,8 @@ export function TemplateEditorPage() {
 
     try {
       const response = await settingsService.getSlipLayouts()
-      const header = normalizeLayout(response.data.slip_header_layout ?? emptyLayout)
-      const footer = normalizeLayout(response.data.slip_footer_layout ?? emptyLayout)
+      const header = normalizeLayout(response.slip_header_layout ?? emptyLayout)
+      const footer = normalizeLayout(response.slip_footer_layout ?? emptyLayout)
       const templateExists = hasLayoutComponents(header) || hasLayoutComponents(footer)
 
       setHasTemplate(templateExists)
@@ -110,7 +110,7 @@ export function TemplateEditorPage() {
       setInitialFooterLayout(footer)
       setHeaderLayout(header)
       setFooterLayout(footer)
-      setUpdateKey(response.data.update_key ?? 0)
+      setUpdateKey(response.update_key ?? 0)
       setSelectedIndex(null)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load template layouts.')
@@ -138,14 +138,14 @@ export function TemplateEditorPage() {
         slip_footer_layout: footerLayout,
         update_key: updateKey,
       })
-      const nextHeader = normalizeLayout(response.data.slip_header_layout ?? headerLayout)
-      const nextFooter = normalizeLayout(response.data.slip_footer_layout ?? footerLayout)
+      const nextHeader = normalizeLayout(response.slip_header_layout ?? headerLayout)
+      const nextFooter = normalizeLayout(response.slip_footer_layout ?? footerLayout)
 
       setInitialHeaderLayout(nextHeader)
       setInitialFooterLayout(nextFooter)
       setHeaderLayout(nextHeader)
       setFooterLayout(nextFooter)
-      setUpdateKey(response.data.update_key ?? updateKey)
+      setUpdateKey(response.update_key ?? updateKey)
       setHasTemplate(true)
       setNotice('Template layout saved successfully.')
     } catch (saveError) {

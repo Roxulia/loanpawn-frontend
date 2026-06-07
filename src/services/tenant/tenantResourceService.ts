@@ -15,11 +15,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 type MessageResponse = {
   message: string
 }
@@ -58,15 +53,15 @@ function listOptions(params: ListParams = {}, auth?: TenantAuth) {
 
 export const tenantResourceService = {
   listUsers(auth?: TenantAuth) {
-    return apiClient.get<DataResponse<PaginatedResult<TenantUser>>>('/tenant/users', authOptions(auth))
+    return apiClient.get<PaginatedResult<TenantUser>>('/tenant/users', authOptions(auth))
   },
 
   createUser(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<DataResponse<TenantUser>>('/tenant/users', payload, authOptions(auth))
+    return apiClient.post<TenantUser>('/tenant/users', payload, authOptions(auth))
   },
 
   updateUser(tenantUserCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<DataResponse<TenantUser>>(`/tenant/users/${encodeURIComponent(tenantUserCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantUser>(`/tenant/users/${encodeURIComponent(tenantUserCode)}`, payload, authOptions(auth))
   },
 
   deleteUser(tenantUserCode: string, auth?: TenantAuth) {
@@ -74,19 +69,19 @@ export const tenantResourceService = {
   },
 
   listAccounting(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<PaginatedResult<AccountingTransaction>>>('/tenant/accounting', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting', listOptions(params, auth))
   },
 
   listIncomingAccounting(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<PaginatedResult<AccountingTransaction>>>('/tenant/accounting/incoming', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting/incoming', listOptions(params, auth))
   },
 
   listOutgoingAccounting(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<PaginatedResult<AccountingTransaction>>>('/tenant/accounting/outgoing', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting/outgoing', listOptions(params, auth))
   },
 
   generateAccountingLedger(params: LedgerParams, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<AccountingLedger>>('/tenant/accounting/ledger', {
+    return apiClient.get<AccountingLedger>('/tenant/accounting/ledger', {
       ...authOptions(auth),
       params: {
         end_date: params.endDate,
@@ -108,15 +103,15 @@ export const tenantResourceService = {
   },
 
   listExpenses(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<PaginatedResult<TenantExpense>>>('/tenant/expenses', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<TenantExpense>>('/tenant/expenses', listOptions(params, auth))
   },
 
   createExpense(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<DataResponse<TenantExpense>>('/tenant/expenses', payload, authOptions(auth))
+    return apiClient.post<TenantExpense>('/tenant/expenses', payload, authOptions(auth))
   },
 
   updateExpense(expenseCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<DataResponse<TenantExpense>>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, payload, authOptions(auth))
   },
 
   deleteExpense(expenseCode: string, auth?: TenantAuth) {
@@ -124,19 +119,19 @@ export const tenantResourceService = {
   },
 
   listExpenseTypes(auth?: TenantAuth) {
-    return apiClient.get<DataResponse<ExpenseTypeOption[]>>('/tenant/expense-types', authOptions(auth))
+    return apiClient.get<ExpenseTypeOption[]>('/tenant/expense-types', authOptions(auth))
   },
 
   listDebts(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<PaginatedResult<TenantDebt>>>('/tenant/debts', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<TenantDebt>>('/tenant/debts', listOptions(params, auth))
   },
 
   createDebt(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<DataResponse<TenantDebt>>('/tenant/debts', payload, authOptions(auth))
+    return apiClient.post<TenantDebt>('/tenant/debts', payload, authOptions(auth))
   },
 
   updateDebt(debtCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<DataResponse<TenantDebt>>(`/tenant/debts/${encodeURIComponent(debtCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}`, payload, authOptions(auth))
   },
 
   deleteDebt(debtCode: string, auth?: TenantAuth) {
@@ -144,7 +139,7 @@ export const tenantResourceService = {
   },
 
   payDebt(debtCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<DataResponse<TenantDebt>>(`/tenant/debts/${encodeURIComponent(debtCode)}/paid`, payload, authOptions(auth))
+    return apiClient.post<TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}/paid`, payload, authOptions(auth))
   },
 
   showBrandingSlipLayouts(auth?: TenantAuth) {

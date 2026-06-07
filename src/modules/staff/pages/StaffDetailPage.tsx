@@ -27,8 +27,8 @@ export function StaffDetailPage() {
 
     try {
       const response = await staffService.getUser(code)
-      setStaffUser(response.data)
-      setSelectedPermissions((response.data.permissions ?? []) as PermissionCode[])
+      setStaffUser(response)
+      setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load staff account.')
     } finally {

@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from 'axios'
+import { ApiError, type ApiEnvelope, type ApiErrorData, type ValidationErrors } from '../../dataobjects/common/api'
 
-const defaultBaseUrl = 'http://loanpawn.1morebit.tech:8000/api'
+const defaultBaseUrl = 'http://loanpawntest.1morebit.tech:8000/api'
 const csrfCookiePath = '/sanctum/csrf-cookie'
 
 type RequestOptions = Omit<AxiosRequestConfig, 'data' | 'headers' | 'url' | 'method'> & {
@@ -55,7 +56,7 @@ export class ApiClient {
     }
 
     try {
-      const response = await this.client.request<TData>({
+      const response = await this.client.request<TData | ApiEnvelope<TData>>({
         ...options,
         data: options.body,
         headers: this.buildHeaders(options),
@@ -64,7 +65,7 @@ export class ApiClient {
         withCredentials: options.withCredentials ?? true,
       })
 
-      return response.data
+      return this.unwrapResponse<TData>(response.data, options)
     } catch (error) {
       throw this.normalizeError(error)
     }
@@ -111,14 +112,73 @@ export class ApiClient {
     return `${this.client.defaults.baseURL?.replace(/\/api\/?$/, '') ?? ''}${path}`
   }
 
+  private unwrapResponse<TData>(data: TData | ApiEnvelope<TData>, options: RequestOptions): TData {
+    if (options.responseType && options.responseType !== 'json') {
+      return data as TData
+    }
+
+    if (!this.isApiEnvelope<TData>(data)) {
+      return data as TData
+    }
+
+    if (!data.success) {
+      throw this.errorFromEnvelope(data)
+    }
+
+    return data.data
+  }
+
+  private isApiEnvelope<TData>(data: unknown): data is ApiEnvelope<TData> {
+    return Boolean(
+      data &&
+        typeof data === 'object' &&
+        'success' in data &&
+        'message' in data &&
+        'data' in data &&
+        'statusCode' in data,
+    )
+  }
+
   private normalizeError(error: unknown) {
     if (error instanceof AxiosError) {
-      const data = error.response?.data as { message?: string } | undefined
+      const data = error.response?.data
 
-      return new Error(data?.message ?? error.message)
+      if (this.isApiEnvelope(data)) {
+        return this.errorFromEnvelope(data)
+      }
+
+      if (data && typeof data === 'object' && 'message' in data) {
+        return new ApiError(String(data.message), {
+          data,
+          statusCode: error.response?.status,
+        })
+      }
+
+      return new ApiError(error.message, {
+        data,
+        statusCode: error.response?.status,
+      })
     }
 
     return error instanceof Error ? error : new Error('Request failed.')
+  }
+
+  private errorFromEnvelope(envelope: ApiEnvelope<unknown>) {
+    const data = envelope.data as ApiErrorData | null | undefined
+
+    return new ApiError(envelope.message || 'Request failed.', {
+      data: envelope.data,
+      errors: this.readValidationErrors(data),
+      statusCode: envelope.statusCode,
+    })
+  }
+
+  private readValidationErrors(data: ApiErrorData | null | undefined): ValidationErrors | undefined {
+    if (!data?.errors || typeof data.errors !== 'object') {
+      return undefined
+    }
+
+    return data.errors
   }
 }
 

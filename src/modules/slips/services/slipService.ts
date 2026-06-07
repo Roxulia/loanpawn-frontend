@@ -9,11 +9,6 @@ type IdempotentRequestOptions = {
   idempotencyKey?: string
 }
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 type MessageResponse = {
   message: string
 }
@@ -150,21 +145,21 @@ export const slipService = {
 
     const query = searchParams.toString()
 
-    return apiClient.get<DataResponse<LoanContractSlipListPage>>(
+    return apiClient.get<LoanContractSlipListPage>(
       `/tenant/loan-contract-slips${query ? `?${query}` : ''}`,
       authOptions(auth),
     )
   },
 
   createSlip(payload: SlipCreatePayload, auth?: TenantAuth, options: IdempotentRequestOptions = {}) {
-    return apiClient.post<DataResponse<LoanContractSlip>>('/tenant/loan-contract-slips', payload, {
+    return apiClient.post<LoanContractSlip>('/tenant/loan-contract-slips', payload, {
       ...authOptions(auth),
       idempotencyKey: options.idempotencyKey,
     })
   },
 
   getSlip(slipNo: string, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<LoanContractSlip>>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
+    return apiClient.get<LoanContractSlip>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
   },
 
   deleteSlip(slipNo: string, auth?: TenantAuth) {
@@ -183,10 +178,10 @@ export const slipService = {
   },
 
   listInterestTypes(auth?: TenantAuth) {
-    return apiClient.get<DataResponse<InterestType[]>>('/tenant/interest-types', authOptions(auth))
+    return apiClient.get<InterestType[]>('/tenant/interest-types', authOptions(auth))
   },
 
   listMaterialTypes(auth?: TenantAuth) {
-    return apiClient.get<DataResponse<MaterialType[]>>('/tenant/material-types', authOptions(auth))
+    return apiClient.get<MaterialType[]>('/tenant/material-types', authOptions(auth))
   },
 }

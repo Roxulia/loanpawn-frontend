@@ -148,7 +148,7 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
         amount_paid: Number(paymentAmount),
       })
 
-      setPaidDebt(response.data)
+      setPaidDebt(response)
       setPaidAmount(paymentAmount)
       setIsPayModalOpen(false)
       setPaymentAmount('')

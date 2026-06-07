@@ -9,11 +9,6 @@ type IdempotentRequestOptions = {
   idempotencyKey?: string
 }
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 export type InterestBreakdownRow = {
   id: number
   updateKey?: number
@@ -95,7 +90,7 @@ function authOptions(auth: TenantAuth = {}) {
 
 export const interestService = {
   listHistory(params: { page?: number; perPage?: number } = {}, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<InterestPaymentHistoryPage>>(
+    return apiClient.get<InterestPaymentHistoryPage>(
       '/tenant/interest-payments',
       {
         ...authOptions(auth),
@@ -108,14 +103,14 @@ export const interestService = {
   },
 
   calculate(slipNo: string, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<InterestCalculationResult>>(
+    return apiClient.get<InterestCalculationResult>(
       `/tenant/interest-payments/${encodeURIComponent(slipNo)}/calculate`,
       authOptions(auth),
     )
   },
 
   pay(slipNo: string, payload: InterestPaymentPayload, auth?: TenantAuth, options: IdempotentRequestOptions = {}) {
-    return apiClient.post<DataResponse<InterestPaymentResult>>(
+    return apiClient.post<InterestPaymentResult>(
       `/tenant/interest-payments/${encodeURIComponent(slipNo)}/pay`,
       payload,
       {

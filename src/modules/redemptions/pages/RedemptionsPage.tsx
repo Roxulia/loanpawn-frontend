@@ -44,7 +44,7 @@ export function RedemptionsPage() {
 
     try {
       const response = await redemptionService.listRedemptions({ page, perPage })
-      const pageData = response.data
+      const pageData = response
       const nextItems = pageData.items ?? []
       const nextPerPage = pageData.per_page ?? pageData.perPage ?? perPage
 
@@ -85,9 +85,9 @@ export function RedemptionsPage() {
 
     try {
       const response = await redemptionService.calculate(slipNo.trim())
-      setCalculation(response.data)
-      setPaymentAmount(String(response.data.total_amount_to_pay))
-      setNotice(`Redemption calculated for slip ${response.data.slip.slip_no}.`)
+      setCalculation(response)
+      setPaymentAmount(String(response.total_amount_to_pay))
+      setNotice(`Redemption calculated for slip ${response.slip.slip_no}.`)
     } catch (calculateError) {
       setCalculation(null)
       setError(calculateError instanceof Error ? calculateError.message : 'Unable to calculate redemption.')
@@ -133,7 +133,7 @@ export function RedemptionsPage() {
       })
 
       setNotice('Pawn redemption created successfully.')
-      setRedemptionResult(response.data)
+      setRedemptionResult(response)
       resetRedemptionForm()
       if (activeTab === 'history') {
         await loadRecords(1)

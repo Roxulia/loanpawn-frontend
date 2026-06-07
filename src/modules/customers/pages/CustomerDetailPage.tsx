@@ -21,7 +21,7 @@ export function CustomerDetailPage() {
 
     try {
       const response = await customerService.getCustomer(code)
-      setCustomer(response.data)
+      setCustomer(response)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load customer.')
     } finally {

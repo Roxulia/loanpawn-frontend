@@ -1,18 +1,35 @@
-export type ApiSuccessResponse<TData> = {
-  success: true
-  code?: string
-  message?: string
-  data: TData
-}
+export type ValidationErrors = Record<string, string[]>
 
-export type ApiErrorResponse = {
-  success: false
-  code?: string
+export type ApiEnvelope<TData> = {
+  success: boolean
   message: string
-  errors?: Record<string, string[]>
+  data: TData
+  statusCode: number
 }
 
-export type ApiResponse<TData> = ApiSuccessResponse<TData> | ApiErrorResponse
+export type ApiErrorData = {
+  code?: string
+  errors?: ValidationErrors
+  [key: string]: unknown
+}
+
+export class ApiError extends Error {
+  readonly data?: unknown
+  readonly errors?: ValidationErrors
+  readonly statusCode?: number
+
+  constructor(message: string, options: { data?: unknown; errors?: ValidationErrors; statusCode?: number } = {}) {
+    super(message)
+    this.name = 'ApiError'
+    this.data = options.data
+    this.errors = options.errors
+    this.statusCode = options.statusCode
+  }
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError
+}
 
 export type PaginatedResult<TItem> = {
   items: TItem[]

@@ -7,15 +7,6 @@ import type {
 } from '../../dataobjects/tenant/auth'
 import { apiClient } from '../http/apiClient'
 
-type TenantAuthResponse = {
-  data: TenantUserAuthSession
-  message?: string
-}
-
-type TenantUserResponse = {
-  data: TenantUser
-}
-
 type MessageResponse = {
   message: string
 }
@@ -28,21 +19,21 @@ type TenantChangePasswordPayload = {
 
 export const tenantAuthService = {
   loginPublicSpa(payload: TenantPublicLoginRequest) {
-    return apiClient.post<TenantAuthResponse>('/tenant/login/public-spa', payload)
+    return apiClient.post<TenantUserAuthSession>('/tenant/login/public-spa', payload)
   },
 
   loginSubdomainSpa(payload: TenantSubdomainLoginRequest, tenantCode?: string) {
-    return apiClient.post<TenantAuthResponse>('/tenant/login/subdomain-spa', payload, { tenantCode })
+    return apiClient.post<TenantUserAuthSession>('/tenant/login/subdomain-spa', payload, { tenantCode })
   },
 
   consumeSso(payload: TenantSsoConsumeRequest) {
-    return apiClient.post<TenantAuthResponse>('/tenant/sso/consume', payload, {
+    return apiClient.post<TenantUserAuthSession>('/tenant/sso/consume', payload, {
       tenantCode: payload.tenant_code,
     })
   },
 
   me(token?: string) {
-    return apiClient.get<TenantUserResponse>('/tenant/me', { token })
+    return apiClient.get<TenantUser>('/tenant/me', { token })
   },
 
   logout(token?: string) {

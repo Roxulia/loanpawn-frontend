@@ -6,11 +6,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 type MessageResponse = {
   message: string
 }
@@ -40,14 +35,14 @@ export const collateralService = {
 
     const query = searchParams.toString()
 
-    return apiClient.get<DataResponse<CollateralItemListPage>>(
+    return apiClient.get<CollateralItemListPage>(
       `/tenant/collateral-items${query ? `?${query}` : ''}`,
       authOptions(auth),
     )
   },
 
   getCollateral(itemCode: string, auth?: TenantAuth) {
-    return apiClient.get<DataResponse<CollateralItem>>(`/tenant/collateral-items/${encodeURIComponent(itemCode)}`, authOptions(auth))
+    return apiClient.get<CollateralItem>(`/tenant/collateral-items/${encodeURIComponent(itemCode)}`, authOptions(auth))
   },
 
   deleteCollateral(itemCode: string, auth?: TenantAuth) {

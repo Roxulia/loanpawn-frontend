@@ -52,7 +52,7 @@ export function CustomerListPage() {
 
     try {
       const response = await customerService.listCustomers({ page, perPage, search })
-      const pageData = response.data
+      const pageData = response
 
       setCustomers(pageData.items)
       setCurrentPage(getPageValue(pageData, 'currentPage', 'current_page', 1))

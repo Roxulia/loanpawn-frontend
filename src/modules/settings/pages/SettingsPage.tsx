@@ -118,9 +118,9 @@ export function SettingsPage() {
         settingsService.listExpenseTypes(),
         settingsService.listMaterialTypes(),
       ])
-      const nextBranding = normalizeBranding(settingsResponse.data.branding)
-      const nextContact = normalizeContact(settingsResponse.data.contact)
-      const nextTenant = normalizeTenant(settingsResponse.data.tenant_setting)
+      const nextBranding = normalizeBranding(settingsResponse.branding)
+      const nextContact = normalizeContact(settingsResponse.contact)
+      const nextTenant = normalizeTenant(settingsResponse.tenant_setting)
 
       setBrandingInitial(nextBranding)
       setBranding(nextBranding)
@@ -128,9 +128,9 @@ export function SettingsPage() {
       setContact(nextContact)
       setTenantInitial(nextTenant)
       setTenant(nextTenant)
-      setInterestTypes(interestResponse.data ?? [])
-      setExpenseTypes(expenseResponse.data ?? [])
-      setMaterialTypes(materialResponse.data ?? [])
+      setInterestTypes(interestResponse ?? [])
+      setExpenseTypes(expenseResponse ?? [])
+      setMaterialTypes(materialResponse ?? [])
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.')
     } finally {
@@ -149,7 +149,7 @@ export function SettingsPage() {
   async function saveBranding() {
     await saveSection('branding', async () => {
       const response = await settingsService.updateBranding(branding)
-      const nextBranding = normalizeBranding(response.data)
+      const nextBranding = normalizeBranding(response)
       setBrandingInitial(nextBranding)
       setBranding(nextBranding)
     })
@@ -158,7 +158,7 @@ export function SettingsPage() {
   async function saveContact() {
     await saveSection('contact', async () => {
       const response = await settingsService.updateContact(contact)
-      const nextContact = normalizeContact(response.data)
+      const nextContact = normalizeContact(response)
       setContactInitial(nextContact)
       setContact(nextContact)
     })
@@ -167,7 +167,7 @@ export function SettingsPage() {
   async function saveTenant() {
     await saveSection('tenant', async () => {
       const response = await settingsService.updateDefaultUserPassword(tenant)
-      const nextTenant = normalizeTenant(response.data)
+      const nextTenant = normalizeTenant(response)
       setTenantInitial(nextTenant)
       setTenant(nextTenant)
     })
@@ -186,15 +186,15 @@ export function SettingsPage() {
 
       if (kind === 'interest') {
         const response = await settingsService.createInterestType(toTypePayload(form, true))
-        createdType = response.data
+        createdType = response
         setInterestForm(emptyTypeForm)
       } else if (kind === 'expense') {
         const response = await settingsService.createExpenseType(toTypePayload(form, false))
-        createdType = response.data
+        createdType = response
         setExpenseForm(emptyTypeForm)
       } else {
         const response = await settingsService.createMaterialType(toTypePayload(form, false))
-        createdType = response.data
+        createdType = response
         setMaterialForm(emptyTypeForm)
       }
 
@@ -261,13 +261,13 @@ export function SettingsPage() {
   async function reloadTypeData(kind: TypeKind) {
     if (kind === 'interest') {
       const response = await settingsService.listInterestTypes()
-      setInterestTypes(response.data ?? [])
+      setInterestTypes(response ?? [])
     } else if (kind === 'expense') {
       const response = await settingsService.listExpenseTypes()
-      setExpenseTypes(response.data ?? [])
+      setExpenseTypes(response ?? [])
     } else {
       const response = await settingsService.listMaterialTypes()
-      setMaterialTypes(response.data ?? [])
+      setMaterialTypes(response ?? [])
     }
   }
 

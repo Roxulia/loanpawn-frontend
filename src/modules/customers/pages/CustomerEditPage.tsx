@@ -30,7 +30,7 @@ export function CustomerEditPage() {
 
     try {
       const response = await customerService.getCustomer(code)
-      setForm(customerToForm(response.data))
+      setForm(customerToForm(response))
     } catch (loadError) {
       setPageError(loadError instanceof Error ? loadError.message : 'Unable to load customer.')
     } finally {

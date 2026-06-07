@@ -1,10 +1,5 @@
 import { apiClient } from '../../../services/http/apiClient'
 
-type DataResponse<TData> = {
-  data: TData
-  message?: string
-}
-
 export type DefaultTypeOption = {
   id: number
   tenant_id?: number | null
@@ -76,31 +71,31 @@ export type SettingsResponse = {
 
 export const settingsService = {
   getSettings() {
-    return apiClient.get<DataResponse<SettingsResponse>>('/tenant/settings')
+    return apiClient.get<SettingsResponse>('/tenant/settings')
   },
 
   updateSettings(payload: SettingsPayload) {
-    return apiClient.put<DataResponse<SettingsResponse>>('/tenant/settings', payload)
+    return apiClient.put<SettingsResponse>('/tenant/settings', payload)
   },
 
   updateBranding(payload: BrandingSettings) {
-    return apiClient.put<DataResponse<BrandingSettings>>('/tenant/settings/branding', payload)
+    return apiClient.put<BrandingSettings>('/tenant/settings/branding', payload)
   },
 
   updateContact(payload: ContactSettings) {
-    return apiClient.put<DataResponse<ContactSettings>>('/tenant/settings/contact', payload)
+    return apiClient.put<ContactSettings>('/tenant/settings/contact', payload)
   },
 
   updateDefaultUserPassword(payload: { default_tenant_user_password: string; update_key?: number }) {
-    return apiClient.put<DataResponse<TenantSettings>>('/tenant/settings/default-user-password', payload)
+    return apiClient.put<TenantSettings>('/tenant/settings/default-user-password', payload)
   },
 
   getSlipLayouts() {
-    return apiClient.get<DataResponse<SlipLayoutSettings>>('/tenant/branding/slip-layouts')
+    return apiClient.get<SlipLayoutSettings>('/tenant/branding/slip-layouts')
   },
 
   updateSlipLayouts(payload: { slip_header_layout?: SlipDocumentLayout; slip_footer_layout?: SlipDocumentLayout; update_key?: number }) {
-    return apiClient.put<DataResponse<SlipLayoutSettings>>('/tenant/branding/slip-layouts', payload)
+    return apiClient.put<SlipLayoutSettings>('/tenant/branding/slip-layouts', payload)
   },
 
   previewDummySlipDocument(slipNo: string, paperType = 'A4') {
@@ -114,27 +109,27 @@ export const settingsService = {
   },
 
   listInterestTypes() {
-    return apiClient.get<DataResponse<DefaultTypeOption[]>>('/tenant/interest-types')
+    return apiClient.get<DefaultTypeOption[]>('/tenant/interest-types')
   },
 
   listExpenseTypes() {
-    return apiClient.get<DataResponse<DefaultTypeOption[]>>('/tenant/expense-types')
+    return apiClient.get<DefaultTypeOption[]>('/tenant/expense-types')
   },
 
   listMaterialTypes() {
-    return apiClient.get<DataResponse<DefaultTypeOption[]>>('/tenant/material-types')
+    return apiClient.get<DefaultTypeOption[]>('/tenant/material-types')
   },
 
   createInterestType(payload: { name: string; code: string; durationInDays?: number }) {
-    return apiClient.post<DataResponse<DefaultTypeOption>>('/tenant/interest-types', payload)
+    return apiClient.post<DefaultTypeOption>('/tenant/interest-types', payload)
   },
 
   createExpenseType(payload: { name: string; code: string }) {
-    return apiClient.post<DataResponse<DefaultTypeOption>>('/tenant/expense-types', payload)
+    return apiClient.post<DefaultTypeOption>('/tenant/expense-types', payload)
   },
 
   createMaterialType(payload: { name: string; code: string }) {
-    return apiClient.post<DataResponse<DefaultTypeOption>>('/tenant/material-types', payload)
+    return apiClient.post<DefaultTypeOption>('/tenant/material-types', payload)
   },
 
   deleteInterestType(code: string) {

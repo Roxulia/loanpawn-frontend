@@ -22,7 +22,7 @@ export function CollateralDetailPage() {
 
     try {
       const response = await collateralService.getCollateral(code)
-      setItem(response.data)
+      setItem(response)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load collateral item.')
     } finally {

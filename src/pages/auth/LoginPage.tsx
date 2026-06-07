@@ -54,16 +54,14 @@ export function LoginPage() {
       const response = resolvedTenant
         ? await tenantAuthService.loginSubdomainSpa({ email, password }, resolvedTenant.code)
         : await tenantAuthService.loginPublicSpa({ tenant_code: tenantCode, email, password })
-      const tenantResponse = await tenantResolverService.resolveByCode(response.data.tenant_code)
-      if ('data' in tenantResponse && tenantResponse.data) {
-        setTenantResolution({
-          status: 'resolved',
-          subdomain: tenantResponse.data.subdomain ?? null,
-          tenant: tenantResponse.data,
-          error: null,
-        })
-      }
-      setSession(response.data)
+      const tenantResponse = await tenantResolverService.resolveByCode(response.tenant_code)
+      setTenantResolution({
+        status: 'resolved',
+        subdomain: tenantResponse.subdomain ?? null,
+        tenant: tenantResponse,
+        error: null,
+      })
+      setSession(response)
       navigate(redirectTo)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Login failed.')
