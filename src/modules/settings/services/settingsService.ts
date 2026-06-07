@@ -1,4 +1,6 @@
 import { apiClient } from '../../../services/http/apiClient'
+import type { TenantUser } from '../../../dataobjects/tenant/auth'
+import type { UiLocale } from '../../../locales/UiLocale'
 
 export type DefaultTypeOption = {
   id: number
@@ -69,6 +71,16 @@ export type SettingsResponse = {
   tenant_setting: TenantSettings
 }
 
+export type ChangeLanguagePayload = {
+  updateKey: number
+  preferLang: UiLocale
+}
+
+export type ChangeLanguageResponse = Partial<TenantUser> & {
+  user?: TenantUser
+  message?: string
+}
+
 export const settingsService = {
   getSettings() {
     return apiClient.get<SettingsResponse>('/tenant/settings')
@@ -88,6 +100,11 @@ export const settingsService = {
 
   updateDefaultUserPassword(payload: { default_tenant_user_password: string; update_key?: number }) {
     return apiClient.put<TenantSettings>('/tenant/settings/default-user-password', payload)
+  },
+
+  changeLanguage(payload: ChangeLanguagePayload) {
+    console.log('Changing language with payload:', payload);
+    return apiClient.put<ChangeLanguageResponse>('tenant/me/change-language', payload)
   },
 
   getSlipLayouts() {

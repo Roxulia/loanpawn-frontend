@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useUiLocale } from '../../locales/UiLocale'
 
 type ModalProps = {
   children: ReactNode
@@ -9,6 +10,8 @@ type ModalProps = {
 }
 
 export function Modal({ children, footer, isOpen, onClose, title }: ModalProps) {
+  const { t } = useUiLocale()
+
   if (!isOpen) {
     return null
   }
@@ -22,8 +25,8 @@ export function Modal({ children, footer, isOpen, onClose, title }: ModalProps) 
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="ui-modal__header">
-          <h2 className="ui-card__title">{title}</h2>
-          <button className="ui-modal__close" onClick={onClose} type="button" aria-label="Close modal">
+          <h2 className="ui-card__title">{t(title)}</h2>
+          <button className="ui-modal__close" onClick={onClose} type="button" aria-label={t('Close modal')}>
             ×
           </button>
         </header>

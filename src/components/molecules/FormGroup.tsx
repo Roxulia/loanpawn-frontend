@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useUiLocale } from '../../locales/UiLocale'
 
 type FormGroupColumns = 1 | 2 | 3
 
@@ -10,12 +11,14 @@ type FormGroupProps = {
 }
 
 export function FormGroup({ children, columns = 2, description, title }: FormGroupProps) {
+  const { t } = useUiLocale()
+
   return (
     <section className="ui-form-group">
       {(title || description) && (
         <header className="ui-form-group__header">
-          {title && <h2 className="ui-form-group__title">{title}</h2>}
-          {description && <p className="ui-form-group__description">{description}</p>}
+          {title && <h2 className="ui-form-group__title">{t(title)}</h2>}
+          {description && <p className="ui-form-group__description">{t(description)}</p>}
         </header>
       )}
       <div className={`ui-form-group__grid ui-form-group__grid--${columns}`}>{children}</div>

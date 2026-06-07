@@ -1,9 +1,11 @@
 import { moduleRegistry } from '../../modules/moduleRegistry'
 import { Card, SectionHeader, StatCard } from '../../components/molecules'
 import { Badge } from '../../components/atoms'
+import { getLocalizedModule, useUiLocale } from '../../locales/UiLocale'
 
 export function DashboardPage() {
-  const visibleModules = moduleRegistry.slice(0, 6)
+  const { locale } = useUiLocale()
+  const visibleModules = moduleRegistry.slice(0, 6).map((module) => getLocalizedModule(module, locale))
 
   return (
     <section className="page">

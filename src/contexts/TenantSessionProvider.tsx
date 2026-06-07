@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { TenantUser, TenantUserAuthSession } from '../dataobjects/tenant/auth'
 import type { TenantResolveState } from '../dataobjects/tenant/tenantResolver'
+import type { UiLocale } from '../locales/UiLocale'
 import {
   TenantSessionContext,
   type TenantAuthStatus,
@@ -17,6 +18,7 @@ const initialTenantResolution: TenantResolveState = {
 export function TenantSessionProvider({ children }: { children: ReactNode }) {
   const [authStatus, setAuthStatus] = useState<TenantAuthStatus>('checking')
   const [currentUser, setCurrentUser] = useState<TenantUser | null>(null)
+  const [locale, setLocale] = useState<UiLocale>('en')
   const [session, setSession] = useState<TenantUserAuthSession | null>(null)
   const [tenantResolution, setTenantResolution] = useState<TenantResolveState>(
     initialTenantResolution,
@@ -25,6 +27,7 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
   function handleSetSession(nextSession: TenantUserAuthSession | null) {
     setSession(nextSession)
     setCurrentUser(nextSession?.user ?? null)
+    setLocale(nextSession?.user?.prefer_lang && nextSession.user.prefer_lang === 'mm' ? 'mm' : 'en')
     setAuthStatus(nextSession ? 'authenticated' : 'unauthenticated')
   }
 
@@ -32,15 +35,17 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       authStatus,
       currentUser,
+      locale,
       session,
       tenantResolution,
       isAuthenticated: authStatus === 'authenticated' || session !== null || currentUser !== null,
       setAuthStatus,
       setCurrentUser,
+      setLocale,
       setSession: handleSetSession,
       setTenantResolution,
     }),
-    [authStatus, currentUser, session, tenantResolution],
+    [authStatus, currentUser, locale, session, tenantResolution],
   )
 
   return (

@@ -1,3 +1,5 @@
+import type { UiLocale } from '../../locales/UiLocale'
+
 export type TenantUser = {
   id: number
   code: string
@@ -17,6 +19,8 @@ export type TenantUser = {
   created_by?: number | null
   role_name?: string | null
   roleName?: string | null
+  preferLang?: UiLocale | null
+  prefer_lang?: UiLocale | null
   permissions?: string[]
 }
 

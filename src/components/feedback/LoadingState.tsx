@@ -1,3 +1,5 @@
+import { useUiLocale } from '../../locales/UiLocale'
+
 type SkeletonVariant = 'line' | 'short' | 'control'
 
 type SkeletonProps = {
@@ -14,8 +16,10 @@ export function Skeleton({ variant = 'line' }: SkeletonProps) {
 }
 
 export function LoadingState({ rows = 4, variant = 'line' }: LoadingStateProps) {
+  const { t } = useUiLocale()
+
   return (
-    <div className="ui-loading-stack" role="status" aria-label="Loading">
+    <div className="ui-loading-stack" role="status" aria-label={t('Loading')}>
       {Array.from({ length: rows }).map((_, index) => (
         <Skeleton key={index} variant={index === 0 ? 'short' : variant} />
       ))}

@@ -4,6 +4,7 @@ import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
 import { Card, KeyValueList, SectionHeader } from '../../../components/molecules'
+import { LocalizedText } from '../../../locales/UiLocale'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
 import { slipService, type LoanContractSlip, type SlipCollateralItem } from '../services/slipService'
 
@@ -88,7 +89,7 @@ export function SlipDetailPage() {
           </Card>
 
           <Card title="Collateral Items" description={`${(slip.items ?? []).length} item${(slip.items ?? []).length === 1 ? '' : 's'}`}>
-            {(slip.items ?? []).length === 0 ? <p className="muted">No collateral items returned.</p> : (
+            {(slip.items ?? []).length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
               <div className="workflow-stack">
                 {(slip.items ?? []).map((item) => <SlipItemCard item={item} key={item.id} />)}
               </div>

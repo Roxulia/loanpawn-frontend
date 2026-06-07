@@ -5,6 +5,7 @@ import { Button, Input, Select } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
 import { ActionBar, Card, FormField, SectionHeader } from '../../../components/molecules'
 import { Modal } from '../../../components/organisms'
+import { LocalizedText } from '../../../locales/UiLocale'
 import { settingsService, type SlipDocumentLayout } from '../services/settingsService'
 
 type EditorTab = 'header' | 'footer'
@@ -370,7 +371,7 @@ export function TemplateEditorPage() {
                   <Button onClick={removeSelectedComponent} variant="danger">Remove Component</Button>
                 </div>
               ) : (
-                <p className="template-editor-empty">Select a component on the canvas to update its coordinates and sizing.</p>
+                <p className="template-editor-empty"><LocalizedText text="Select a component on the canvas to update its coordinates and sizing." /></p>
               )}
             </Card>
           </div>

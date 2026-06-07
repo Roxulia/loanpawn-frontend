@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Button } from '../atoms'
 import { EmptyState, LoadingState } from '../feedback'
 import { DataCard, type KeyValueItem } from '../molecules'
+import { useUiLocale } from '../../locales/UiLocale'
 
 export type DataTableColumn<TItem> = {
   header: string
@@ -47,6 +48,8 @@ export function DataTable<TItem>({
   pagination,
   showEmptyStructure = false,
 }: DataTableProps<TItem>) {
+  const { t } = useUiLocale()
+
   if (isLoading) {
     return <LoadingState rows={5} />
   }
@@ -62,9 +65,9 @@ export function DataTable<TItem>({
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.key}>{column.header}</th>
+                <th key={column.key}>{t(column.header)}</th>
               ))}
-              {actions && <th>Actions</th>}
+              {actions && <th>{t('Actions')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -112,8 +115,7 @@ export function DataTable<TItem>({
       {pagination && (
         <div className="ui-pagination">
           <span className="ui-pagination__meta">
-            Page {pagination.currentPage} of {pagination.lastPage}
-            {pagination.total !== undefined ? ` - ${pagination.total} records` : ''}
+            {t(`Page ${pagination.currentPage} of ${pagination.lastPage}${pagination.total !== undefined ? ` - ${pagination.total} records` : ''}`)}
           </span>
           <Button
             disabled={pagination.currentPage <= 1}

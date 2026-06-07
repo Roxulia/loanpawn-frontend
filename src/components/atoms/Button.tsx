@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { translateNode, useUiLocale } from '../../locales/UiLocale'
 
 type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost'
 
@@ -22,6 +23,7 @@ export function Button({
   variant = 'secondary',
   ...props
 }: ButtonProps) {
+  const { locale, t } = useUiLocale()
   const classes = [
     'ui-button',
     `ui-button--${variant}`,
@@ -30,9 +32,16 @@ export function Button({
   ].filter(Boolean).join(' ')
 
   return (
-    <button className={classes} disabled={disabled || isLoading} type={type} {...props}>
+    <button
+      className={classes}
+      disabled={disabled || isLoading}
+      type={type}
+      {...props}
+      aria-label={typeof props['aria-label'] === 'string' ? t(props['aria-label']) : props['aria-label']}
+      title={typeof props.title === 'string' ? t(props.title) : props.title}
+    >
       {isLoading ? <span className="ui-spinner" aria-hidden="true" /> : leftIcon}
-      <span>{children}</span>
+      <span>{translateNode(children, locale)}</span>
       {rightIcon}
     </button>
   )

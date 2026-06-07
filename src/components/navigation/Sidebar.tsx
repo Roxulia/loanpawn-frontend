@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router'
 import { routePaths } from '../../app/routes/paths'
 import { usePermissions, type PermissionCode } from '../../modules/auth'
+import { useUiLocale } from '../../locales/UiLocale'
 
 type SidebarProps = {
   onNavigate?: () => void
@@ -67,6 +68,7 @@ const navigationGroups: NavigationGroup[] = [
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { hasAnyPermission } = usePermissions()
+  const { t } = useUiLocale()
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
@@ -75,27 +77,27 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     .filter((group) => group.items.length > 0)
 
   return (
-    <aside className="sidebar" aria-label="Main navigation">
+    <aside className="sidebar" aria-label={t('Main navigation')}>
       <header className="sidebar-header">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true" />
           <div>
             <strong>LonePawn</strong>
-            <span>Operations</span>
+            <span>{t('Operations')}</span>
           </div>
         </div>
       </header>
 
       <div className="sidebar-body">
-        <nav className="sidebar-nav" aria-label="Application sections">
+        <nav className="sidebar-nav" aria-label={t('Application sections')}>
           {visibleGroups.map((group) => (
             <div className="nav-group" key={group.label}>
-              <span className="nav-group-label">{group.label}</span>
+              <span className="nav-group-label">{t(group.label)}</span>
               <div className="nav-list">
                 {group.items.map((item) => (
-                  <NavLink key={item.to} to={item.to} onClick={onNavigate} title={item.label}>
+                  <NavLink key={item.to} to={item.to} onClick={onNavigate} title={t(item.label)}>
                     <SidebarIcon name={item.icon} />
-                    <span>{item.label}</span>
+                    <span>{t(item.label)}</span>
                   </NavLink>
                 ))}
               </div>

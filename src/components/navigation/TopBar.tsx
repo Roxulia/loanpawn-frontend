@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { routePaths } from '../../app/routes/paths'
 import { useTenantSession } from '../../contexts/useTenantSession'
+import { useUiLocale } from '../../locales/UiLocale'
 import { tenantAuthService } from '../../services/tenant/authService'
 
 type TopBarProps = {
@@ -11,15 +12,16 @@ type TopBarProps = {
 export function TopBar({ onOpenSidebar }: TopBarProps) {
   const navigate = useNavigate()
   const { currentUser, session, setSession, tenantResolution } = useTenantSession()
+  const { t } = useUiLocale()
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement | null>(null)
-  const displayName = currentUser?.name ?? session?.user.name ?? 'Guest'
+  const displayName = currentUser?.name ?? session?.user.name ?? t('Guest')
   const currentUserId = currentUser?.id ?? session?.user.id
   const userRole = currentUser?.role_name ?? currentUser?.roleName ?? session?.user.role_name ?? session?.user.roleName ?? null
   const userStatus = currentUser?.status ?? session?.user.status ?? null
   const userInitials = getInitials(displayName)
   const resolvedTenant = tenantResolution.status === 'resolved' ? tenantResolution.tenant : null
-  const tenantLabel = session?.tenant_code ?? resolvedTenant?.code ?? 'Tenant session'
+  const tenantLabel = session?.tenant_code ?? resolvedTenant?.code ?? t('Tenant session')
 
   useEffect(() => {
     function handleDocumentClick(event: MouseEvent) {
@@ -58,15 +60,15 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
           type="button"
           className="topbar-menu-button"
           onClick={onOpenSidebar}
-          aria-label="Open navigation"
-          title="Open navigation"
+          aria-label={t('Open navigation')}
+          title={t('Open navigation')}
         >
           <span />
           <span />
           <span />
         </button>
         <div>
-          <span className="eyebrow">Tenant workspace</span>
+          <span className="eyebrow">{t('Tenant workspace')}</span>
           <strong>{tenantLabel}</strong>
         </div>
       </div>
@@ -81,17 +83,17 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
           <span className="topbar-user__avatar" aria-hidden="true">{userInitials}</span>
           <span className="topbar-user__identity">
             <strong>{displayName}</strong>
-            <span>{userRole ?? userStatus ?? 'User'}</span>
+            <span>{userRole ?? userStatus ?? t('User')}</span>
           </span>
           <span className="topbar-user__chevron" aria-hidden="true">v</span>
         </button>
         {isUserMenuOpen && (
           <div className="topbar-user-dropdown" role="menu">
             <button disabled={!currentUserId} onClick={handleProfileSetting} role="menuitem" type="button">
-              Profile Setting
+              {t('Profile Setting')}
             </button>
             <button onClick={() => void handleLogout()} role="menuitem" type="button">
-              Logout
+              {t('Logout')}
             </button>
           </div>
         )}

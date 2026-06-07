@@ -3,6 +3,7 @@ import { Button, Input, Textarea } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
 import { ActionBar, Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
+import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney, getSlipCustomerName } from '../../slips/slipFormat'
 import { redemptionService, type RedemptionCalculationResult, type RedemptionDebt, type RedemptionDetail, type RedemptionInterestPayment } from '../services/redemptionService'
@@ -16,6 +17,7 @@ function initialRedemptionDate() {
 }
 
 export function RedemptionsPage() {
+  const { t } = useUiLocale()
   const [activeTab, setActiveTab] = useState<RedemptionTab>('workflow')
   const [slipNo, setSlipNo] = useState('')
   const [paymentAmount, setPaymentAmount] = useState('')
@@ -166,7 +168,7 @@ export function RedemptionsPage() {
     <section className="page">
       <SectionHeader title="Redemptions" subtitle="Calculate redemption totals, receive payment, and review redemption records." />
 
-      <div className="module-tabs" role="tablist" aria-label="Redemption sections">
+      <div className="module-tabs" role="tablist" aria-label={t('Redemption sections')}>
         <Button onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
         <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
       </div>
@@ -233,7 +235,7 @@ export function RedemptionsPage() {
             />
           </Card>
           <Card title="Redemption Detail" description={selectedRecord ? `Slip ${getRedemptionSlipNumber(selectedRecord)}` : 'Select a redemption record'}>
-            {selectedRecord ? <RedemptionDetailPanel record={selectedRecord} /> : <p className="muted">No redemption selected.</p>}
+            {selectedRecord ? <RedemptionDetailPanel record={selectedRecord} /> : <p className="muted"><LocalizedText text="No redemption selected." /></p>}
           </Card>
         </div>
       )}
@@ -264,8 +266,8 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         { key: 'Total Amount To Pay', value: formatMoney(calculation.total_amount_to_pay) },
       ]} />
       <section className="detail-list">
-        <strong>Collateral Summary</strong>
-        {(calculation.collateral_items ?? calculation.slip.items ?? []).length === 0 ? <p className="muted">No collateral items returned.</p> : (
+        <strong><LocalizedText text="Collateral Summary" /></strong>
+        {(calculation.collateral_items ?? calculation.slip.items ?? []).length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
           <DataTable
             columns={[
               { header: 'Code', key: 'code', render: (item) => item.code ?? '-' },
@@ -280,8 +282,8 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         )}
       </section>
       <section className="detail-list">
-        <strong>Interest Snapshot</strong>
-        {interestPayments.length === 0 ? <p className="muted">No interest rows returned.</p> : (
+        <strong><LocalizedText text="Interest Snapshot" /></strong>
+        {interestPayments.length === 0 ? <p className="muted"><LocalizedText text="No interest rows returned." /></p> : (
           <DataTable
             columns={[
               { header: 'Start Date', key: 'start', render: (payment) => formatDate(getInterestStartDate(payment)) },
@@ -295,8 +297,8 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         )}
       </section>
       <section className="detail-list">
-        <strong>Debt Snapshot</strong>
-        {unpaidDebts.length === 0 ? <p className="muted">No unpaid debts returned.</p> : (
+        <strong><LocalizedText text="Debt Snapshot" /></strong>
+        {unpaidDebts.length === 0 ? <p className="muted"><LocalizedText text="No unpaid debts returned." /></p> : (
           <DataTable
             columns={[
               { header: 'Code', key: 'code', render: (debt) => <strong>{debt.code ?? '-'}</strong> },

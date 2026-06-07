@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
-import { Badge, Button, Input, Textarea } from '../../../components/atoms'
+import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
 import { ActionBar, Card, FormField, FormGroup, SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
-import { settingsService, type BrandingSettings, type ContactSettings, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
+import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { useTenantSession } from '../../../contexts/useTenantSession'
+import type { UiLocale } from '../../../locales/UiLocale'
+import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
 
 type TypeForm = {
   name: string
@@ -93,19 +95,22 @@ export function SettingsPage() {
   const [interestForm, setInterestForm] = useState(emptyTypeForm)
   const [expenseForm, setExpenseForm] = useState(emptyTypeForm)
   const [materialForm, setMaterialForm] = useState(emptyTypeForm)
+  const [selectedLanguage, setSelectedLanguage] = useState<UiLocale>('en')
   const [isLoading, setIsLoading] = useState(true)
   const [savingSection, setSavingSection] = useState<string | null>(null)
   const [deletingType, setDeletingType] = useState<TypeToDelete | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const { tenantResolution } = useTenantSession()
+  const { currentUser, session, setCurrentUser, setLocale, setSession, tenantResolution } = useTenantSession()
   const tenantPlan = tenantResolution.status === 'resolved'
     ? tenantResolution.tenant.tenant_license.plan_type
     : null
+  const currentLanguage = getUserLocale(currentUser)
 
   const brandingChanged = useMemo(() => hasChanged(branding, brandingInitial), [branding, brandingInitial])
   const contactChanged = useMemo(() => hasChanged(contact, contactInitial), [contact, contactInitial])
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
+  const userLanguageChanged = selectedLanguage !== currentLanguage
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true)
@@ -146,6 +151,10 @@ export function SettingsPage() {
     return () => window.clearTimeout(loadTimer)
   }, [loadSettings])
 
+  useEffect(() => {
+    setSelectedLanguage(currentLanguage)
+  }, [currentLanguage])
+
   async function saveBranding() {
     await saveSection('branding', async () => {
       const response = await settingsService.updateBranding(branding)
@@ -171,6 +180,30 @@ export function SettingsPage() {
       setTenantInitial(nextTenant)
       setTenant(nextTenant)
     })
+  }
+
+  async function saveUserLanguage() {
+    const updateKey = getUserUpdateKey(currentUser)
+
+    if (!currentUser || updateKey === null) {
+      setNotice(null)
+      setError('Unable to save language because current user update key is missing.')
+      return
+    }
+
+    await saveSection('user-language', async () => {
+      const response = await settingsService.changeLanguage({
+        updateKey,
+        preferLang: selectedLanguage,
+      })
+      const updatedUser = mergeLanguageResponse(currentUser, response, selectedLanguage)
+
+      setCurrentUser(updatedUser)
+      if (session) {
+        setSession({ ...session, user: updatedUser })
+      }
+      setLocale(selectedLanguage)
+    }, 'User language saved successfully.')
   }
 
   async function saveTypeData(kind: TypeKind) {
@@ -315,6 +348,38 @@ export function SettingsPage() {
       {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Settings updated" tone="success" />}
 
       <div className="workflow-stack">
+        <Card title="User Setting" description="Choose the language used for your account.">
+          <FormGroup columns={1}>
+            <FormField id="settings-user-language" label="Language">
+              <Select
+                id="settings-user-language"
+                onChange={(event) => setSelectedLanguage(event.target.value === 'mm' ? 'mm' : 'en')}
+                value={selectedLanguage}
+              >
+                <option value="en">English</option>
+                <option value="mm">Myanmar</option>
+              </Select>
+            </FormField>
+          </FormGroup>
+          <ActionBar>
+            <Button
+              disabled={!userLanguageChanged || savingSection === 'user-language'}
+              onClick={() => setSelectedLanguage(currentLanguage)}
+              variant="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!userLanguageChanged}
+              isLoading={savingSection === 'user-language'}
+              onClick={() => void saveUserLanguage()}
+              variant="primary"
+            >
+              Save
+            </Button>
+          </ActionBar>
+        </Card>
+
         {tenantPlan === 'premium' && (
           <Card title="Branding Setting">
             <FormGroup columns={3}>
@@ -553,6 +618,36 @@ function TypeDataBlock({
       </ActionBar>
     </section>
   )
+}
+
+function getUserLocale(user: TenantUser | null): UiLocale {
+  const locale = user?.preferLang ?? user?.prefer_lang
+
+  return locale === 'mm' ? 'mm' : 'en'
+}
+
+function getUserUpdateKey(user: TenantUser | null) {
+  const updateKey = user?.updateKey ?? user?.update_key
+
+  return typeof updateKey === 'number' ? updateKey : null
+}
+
+function mergeLanguageResponse(
+  currentUser: TenantUser,
+  response: ChangeLanguageResponse,
+  preferLang: UiLocale,
+): TenantUser {
+  const responseUser = response.user ?? response
+  const nextUpdateKey = responseUser.updateKey ?? responseUser.update_key ?? currentUser.updateKey ?? currentUser.update_key
+
+  return {
+    ...currentUser,
+    ...responseUser,
+    preferLang,
+    prefer_lang: preferLang,
+    updateKey: nextUpdateKey,
+    update_key: nextUpdateKey,
+  }
 }
 
 function normalizeBranding(value?: BrandingSettings | null) {

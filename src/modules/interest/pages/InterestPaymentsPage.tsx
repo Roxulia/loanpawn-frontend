@@ -3,6 +3,7 @@ import { Button, Input } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
 import { ActionBar, Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
+import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney } from '../../slips/slipFormat'
 import { interestService, type InterestBreakdownRow, type InterestCalculationResult, type InterestPaymentHistoryItem, type InterestPaymentResult } from '../services/interestService'
@@ -12,6 +13,7 @@ const perPage = 10
 type InterestTab = 'workflow' | 'history'
 
 export function InterestPaymentsPage() {
+  const { t } = useUiLocale()
   const [activeTab, setActiveTab] = useState<InterestTab>('workflow')
   const [slipNo, setSlipNo] = useState('')
   const [paymentAmount, setPaymentAmount] = useState('')
@@ -180,7 +182,7 @@ export function InterestPaymentsPage() {
     <section className="page">
       <SectionHeader title="Interest Payments" subtitle="Calculate due interest, record payment, and create debt when needed." />
 
-      <div className="module-tabs" role="tablist" aria-label="Interest payment sections">
+      <div className="module-tabs" role="tablist" aria-label={t('Interest payment sections')}>
         <Button onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
         <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
       </div>
@@ -224,7 +226,7 @@ export function InterestPaymentsPage() {
               </FormField>
               <label className="checkbox-line">
                 <input checked={recordDebt} onChange={(event) => setRecordDebt(event.target.checked)} type="checkbox" />
-                <span>Create debt if payment is insufficient</span>
+                <span><LocalizedText text="Create debt if payment is insufficient" /></span>
               </label>
               {isInsufficient && !recordDebt && (
                 <Alert message="Payment is less than calculated interest. Confirm debt recording before submitting." title="Insufficient payment" tone="warning" />

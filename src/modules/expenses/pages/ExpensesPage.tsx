@@ -5,6 +5,7 @@ import type { DataTableColumn } from '../../../components/organisms'
 import type { ExpenseTypeOption, TenantExpense } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { routePaths } from '../../../app/routes/paths'
+import { LocalizedText } from '../../../locales/UiLocale'
 import {
   FinanceResourcePage,
   type FinanceFormErrors,
@@ -204,9 +205,9 @@ function ExpenseFormFields({
         />
       </FormField>
       <div className="ui-form-field">
-        <span className="ui-label">Accounting effect</span>
+        <span className="ui-label"><LocalizedText text="Accounting effect" /></span>
         <Badge tone="warning">Outgoing</Badge>
-        <div className="ui-form-field__hint">Expense records create outgoing accounting entries server-side.</div>
+        <div className="ui-form-field__hint"><LocalizedText text="Expense records create outgoing accounting entries server-side." /></div>
       </div>
     </FormGroup>
   )

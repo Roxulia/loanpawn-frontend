@@ -529,6 +529,34 @@
   color: var(--color-on-primary);
 }
 
+.locale-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.locale-switcher button {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+}
+
+.locale-switcher button.is-active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.locale-switcher small {
+  color: var(--color-text-secondary);
+}
+
 .ui-empty-state {
   align-items: center;
   background: var(--color-surface);

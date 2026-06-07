@@ -7,6 +7,7 @@ export function AuthenticationGate({ children }: { children: ReactNode }) {
     setAuthStatus,
     setCurrentUser,
     setSession,
+    setLocale,
     tenantResolution,
   } = useTenantSession()
   const checkedKey = useRef<string | null>(null)
@@ -28,7 +29,9 @@ export function AuthenticationGate({ children }: { children: ReactNode }) {
       .me()
       .then((user) => {
         setCurrentUser(user)
+        setLocale(user.prefer_lang && user.prefer_lang === 'mm' ? 'mm' : 'en') 
         setAuthStatus('authenticated')
+        console.log('User authenticated:', user)
       })
       .catch(() => {
         setSession(null)

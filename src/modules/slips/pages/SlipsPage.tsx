@@ -6,6 +6,7 @@ import { Alert } from '../../../components/feedback'
 import { PrinterIcon, TrashIcon } from '../../../components/icons/icon'
 import { ActionBar, Card, FormField, FormGroup, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, ModalForm, type DataTableColumn } from '../../../components/organisms'
+import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { usePermissions } from '../../auth'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
@@ -48,6 +49,7 @@ const emptyLoan = {
 
 export function SlipsPage() {
   const navigate = useNavigate()
+  const { t } = useUiLocale()
   const { hasPermission } = usePermissions()
   const canList = hasPermission('list_loan_contract')
   const canCreate = hasPermission('create_loan_contract')
@@ -288,7 +290,7 @@ export function SlipsPage() {
         subtitle="Create pawn loan contracts and manage active slip records from the desktop workflow."
       />
 
-      <div className="module-tabs" role="tablist" aria-label="Loan slip sections">
+      <div className="module-tabs" role="tablist" aria-label={t('Loan slip sections')}>
         <Button onClick={() => setActiveTab('application')} variant={activeTab === 'application' ? 'primary' : 'secondary'}>Loan Application</Button>
         <Button onClick={() => setActiveTab('management')} variant={activeTab === 'management' ? 'primary' : 'secondary'}>Management</Button>
       </div>
@@ -330,7 +332,7 @@ export function SlipsPage() {
           >
             <div className="workflow-stack">
               {formErrors.items && <Alert message={formErrors.items} title="Collateral required" tone="warning" />}
-              {items.length === 0 && <p className="muted">Choose an item type to start adding collateral.</p>}
+              {items.length === 0 && <p className="muted"><LocalizedText text="Choose an item type to start adding collateral." /></p>}
               {items.map((item, index) => (
                 <section className="subform-panel" key={item.key}>
                   <header className="subform-panel__header">
@@ -399,7 +401,7 @@ export function SlipsPage() {
                             })}
                           type="checkbox"
                         />
-                        <span>Have Gem Stone</span>
+                        <span><LocalizedText text="Have Gem Stone" /></span>
                       </label>
                       {item.contains_gemstones && (
                         <FormGroup columns={2}>
@@ -424,9 +426,9 @@ export function SlipsPage() {
                       <Input id={`${item.key}-quantity`} min="1" type="number" value={item.quantity ?? 1} onChange={(event) => updateItem(item.key, { quantity: Number(event.target.value) })} />
                     </FormField>
                     <div className="ui-form-field">
-                      <span className="ui-label">Minimum Retail Price</span>
+                      <span className="ui-label"><LocalizedText text="Minimum Retail Price" /></span>
                       <Badge tone="info">{formatMoney(calculateMinimumRetailPrice(item))}</Badge>
-                      <div className="ui-form-field__hint">Calculated from item value, quantity, and jewellery weight where applicable.</div>
+                      <div className="ui-form-field__hint"><LocalizedText text="Calculated from item value, quantity, and jewellery weight where applicable." /></div>
                     </div>
                   </FormGroup>
                 </section>
@@ -466,7 +468,7 @@ export function SlipsPage() {
             <ActionBar>
               <label className="checkbox-line">
                 <input checked={shouldPrintAfterCreate} onChange={(event) => setShouldPrintAfterCreate(event.target.checked)} type="checkbox" />
-                <span>Print after saving</span>
+                <span><LocalizedText text="Print after saving" /></span>
               </label>
               <Button onClick={resetForm} variant="secondary">Reset</Button>
               <Button disabled={!canCreate} isLoading={isCreating} type="submit" variant="primary">Create Slip</Button>

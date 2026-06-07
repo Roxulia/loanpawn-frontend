@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '../atoms'
+import { useUiLocale } from '../../locales/UiLocale'
 
 type AlertTone = 'success' | 'warning' | 'danger' | 'info'
 
@@ -19,12 +20,14 @@ const toneIcon: Record<AlertTone, string> = {
 }
 
 export function Alert({ action, message, onDismiss, title, tone = 'info' }: AlertProps) {
+  const { t } = useUiLocale()
+
   return (
     <section className={`ui-alert ui-alert--${tone}`} role={tone === 'danger' ? 'alert' : 'status'}>
       <span className="ui-alert__icon" aria-hidden="true">{toneIcon[tone]}</span>
       <div className="ui-alert__content">
-        {title && <strong className="ui-alert__title">{title}</strong>}
-        <p className="ui-alert__message">{message}</p>
+        {title && <strong className="ui-alert__title">{t(title)}</strong>}
+        <p className="ui-alert__message">{t(message)}</p>
       </div>
       {action}
       {onDismiss && (
