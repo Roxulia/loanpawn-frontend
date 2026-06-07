@@ -103,7 +103,7 @@ export const settingsService = {
   },
 
   changeLanguage(payload: ChangeLanguagePayload) {
-    console.log('Changing language with payload:', payload);
+    //console.log('Changing language with payload:', payload);
     return apiClient.put<ChangeLanguageResponse>('tenant/me/change-language', payload)
   },
 
