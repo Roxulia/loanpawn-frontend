@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from 'axios'
 
-const defaultBaseUrl = 'http://loanpawn.1morebit.tech:8000/api'
+const defaultBaseUrl = 'https://loanpawn.1morebit.tech/api'
 const csrfCookiePath = '/sanctum/csrf-cookie'
 
 type RequestOptions = Omit<AxiosRequestConfig, 'data' | 'headers' | 'url' | 'method'> & {
