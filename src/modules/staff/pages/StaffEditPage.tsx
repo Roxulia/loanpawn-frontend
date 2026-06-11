@@ -70,7 +70,7 @@ export function StaffEditPage() {
     return <Navigate to={routePaths.staff} replace />
   }
 
-  function updateFormField(field: keyof StaffFormState, value: string) {
+  function updateFormField<K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
   }

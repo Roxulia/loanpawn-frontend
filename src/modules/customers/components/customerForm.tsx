@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Button, Input, Textarea } from '../../../components/atoms'
-import { ActionBar, Card, FormField, FormGroup } from '../../../components/molecules'
+import { ActionBar, Card, FormField, FormGroup, NrcField } from '../../../components/molecules'
 import type { CustomerFormErrors, CustomerFormState } from './customerFormModel'
 
 type CustomerFormProps = {
@@ -9,7 +9,7 @@ type CustomerFormProps = {
   isSaving: boolean
   mode: 'create' | 'edit'
   onCancel: () => void
-  onChange: (field: keyof CustomerFormState, value: string) => void
+  onChange: <K extends keyof CustomerFormState>(field: K, value: CustomerFormState[K]) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   operationAlert?: ReactNode
   value: CustomerFormState
@@ -51,6 +51,9 @@ export function CustomerForm({
               onChange={(event) => onChange('phone', event.target.value)}
               value={value.phone}
             />
+          </FormField>
+          <FormField error={errors.nrc} id="customer-nrc" label="NRC">
+            <NrcField hasError={Boolean(errors.nrc)} id="customer-nrc" onChange={(nextNrc) => onChange('nrc', nextNrc)} value={value.nrc} />
           </FormField>
           <FormField error={errors.email} id="customer-email" label="Email">
             <Input

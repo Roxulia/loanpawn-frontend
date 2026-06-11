@@ -11,7 +11,10 @@ export type StaffPayload = {
   address?: string | null
   email: string
   name: string
-  nrc: string
+  nrc_citizen: string
+  nrc_number: string
+  nrc_state: string
+  nrc_township: string
   phone: string
   role_id?: number | null
   status?: string | null

@@ -4,7 +4,20 @@ import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
 import { PrinterIcon, TrashIcon } from '../../../components/icons/icon'
-import { ActionBar, Card, FormField, FormGroup, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
+import {
+  ActionBar,
+  Card,
+  emptyNrcValue,
+  FormField,
+  FormGroup,
+  isCompleteNrcValue,
+  isEmptyNrcValue,
+  nrcValueToPayloadFields,
+  NrcField,
+  SearchField,
+  SectionHeader,
+  TableToolbar,
+} from '../../../components/molecules'
 import { ConfirmDialog, DataTable, ModalForm, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
@@ -33,6 +46,7 @@ type ItemForm = SlipCollateralPayload & {
 const emptyCustomer = {
   name: '',
   email: '',
+  nrc: emptyNrcValue,
   phone: '',
   address: '',
   note: '',
@@ -175,6 +189,7 @@ export function SlipsPage() {
         customer: {
           name: customer.name.trim(),
           email: customer.email.trim() || undefined,
+          ...optionalNrcPayload(customer.nrc),
           phone: customer.phone.trim() || undefined,
           address: customer.address.trim() || undefined,
           note: customer.note.trim() || undefined,
@@ -307,6 +322,9 @@ export function SlipsPage() {
               </FormField>
               <FormField id="slip-customer-phone" label="Phone">
                 <Input id="slip-customer-phone" value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} />
+              </FormField>
+              <FormField id="slip-customer-nrc" label="NRC" error={formErrors.customerNrc}>
+                <NrcField id="slip-customer-nrc" value={customer.nrc} onChange={(nrc) => setCustomer({ ...customer, nrc })} hasError={Boolean(formErrors.customerNrc)} />
               </FormField>
               <FormField id="slip-customer-email" label="Email">
                 <Input id="slip-customer-email" type="email" value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} />
@@ -587,6 +605,10 @@ function validateSlipForm(customer: typeof emptyCustomer, loan: typeof emptyLoan
     errors.customerName = 'Customer name is required.'
   }
 
+  if (!isEmptyNrcValue(customer.nrc) && !isCompleteNrcValue(customer.nrc)) {
+    errors.customerNrc = 'Complete NRC or leave it empty.'
+  }
+
   if (items.length === 0) {
     errors.items = 'At least one collateral item is required.'
   }
@@ -614,6 +636,19 @@ function validateSlipForm(customer: typeof emptyCustomer, loan: typeof emptyLoan
   }
 
   return errors
+}
+
+function optionalNrcPayload(value: typeof emptyNrcValue) {
+  if (isEmptyNrcValue(value)) {
+    return {
+      nrc_citizen: undefined,
+      nrc_number: undefined,
+      nrc_state: undefined,
+      nrc_township: undefined,
+    }
+  }
+
+  return nrcValueToPayloadFields(value)
 }
 
 function toPayloadItem(item: ItemForm): SlipCollateralPayload {

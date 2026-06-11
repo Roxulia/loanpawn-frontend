@@ -20,7 +20,7 @@ export function CustomerCreatePage() {
   const [pageError, setPageError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  function updateFormField(field: keyof CustomerFormState, value: string) {
+  function updateFormField<K extends keyof CustomerFormState>(field: K, value: CustomerFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
   }

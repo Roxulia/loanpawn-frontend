@@ -16,6 +16,11 @@ type MessageResponse = {
 export type SlipCustomer = {
   id?: number
   name?: string
+  nrc?: string | null
+  nrc_citizen?: string | null
+  nrc_number?: string | null
+  nrc_state?: string | null
+  nrc_township?: string | null
   email?: string | null
   phone?: string | null
   address?: string | null
@@ -110,6 +115,10 @@ export type GemstoneDetailsPayload = {
 export type SlipCreatePayload = {
   customer: {
     name: string
+    nrc_citizen?: string
+    nrc_number?: string
+    nrc_state?: string
+    nrc_township?: string
     email?: string
     phone?: string
     address?: string

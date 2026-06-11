@@ -54,7 +54,7 @@ export function CustomerEditPage() {
     return <Navigate to={routePaths.customers} replace />
   }
 
-  function updateFormField(field: keyof CustomerFormState, value: string) {
+  function updateFormField<K extends keyof CustomerFormState>(field: K, value: CustomerFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
   }

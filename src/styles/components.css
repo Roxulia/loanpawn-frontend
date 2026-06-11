@@ -148,6 +148,20 @@
   cursor: not-allowed;
 }
 
+.nrc-field {
+  align-items: center;
+  display: grid;
+  gap: var(--space-1);
+  grid-template-columns: minmax(4rem, 0.6fr) auto minmax(7rem, 1.3fr) auto minmax(5rem, 0.75fr) auto minmax(7rem, 1fr);
+  width: 100%;
+}
+
+.nrc-field__separator {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
 .ui-badge {
   align-items: center;
   border-radius: var(--radius-full);
@@ -1081,6 +1095,14 @@
 
   .ui-key-value-list__row {
     grid-template-columns: 1fr;
+  }
+
+  .nrc-field {
+    grid-template-columns: minmax(4rem, 0.7fr) auto minmax(7rem, 1.3fr);
+  }
+
+  .nrc-field .ui-input {
+    grid-column: span 3;
   }
 
   .ui-search-field {

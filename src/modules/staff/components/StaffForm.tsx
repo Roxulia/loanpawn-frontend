@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Button, Input, Select } from '../../../components/atoms'
-import { ActionBar, Card, FormField, FormGroup } from '../../../components/molecules'
+import { ActionBar, Card, FormField, FormGroup, NrcField } from '../../../components/molecules'
 import type { StaffFormErrors, StaffFormState } from './staffFormModel'
 
 type StaffFormProps = {
@@ -8,7 +8,7 @@ type StaffFormProps = {
   isSaving: boolean
   mode: 'create' | 'edit'
   onCancel: () => void
-  onChange: (field: keyof StaffFormState, value: string) => void
+  onChange: <K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   operationAlert?: ReactNode
   value: StaffFormState
@@ -33,7 +33,7 @@ export function StaffForm({
             <Input hasError={Boolean(errors.name)} id="staff-name" onChange={(event) => onChange('name', event.target.value)} value={value.name} />
           </FormField>
           <FormField error={errors.nrc} id="staff-nrc" label="NRC">
-            <Input hasError={Boolean(errors.nrc)} id="staff-nrc" onChange={(event) => onChange('nrc', event.target.value)} value={value.nrc} />
+            <NrcField hasError={Boolean(errors.nrc)} id="staff-nrc" onChange={(nextNrc) => onChange('nrc', nextNrc)} required value={value.nrc} />
           </FormField>
           <FormField error={errors.email} id="staff-email" label="Email">
             <Input hasError={Boolean(errors.email)} id="staff-email" onChange={(event) => onChange('email', event.target.value)} type="email" value={value.email} />

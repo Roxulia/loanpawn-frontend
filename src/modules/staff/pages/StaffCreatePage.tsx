@@ -20,7 +20,7 @@ export function StaffCreatePage() {
   const [pageError, setPageError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  function updateFormField(field: keyof StaffFormState, value: string) {
+  function updateFormField<K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
   }

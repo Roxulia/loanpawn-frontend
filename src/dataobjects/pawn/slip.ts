@@ -42,6 +42,10 @@ export type LoanContractSlip = {
 export type LoanContractSlipPayload = {
   customer: {
     name: string
+    nrc_citizen?: string | null
+    nrc_number?: string | null
+    nrc_state?: string | null
+    nrc_township?: string | null
     email?: string | null
     phone?: string | null
     address?: string | null

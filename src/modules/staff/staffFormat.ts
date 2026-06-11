@@ -1,4 +1,5 @@
 import type { TenantUser } from '../../dataobjects/tenant/auth'
+import { nrcValueFromFields } from '../../components/molecules'
 import type { StaffFormState } from './components/staffFormModel'
 
 export function getUserRoleName(user: TenantUser) {
@@ -10,7 +11,7 @@ export function staffToForm(user: TenantUser): StaffFormState {
     address: user.address ?? '',
     email: user.email ?? '',
     name: user.name,
-    nrc: user.nrc,
+    nrc: nrcValueFromFields(user),
     phone: user.phone,
     status: user.status,
     update_key: user.update_key ?? user.updateKey,
