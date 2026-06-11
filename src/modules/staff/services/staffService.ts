@@ -1,4 +1,5 @@
 import type { PaginatedResult } from '../../../dataobjects/common/api'
+import type { TenantUserCreateResponse } from '../../../dataobjects/tenant/staff';
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { apiClient } from '../../../services/http/apiClient'
 import type { PermissionCode } from '../../auth'
@@ -26,7 +27,7 @@ export const staffService = {
   },
 
   createUser(payload: StaffPayload) {
-    return apiClient.post<TenantUser>('/tenant/users', payload)
+    return apiClient.post<TenantUserCreateResponse>('/tenant/users', payload)
   },
 
   getUser(userCode: string) {
