@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { path: routePaths.dashboard, element: <DashboardPage /> },
+      { path: routePaths.dashboard, element: <PermissionRoute permission='dashboard'><DashboardPage /></PermissionRoute> },
       { path: routePaths.profile, element: <ProfilePage /> },
       { path: routePaths.profileChangePassword, element: <ChangePasswordPage /> },
       { path: routePaths.customers, element: <PermissionRoute any={['list_customer', 'create_customer', 'update_customer', 'delete_customer']}><CustomerListPage /></PermissionRoute> },

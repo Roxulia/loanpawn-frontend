@@ -110,3 +110,77 @@ export type TenantDebt = {
   created_at?: string | null
   updated_at?: string | null
 }
+
+export type DashboardNearlyExpiredSlip = {
+  slipNo: string
+  customerName: string
+  loanAmount: number
+  expireDate: string | null
+  daysRemaining: number
+}
+
+export type DashboardTrustedCustomer = {
+  code: string
+  name: string
+  trustScore: number | null
+  activeLoanAmount: number
+  activeSlipCount: number
+}
+
+export type DashboardCustomerLoanUsage = {
+  code: string
+  name: string
+  totalLoanAmount: number
+  activeLoanAmount: number
+  slipCount: number
+  lastLoanDate: string | null
+}
+
+export type DashboardRecentExpense = {
+  code: string
+  description: string
+  amount: number
+  expenseTypeName: string | null
+  createdAt: string | null
+}
+
+export type DashboardExpenseTypeTotal = {
+  name: string
+  total: number
+}
+
+export type TenantDashboardSummary = {
+  financial: {
+    todayIncome: number
+    todayExpense: number
+    netToday: number
+    activeLoanPrincipal: number
+    outstandingDebt: number
+  }
+  collateral: {
+    totalItems: number
+    jewelleryItems: number
+    normalItems: number
+    activeItems: number
+    redeemedItems: number
+    confiscatedItems: number
+    estimatedValue: number
+  }
+  loans: {
+    activeSlips: number
+    expiredSlips: number
+    redeemedSlips: number
+    nearlyExpiredSlips: DashboardNearlyExpiredSlip[]
+  }
+  customers: {
+    totalCustomers: number
+    trustedCustomers: DashboardTrustedCustomer[]
+    topLoanUsage: DashboardCustomerLoanUsage[]
+  }
+  expenses: {
+    todayTotal: number
+    monthTotal: number
+    recent: DashboardRecentExpense[]
+    byType: DashboardExpenseTypeTotal[]
+  }
+}

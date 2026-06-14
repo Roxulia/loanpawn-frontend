@@ -27,6 +27,7 @@ export const permissionCodes = [
   'create_loan_contract',
   'delete_loan_contract',
   'manage_slip_document',
+  'dashboard'
 ] as const
 
 export type PermissionCode = (typeof permissionCodes)[number]

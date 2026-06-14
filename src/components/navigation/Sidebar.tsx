@@ -36,7 +36,7 @@ const navigationGroups: NavigationGroup[] = [
   {
     label: 'Workspace',
     items: [
-      { label: 'Dashboard', to: routePaths.dashboard, icon: 'dashboard' },
+      { label: 'Dashboard', to: routePaths.dashboard, icon: 'dashboard',permissions:['dashboard'] },
     ],
   },
   {

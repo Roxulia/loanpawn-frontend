@@ -2,6 +2,7 @@ import type { PaginatedResult } from '../../dataobjects/common/api'
 import type {
   AccountingLedger,
   AccountingTransaction,
+  TenantDashboardSummary,
   ExpenseTypeOption,
   TenantDebt,
   TenantExpense,
@@ -52,6 +53,10 @@ function listOptions(params: ListParams = {}, auth?: TenantAuth) {
 }
 
 export const tenantResourceService = {
+  getDashboardSummary(auth?: TenantAuth) {
+    return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', authOptions(auth))
+  },
+
   listUsers(auth?: TenantAuth) {
     return apiClient.get<PaginatedResult<TenantUser>>('/tenant/users', authOptions(auth))
   },
