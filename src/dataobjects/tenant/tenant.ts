@@ -1,6 +1,16 @@
 export type TenantLicenseStatus = 'trial' | 'paid' | 'expired' | 'suspended'
 export type TenantPlanType = 'trial' | 'basic' | 'premium'
 
+export type TenantFeatureAccess = {
+  code: string
+  is_active: boolean
+  is_enabled: boolean
+  unlock_in: {
+    code: TenantPlanType
+    name: string
+  } | null
+}
+
 export type TenantDetail = {
   code: string
   name: string
@@ -26,4 +36,5 @@ export type TenantDetail = {
     slip_footer_layout?: unknown[] | null
   } | null
   tenant_setting?: unknown
+  tenant_features: Record<string, TenantFeatureAccess>
 }

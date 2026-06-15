@@ -862,6 +862,109 @@
   gap: var(--space-2);
 }
 
+.feature-access-page {
+  align-items: center;
+  display: grid;
+  min-height: calc(100vh - var(--size-topbar-height) - var(--space-12));
+}
+
+.feature-access {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 48rem;
+  overflow: hidden;
+  padding: var(--space-8);
+  position: relative;
+  width: 100%;
+}
+
+.feature-access::before {
+  content: '';
+  inset: 0 0 auto;
+  height: 0.25rem;
+  position: absolute;
+}
+
+.feature-access--upgrade::before {
+  background: var(--color-primary);
+}
+
+.feature-access--comingSoon::before {
+  background: var(--color-info);
+}
+
+.feature-access__mark {
+  align-items: center;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  display: inline-flex;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  height: 4rem;
+  justify-content: center;
+  width: 4rem;
+}
+
+.feature-access--upgrade .feature-access__mark {
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  border-color: var(--color-primary);
+}
+
+.feature-access--comingSoon .feature-access__mark {
+  background: color-mix(in srgb, var(--color-info) 10%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-info) 40%, var(--color-border));
+  color: var(--color-info);
+}
+
+.feature-access__content {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.feature-access__eyebrow {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.feature-access h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.feature-access p {
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 38rem;
+}
+
+.feature-access__action {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.feature-access__note {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  padding: var(--space-2) var(--space-4);
+}
+
 .accounting-page {
   display: grid;
   gap: var(--space-6);
@@ -1194,6 +1297,7 @@
   .dashboard-page__stats,
   .dashboard-page__overview,
   .dashboard-page__tables,
+  .feature-access,
   .split-workspace,
   .inline-form,
   .form-grid-compact {

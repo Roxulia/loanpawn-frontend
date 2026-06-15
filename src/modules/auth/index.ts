@@ -1,4 +1,5 @@
 export { Can } from './Can'
+export { FeatureRoute } from './FeatureRoute'
 export { PermissionRoute } from './PermissionRoute'
 export {
   hasAllPermissions,
