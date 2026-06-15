@@ -4,7 +4,7 @@ import { routePaths } from '../../app/routes/paths'
 import { Button } from '../../components'
 import { useTenantSession } from '../../contexts/useTenantSession'
 
-const platformBillingUrl = import.meta.env.VITE_PLATFORM_BILLING_URL ?? 'http://loanpawntest.1morebit.tech:8000/billing'
+const platformBillingUrl = import.meta.env.VITE_PLATFORM_BILLING_URL ?? 'https://loanpawn.1morebit.tech:8000/billing'
 
 type FeatureRouteProps = {
   children: ReactNode
