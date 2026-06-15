@@ -3,7 +3,8 @@ import { Navigate, useLocation } from 'react-router'
 import { routePaths } from '../../app/routes/paths'
 import { Button } from '../../components'
 import { useTenantSession } from '../../contexts/useTenantSession'
-import { platformBillingUrl } from '../../config'
+
+const platformBillingUrl = import.meta.env.VITE_PLATFORM_BILLING_URL ?? 'https://loanpawn.1morebit.tech:8000/billing'
 
 type FeatureRouteProps = {
   children: ReactNode
