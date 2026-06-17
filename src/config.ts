@@ -1,1 +1,1 @@
-export const platformBillingUrl = import.meta.env.VITE_PLATFORM_BILLING_URL ?? 'http://loanpawntest.1morebit.tech:8000/billing'
+export const platformBillingUrl = import.meta.env.VITE_PLATFORM_BILLING_URL ?? 'https://loanpawn.1morebit.tech/billing'
