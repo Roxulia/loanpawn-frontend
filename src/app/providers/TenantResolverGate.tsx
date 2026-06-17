@@ -1,19 +1,28 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { TenantResolveErrorPage } from '../../pages/auth/TenantResolveErrorPage'
 import { TenantResolveLoadingPage } from '../../pages/auth/TenantResolveLoadingPage'
+import { tenantAuthService } from '../../services/tenant/authService'
 import { tenantResolverService } from '../../services/tenant/tenantResolverService'
 import { useTenantSession } from '../../contexts/useTenantSession'
 import { getTenantSubdomainFromHost } from '../routes/subdomain'
-
-const publicAppAuthPaths = new Set(['/login', '/sso'])
+import { routePaths } from '../routes/paths'
 
 export function TenantResolverGate({ children }: { children: ReactNode }) {
-  const { tenantResolution, setTenantResolution } = useTenantSession()
+  const {
+    tenantResolution,
+    setAuthStatus,
+    setCurrentUser,
+    setSession,
+    setTenantResolution,
+  } = useTenantSession()
   const hasResolved = useRef(false)
+  const [isClearingPublicAuthRoute, setIsClearingPublicAuthRoute] = useState(false)
 
   const host = window.location.host
   const routePath = window.location.pathname
   const subdomain = useMemo(() => getTenantSubdomainFromHost(host), [host])
+  const isPublicAuthRoute =
+    !subdomain && (routePath === routePaths.login || routePath === routePaths.sso)
 
   useEffect(() => {
     if (hasResolved.current) {
@@ -22,15 +31,25 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
 
     hasResolved.current = true
 
-    if (!subdomain && publicAppAuthPaths.has(routePath)) {
-      if (tenantResolution.status !== 'resolved') {
-        setTenantResolution({
-          status: 'idle',
-          subdomain: null,
-          tenant: null,
-          error: null,
+    if (isPublicAuthRoute) {
+      setIsClearingPublicAuthRoute(true)
+      setAuthStatus('unauthenticated')
+      setCurrentUser(null)
+      setSession(null)
+      setTenantResolution({
+        status: 'idle',
+        subdomain: null,
+        tenant: null,
+        error: null,
+      })
+
+      tenantAuthService.logout()
+        .catch(() => {
+          // Missing or stale auth cookies should not block a fresh login or SSO attempt.
         })
-      }
+        .finally(() => {
+          setIsClearingPublicAuthRoute(false)
+        })
       return
     }
 
@@ -51,6 +70,16 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
         })
       })
       .catch((error: unknown) => {
+        if (!subdomain) {
+          setTenantResolution({
+            status: 'idle',
+            subdomain: null,
+            tenant: null,
+            error: null,
+          })
+          return
+        }
+
         setTenantResolution({
           status: 'failed',
           subdomain,
@@ -58,7 +87,29 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
           error: error instanceof Error ? error.message : 'Tenant could not be resolved.',
         })
       })
-  }, [host, routePath, setTenantResolution, subdomain, tenantResolution.status])
+  }, [
+    host,
+    isPublicAuthRoute,
+    routePath,
+    setAuthStatus,
+    setCurrentUser,
+    setSession,
+    setTenantResolution,
+    subdomain,
+    tenantResolution.status,
+  ])
+
+  if (isClearingPublicAuthRoute) {
+    return <TenantResolveLoadingPage subdomain={null} />
+  }
+
+  if (!hasResolved.current && tenantResolution.status === 'idle') {
+    return <TenantResolveLoadingPage subdomain={subdomain} />
+  }
+
+  if (subdomain && tenantResolution.status === 'idle') {
+    return <TenantResolveLoadingPage subdomain={subdomain} />
+  }
 
   if (tenantResolution.status === 'loading') {
     return <TenantResolveLoadingPage subdomain={tenantResolution.subdomain} />

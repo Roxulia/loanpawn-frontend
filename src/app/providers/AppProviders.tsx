@@ -1,6 +1,7 @@
 import { TenantSessionProvider } from '../../contexts/TenantSessionProvider'
 import { AuthenticationGate } from './AuthenticationGate'
 import { RouteProvider } from './RouteProvider'
+import { TenantLicenseGate } from './TenantLicenseGate'
 import { TenantResolverGate } from './TenantResolverGate'
 
 export function AppProviders() {
@@ -8,7 +9,9 @@ export function AppProviders() {
     <TenantSessionProvider>
       <TenantResolverGate>
         <AuthenticationGate>
-          <RouteProvider />
+          <TenantLicenseGate>
+            <RouteProvider />
+          </TenantLicenseGate>
         </AuthenticationGate>
       </TenantResolverGate>
     </TenantSessionProvider>
