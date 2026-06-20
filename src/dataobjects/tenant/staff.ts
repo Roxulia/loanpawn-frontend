@@ -5,3 +5,8 @@ export type TenantUserCreateResponse = {
     password : string,
     roleName : string
 }
+
+export type TenantRoleOption = {
+    role_id: number
+    role_name: string
+}

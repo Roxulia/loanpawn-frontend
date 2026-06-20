@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
@@ -58,17 +58,13 @@ export function StaffDetailPage() {
         title="Staff Detail"
         subtitle="Review account details and permission access."
         action={
-          <div className="row-actions">
-            <Button onClick={() => navigate(routePaths.staff)} variant="secondary">
-              Back
+          canEdit ? (
+            <Button onClick={() => navigate(routePaths.staffEdit(staffCode))} variant="primary">
+              Edit
             </Button>
-            {canEdit && (
-              <Button onClick={() => navigate(routePaths.staffEdit(staffCode))} variant="primary">
-                Edit
-              </Button>
-            )}
-          </div>
+          ) : null
         }
+        titlePrefix={<Link className="ui-text-link" to={routePaths.staff}>Go back</Link>}
       />
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Staff action failed" tone="danger" />}

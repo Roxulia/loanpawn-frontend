@@ -1,5 +1,5 @@
 import type { PaginatedResult } from '../../../dataobjects/common/api'
-import type { TenantUserCreateResponse } from '../../../dataobjects/tenant/staff';
+import type { TenantRoleOption, TenantUserCreateResponse } from '../../../dataobjects/tenant/staff'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { apiClient } from '../../../services/http/apiClient'
 import type { PermissionCode } from '../../auth'
@@ -27,6 +27,10 @@ export type StaffPermissionPayload = Partial<Record<PermissionCode, boolean>>
 export const staffService = {
   listUsers() {
     return apiClient.get<PaginatedResult<TenantUser>>('/tenant/users')
+  },
+
+  listRoles() {
+    return apiClient.get<TenantRoleOption[]>('/tenant/user-roles')
   },
 
   createUser(payload: StaffPayload) {

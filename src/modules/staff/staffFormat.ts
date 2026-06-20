@@ -13,7 +13,7 @@ export function staffToForm(user: TenantUser): StaffFormState {
     name: user.name,
     nrc: nrcValueFromFields(user),
     phone: user.phone,
-    status: user.status,
+    role_id: String(user.role_id ?? user.roleId ?? ''),
     update_key: user.update_key ?? user.updateKey,
   }
 }

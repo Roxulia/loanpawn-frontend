@@ -1,29 +1,36 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Button, Input, Select } from '../../../components/atoms'
 import { ActionBar, Card, FormField, FormGroup, NrcField } from '../../../components/molecules'
+import type { TenantRoleOption } from '../../../dataobjects/tenant/staff'
 import type { StaffFormErrors, StaffFormState } from './staffFormModel'
 
 type StaffFormProps = {
   errors: StaffFormErrors
+  isLoadingRoles?: boolean
   isSaving: boolean
   mode: 'create' | 'edit'
-  onCancel: () => void
   onChange: <K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) => void
+  onReset: () => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   operationAlert?: ReactNode
+  roleOptions: TenantRoleOption[]
   value: StaffFormState
 }
 
 export function StaffForm({
   errors,
+  isLoadingRoles = false,
   isSaving,
   mode,
-  onCancel,
   onChange,
+  onReset,
   onSubmit,
   operationAlert,
+  roleOptions,
   value,
 }: StaffFormProps) {
+  const isRoleUnavailable = isLoadingRoles || roleOptions.length === 0
+
   return (
     <Card title={mode === 'create' ? 'Staff details' : 'Edit staff details'} description="Keep login and contact details accurate.">
       {operationAlert}
@@ -41,10 +48,20 @@ export function StaffForm({
           <FormField error={errors.phone} id="staff-phone" label="Phone">
             <Input hasError={Boolean(errors.phone)} id="staff-phone" onChange={(event) => onChange('phone', event.target.value)} value={value.phone} />
           </FormField>
-          <FormField error={errors.status} id="staff-status" label="Status">
-            <Select hasError={Boolean(errors.status)} id="staff-status" onChange={(event) => onChange('status', event.target.value)} value={value.status}>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+          <FormField error={errors.role_id} id="staff-role" label="Role">
+            <Select
+              disabled={isRoleUnavailable}
+              hasError={Boolean(errors.role_id)}
+              id="staff-role"
+              onChange={(event) => onChange('role_id', event.target.value)}
+              value={value.role_id}
+            >
+              <option value="">{isLoadingRoles ? 'Loading roles...' : 'Select role'}</option>
+              {roleOptions.map((role) => (
+                <option key={role.role_id} value={role.role_id}>
+                  {role.role_name}
+                </option>
+              ))}
             </Select>
           </FormField>
           <FormField error={errors.address} id="staff-address" label="Address">
@@ -53,10 +70,10 @@ export function StaffForm({
         </FormGroup>
 
         <ActionBar>
-          <Button onClick={onCancel} variant="secondary">
-            Cancel
+          <Button onClick={onReset} variant="secondary">
+            Reset Changes
           </Button>
-          <Button isLoading={isSaving} type="submit" variant="primary">
+          <Button disabled={isRoleUnavailable} isLoading={isSaving} type="submit" variant="primary">
             {mode === 'create' ? 'Create Staff' : 'Save Staff'}
           </Button>
         </ActionBar>

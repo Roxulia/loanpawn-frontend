@@ -7,6 +7,7 @@ export type TenantUser = {
   update_key?: number
   updateKey?: number
   role_id?: number | null
+  roleId?: number | null
   username: string
   name: string
   nrc: string

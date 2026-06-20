@@ -102,9 +102,8 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const { currentUser, session, setCurrentUser, setLocale, setSession, tenantResolution } = useTenantSession()
-  const tenantPlan = tenantResolution.status === 'resolved'
-    ? tenantResolution.tenant.tenant_license.plan_type
-    : null
+  const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
+  const canManageTenantBranding = hasEnabledFeature(tenantResolution, 'tenant_branding')
   const currentLanguage = getUserLocale(currentUser)
 
   const brandingChanged = useMemo(() => hasChanged(branding, brandingInitial), [branding, brandingInitial])
@@ -380,7 +379,7 @@ export function SettingsPage() {
           </ActionBar>
         </Card>
 
-        {tenantPlan === 'premium' && (
+        {canManageTenantBranding && (
           <Card title="Branding Setting">
             <FormGroup columns={3}>
               <FormField id="settings-primary-color" label="Primary Color">
@@ -445,6 +444,7 @@ export function SettingsPage() {
               isSaving={savingSection === 'interest-types'}
               items={interestTypes}
               kind="interest"
+              canManage={canManageMasterData}
               onCancel={() => setInterestForm(emptyTypeForm)}
               onChange={setInterestForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'interest', name: item.name })}
@@ -457,6 +457,7 @@ export function SettingsPage() {
               isSaving={savingSection === 'expense-types'}
               items={expenseTypes}
               kind="expense"
+              canManage={canManageMasterData}
               onCancel={() => setExpenseForm(emptyTypeForm)}
               onChange={setExpenseForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'expense', name: item.name })}
@@ -468,6 +469,7 @@ export function SettingsPage() {
               isSaving={savingSection === 'material-types'}
               items={materialTypes}
               kind="material"
+              canManage={canManageMasterData}
               onCancel={() => setMaterialForm(emptyTypeForm)}
               onChange={setMaterialForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'material', name: item.name })}
@@ -478,9 +480,13 @@ export function SettingsPage() {
         </Card>
 
         <Card title="Tenant Setting">
+          <div className="settings-info-box" role="status">
+            <span>Current default password</span>
+            <strong>{tenantInitial.default_tenant_user_password || '-'}</strong>
+          </div>
           <FormGroup columns={2}>
-            <FormField id="settings-default-password" label="Default Password">
-              <Input id="settings-default-password" minLength={8} type="password" value={tenant.default_tenant_user_password} onChange={(event) => setTenant({ ...tenant, default_tenant_user_password: event.target.value })} />
+            <FormField id="settings-default-password" label="New Default Password">
+              <Input id="settings-default-password" minLength={8} type="password" value="" onChange={(event) => setTenant({ ...tenant, default_tenant_user_password: event.target.value })} />
             </FormField>
           </FormGroup>
           <ActionBar>
@@ -540,6 +546,7 @@ function ColorPickerField({
 }
 
 function TypeDataBlock({
+  canManage,
   form,
   isSaving,
   items,
@@ -551,6 +558,7 @@ function TypeDataBlock({
   title,
   withDuration = false,
 }: {
+  canManage: boolean
   form: TypeForm
   isSaving: boolean
   items: DefaultTypeOption[]
@@ -588,36 +596,53 @@ function TypeDataBlock({
         <Badge tone="info">{items.length}</Badge>
       </header>
       <DataTable
-        actions={(item) => !isBuiltInType(item) && item.code ? (
+        actions={canManage ? (item) => !isBuiltInType(item) && item.code ? (
           <Button onClick={() => onDelete(item)} variant="danger">Delete</Button>
-        ) : null}
+        ) : null : undefined}
         columns={columns}
-        emptyDescription={`Create the first ${typeKindLabel(kind).toLowerCase()} for this tenant.`}
+        emptyDescription={canManage
+          ? `Create the first ${typeKindLabel(kind).toLowerCase()} for this tenant.`
+          : `${title} will appear here when they are available for this tenant.`}
         emptyTitle={`No ${title.toLowerCase()}`}
         getItemId={(item) => item.code ?? item.id}
         getItemTitle={(item) => item.name}
         items={items}
         showEmptyStructure
       />
-      <FormGroup columns={withDuration ? 3 : 2}>
-        <FormField id={`${title}-name`} label="Name">
-          <Input id={`${title}-name`} value={form.name} onChange={(event) => onChange({ ...form, name: event.target.value })} />
-        </FormField>
-        <FormField id={`${title}-code`} label="Code">
-          <Input id={`${title}-code`} value={form.code} onChange={(event) => onChange({ ...form, code: event.target.value })} />
-        </FormField>
-        {withDuration && (
-          <FormField id={`${title}-duration`} label="Duration In Days">
-            <Input id={`${title}-duration`} min="1" type="number" value={form.duration_in_days} onChange={(event) => onChange({ ...form, duration_in_days: event.target.value })} />
-          </FormField>
-        )}
-      </FormGroup>
-      <ActionBar>
-        <Button disabled={!changed || isSaving} onClick={onCancel} variant="secondary">Cancel</Button>
-        <Button disabled={!changed} isLoading={isSaving} onClick={onSave} variant="primary">Save</Button>
-      </ActionBar>
+      {canManage && (
+        <>
+          <FormGroup columns={withDuration ? 3 : 2}>
+            <FormField id={`${title}-name`} label="Name">
+              <Input id={`${title}-name`} value={form.name} onChange={(event) => onChange({ ...form, name: event.target.value })} />
+            </FormField>
+            <FormField id={`${title}-code`} label="Code">
+              <Input id={`${title}-code`} value={form.code} onChange={(event) => onChange({ ...form, code: event.target.value })} />
+            </FormField>
+            {withDuration && (
+              <FormField id={`${title}-duration`} label="Duration In Days">
+                <Input id={`${title}-duration`} min="1" type="number" value={form.duration_in_days} onChange={(event) => onChange({ ...form, duration_in_days: event.target.value })} />
+              </FormField>
+            )}
+          </FormGroup>
+          <ActionBar>
+            <Button disabled={!changed || isSaving} onClick={onCancel} variant="secondary">Cancel</Button>
+            <Button disabled={!changed} isLoading={isSaving} onClick={onSave} variant="primary">Save</Button>
+          </ActionBar>
+        </>
+      )}
     </section>
   )
+}
+
+function hasEnabledFeature(
+  tenantResolution: ReturnType<typeof useTenantSession>['tenantResolution'],
+  featureCode: string,
+) {
+  const feature = tenantResolution.status === 'resolved'
+    ? tenantResolution.tenant.tenant_features?.[featureCode]
+    : null
+
+  return Boolean(feature?.is_active && feature.is_enabled)
 }
 
 function getUserLocale(user: TenantUser | null): UiLocale {

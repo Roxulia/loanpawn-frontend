@@ -441,9 +441,41 @@ p {
   place-items: center;
 }
 
+.auth-shell:has(.auth-login-page) {
+  background:
+    radial-gradient(circle at top right, rgba(0,103,127,.8) 0%, transparent 45%),
+    linear-gradient(135deg, #46636a 0%, #356575 50%, #00677f 100%);
+}
+
 .auth-shell > .ui-card {
   max-width: var(--size-auth-panel-max);
   width: 100%;
+}
+
+.auth-login-page {
+  max-width: var(--size-auth-panel-max);
+  width: 100%;
+}
+
+.auth-login-page > .ui-card {
+  background: rgb(255 255 255 / 18%);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgb(255 255 255 / 32%);
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
+}
+
+.auth-login-page .ui-card__header,
+.auth-login-page .ui-card__body {
+  background: transparent;
+}
+
+.auth-login-page .ui-card__title,
+.auth-login-page .ui-label {
+  color: var(--color-on-primary);
+}
+
+.auth-login-page .ui-card__description {
+  color: rgb(255 255 255 / 78%);
 }
 
 .auth-form {

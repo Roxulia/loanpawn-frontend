@@ -71,55 +71,57 @@ export function LoginPage() {
   }
 
   return (
-    <Card
-      title={resolvedTenant ? `Sign in to ${resolvedTenant.name}` : 'Sign in to LonePawn'}
-      description={
-        resolvedTenant
-          ? `Subdomain ${tenantResolution.subdomain} is verified for this shop.`
-          : 'Use your tenant code and staff credentials.'
-      }
-    >
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <FormGroup columns={1}>
-          {!resolvedTenant && (
-            <FormField id="tenant-code" label="Tenant code">
+    <div className="auth-login-page">
+      <Card
+        title={resolvedTenant ? `Sign in to ${resolvedTenant.name}` : 'Sign in to LonePawn'}
+        description={
+          resolvedTenant
+            ? `Subdomain ${tenantResolution.subdomain} is verified for this shop.`
+            : 'Use your tenant code and staff credentials.'
+        }
+      >
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <FormGroup columns={1}>
+            {!resolvedTenant && (
+              <FormField id="tenant-code" label="Tenant code">
+                <Input
+                  autoComplete="organization"
+                  id="tenant-code"
+                  onChange={(event) => setTenantCode(event.target.value)}
+                  required
+                  value={tenantCode}
+                />
+              </FormField>
+            )}
+            <FormField id="email" label="Email">
               <Input
-                autoComplete="organization"
-                id="tenant-code"
-                onChange={(event) => setTenantCode(event.target.value)}
+                autoComplete="email"
+                id="email"
+                onChange={(event) => setEmail(event.target.value)}
                 required
-                value={tenantCode}
+                type="email"
+                value={email}
               />
             </FormField>
-          )}
-          <FormField id="email" label="Email">
-            <Input
-              autoComplete="email"
-              id="email"
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              type="email"
-              value={email}
-            />
-          </FormField>
-          <FormField id="password" label="Password">
-            <Input
-              autoComplete="current-password"
-              id="password"
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              type="password"
-              value={password}
-            />
-          </FormField>
-        </FormGroup>
+            <FormField id="password" label="Password">
+              <Input
+                autoComplete="current-password"
+                id="password"
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                type="password"
+                value={password}
+              />
+            </FormField>
+          </FormGroup>
 
-        {error && <Alert tone="danger" title="Login failed" message={error} />}
+          {error && <Alert tone="danger" title="Login failed" message={error} />}
 
-        <Button fullWidth isLoading={isSubmitting} type="submit" variant="primary">
-          Sign in
-        </Button>
-      </form>
-    </Card>
+          <Button fullWidth isLoading={isSubmitting} type="submit" variant="primary">
+            Sign in
+          </Button>
+        </form>
+      </Card>
+    </div>
   )
 }

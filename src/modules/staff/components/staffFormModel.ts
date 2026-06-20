@@ -11,7 +11,7 @@ export type StaffFormState = {
   name: string
   nrc: NrcValue
   phone: string
-  status: string
+  role_id: string
   update_key?: number
 }
 
@@ -23,7 +23,7 @@ export const emptyStaffForm: StaffFormState = {
   name: '',
   nrc: emptyNrcValue,
   phone: '',
-  status: 'active',
+  role_id: '',
   update_key: undefined,
 }
 
@@ -46,6 +46,10 @@ export function validateStaffForm(form: StaffFormState) {
     errors.phone = 'Phone is required.'
   }
 
+  if (!form.role_id.trim()) {
+    errors.role_id = 'Role is required.'
+  }
+
   return errors
 }
 
@@ -56,7 +60,7 @@ export function formToStaffPayload(form: StaffFormState) {
     name: form.name.trim(),
     ...nrcValueToPayloadFields(form.nrc),
     phone: form.phone.trim(),
-    status: form.status,
+    role_id: Number(form.role_id),
     update_key: form.update_key,
   }
 }
