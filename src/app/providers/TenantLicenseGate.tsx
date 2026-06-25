@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react'
-import { LoadingState } from '../../components/feedback'
-import { Card } from '../../components/molecules'
 import { useTenantSession } from '../../contexts/useTenantSession'
 import { TenantLicenseExpiredPage } from '../../pages/auth/TenantLicenseExpiredPage'
 
@@ -14,14 +12,8 @@ export function TenantLicenseGate({ children }: { children: ReactNode }) {
     return children
   }
 
-  if (authStatus === 'checking') {
-    return (
-      <main className="auth-shell">
-        <Card title="Checking session" description="Verifying your tenant access with the server.">
-          <LoadingState rows={3} />
-        </Card>
-      </main>
-    )
+  if (authStatus !== 'authenticated') {
+    return children
   }
 
   return <TenantLicenseExpiredPage />

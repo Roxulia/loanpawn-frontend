@@ -21,7 +21,7 @@ import { debtFormToPayload, emptyDebtForm, validateDebtForm, type DebtFormErrors
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
   {
-    header: 'Slip',
+    header: 'Slip code',
     key: 'slip',
     render: (item) => getStringField(item, 'slip_no', 'slipNo') || formatSlipId(item),
   },
@@ -94,7 +94,7 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
         update_key: getNumberField(item ?? {}, 'update_key', 'updateKey') ?? 0,
       })
   },
-  searchPlaceholder: 'Slip number, tag, status, description, or amount',
+  searchPlaceholder: 'Slip code, tag, status, description, or amount',
   subtitle: 'Track unpaid interest and debt records attached to pawn operations.',
   title: 'Debts',
   totalLabel: 'debt',

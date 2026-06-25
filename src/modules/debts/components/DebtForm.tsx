@@ -22,8 +22,8 @@ export function DebtFormFields({ errors, onChange, value }: DebtFormFieldsProps)
       <FormField error={errors.amount} id="debt-amount" label="Amount">
         <Input hasError={Boolean(errors.amount)} id="debt-amount" min="0.01" onChange={(event) => onChange('amount', event.target.value)} step="0.01" type="number" value={value.amount} />
       </FormField>
-      <FormField error={errors.slip_id} helperText="Optional linked slip ID." id="debt-slip-id" label="Slip ID">
-        <Input hasError={Boolean(errors.slip_id)} id="debt-slip-id" onChange={(event) => onChange('slip_id', event.target.value)} type="number" value={value.slip_id} />
+      <FormField error={errors.slip_id} helperText="Optional linked slip code." id="debt-slip-id" label="Slip code">
+        <Input hasError={Boolean(errors.slip_id)} id="debt-slip-id" onChange={(event) => onChange('slip_id', event.target.value)} type="text" value={value.slip_id} />
       </FormField>
       <FormField error={errors.tag} helperText="Example: unpaid_interest" id="debt-tag" label="Tag">
         <Input hasError={Boolean(errors.tag)} id="debt-tag" onChange={(event) => onChange('tag', event.target.value)} value={value.tag} />

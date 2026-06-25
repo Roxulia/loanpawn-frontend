@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { TenantResolveErrorPage } from '../../pages/auth/TenantResolveErrorPage'
 import { TenantResolveLoadingPage } from '../../pages/auth/TenantResolveLoadingPage'
-import { tenantAuthService } from '../../services/tenant/authService'
+import { savedTenantStore } from '../../services/tenant/savedTenantStore'
 import { tenantResolverService } from '../../services/tenant/tenantResolverService'
 import { useTenantSession } from '../../contexts/useTenantSession'
 import { getTenantSubdomainFromHost } from '../routes/subdomain'
@@ -16,7 +16,6 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
     setTenantResolution,
   } = useTenantSession()
   const hasResolved = useRef(false)
-  const [isClearingPublicAuthRoute, setIsClearingPublicAuthRoute] = useState(false)
 
   const host = window.location.host
   const routePath = window.location.pathname
@@ -32,23 +31,49 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
     hasResolved.current = true
 
     if (isPublicAuthRoute) {
-      setIsClearingPublicAuthRoute(true)
+      const activeTenantCode = savedTenantStore.getActiveTenantCode()
+
       setAuthStatus('unauthenticated')
       setCurrentUser(null)
       setSession(null)
+
+      if (!activeTenantCode) {
+        setTenantResolution({
+          status: 'idle',
+          subdomain: null,
+          tenant: null,
+          error: null,
+        })
+        return
+      }
+
       setTenantResolution({
-        status: 'idle',
+        status: 'loading',
         subdomain: null,
         tenant: null,
         error: null,
       })
 
-      tenantAuthService.logout()
-        .catch(() => {
-          // Missing or stale auth cookies should not block a fresh login or SSO attempt.
+      tenantResolverService
+        .resolveByCode(activeTenantCode)
+        .then((tenant) => {
+          savedTenantStore.saveTenantProfile(tenant)
+          savedTenantStore.setActiveTenantCode(tenant.code)
+          setTenantResolution({
+            status: 'resolved',
+            subdomain: null,
+            tenant,
+            error: null,
+          })
         })
-        .finally(() => {
-          setIsClearingPublicAuthRoute(false)
+        .catch(() => {
+          savedTenantStore.clearActiveTenantCode()
+          setTenantResolution({
+            status: 'idle',
+            subdomain: null,
+            tenant: null,
+            error: null,
+          })
         })
       return
     }
@@ -62,6 +87,7 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
     tenantResolverService
       .resolveTenant()
       .then((tenant) => {
+        savedTenantStore.saveTenantProfile(tenant)
         setTenantResolution({
           status: 'resolved',
           subdomain,
@@ -98,14 +124,6 @@ export function TenantResolverGate({ children }: { children: ReactNode }) {
     subdomain,
     tenantResolution.status,
   ])
-
-  if (isClearingPublicAuthRoute) {
-    return <TenantResolveLoadingPage subdomain={null} />
-  }
-
-  if (!hasResolved.current && tenantResolution.status === 'idle') {
-    return <TenantResolveLoadingPage subdomain={subdomain} />
-  }
 
   if (subdomain && tenantResolution.status === 'idle') {
     return <TenantResolveLoadingPage subdomain={subdomain} />

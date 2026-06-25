@@ -483,6 +483,83 @@ p {
   gap: var(--space-4);
 }
 
+.tenant-access {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.tenant-access__actions {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.tenant-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tenant-list-item {
+  align-items: center;
+  background: rgb(255 255 255 / 16%);
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: var(--space-2);
+}
+
+.tenant-list-item__select {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--color-on-primary);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: var(--size-control-height);
+  min-width: 0;
+  padding: var(--space-2);
+  text-align: left;
+}
+
+.tenant-list-item__select:hover {
+  background: rgb(255 255 255 / 12%);
+  border-radius: var(--radius-sm);
+}
+
+.tenant-list-item__mark {
+  align-items: center;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-on-primary);
+  display: inline-flex;
+  font-weight: var(--font-weight-bold);
+  height: 2.5rem;
+  justify-content: center;
+  width: 2.5rem;
+}
+
+.tenant-list-item__content {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.tenant-list-item__content strong,
+.tenant-list-item__content small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-list-item__content small {
+  color: rgb(255 255 255 / 74%);
+}
+
 .auth-panel {
   max-width: var(--size-auth-panel-max);
   width: 100%;
@@ -601,6 +678,21 @@ p {
 
   .button {
     width: 100%;
+  }
+
+  .tenant-access__actions,
+  .tenant-list-item {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-list-item__select {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .tenant-list-item__select .ui-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 
   .row-actions {
