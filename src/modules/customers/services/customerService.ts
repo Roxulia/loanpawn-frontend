@@ -27,6 +27,14 @@ export type TenantCustomer = {
   address?: string | null
   trustScore?: number
   trust_score?: number
+  displayTrustScore?: number
+  display_trust_score?: number
+  activeSlipCount?: number
+  active_slip_count?: number
+  primaryLocation?: string
+  primary_location?: string
+  lastActivity?: TenantCustomerLastActivity
+  last_activity?: TenantCustomerLastActivity
   note?: string | null
   created_by?: number | null
   createdBy?: number | null
@@ -36,8 +44,27 @@ export type TenantCustomer = {
   deletedAt?: string | null
 }
 
+export type TenantCustomerLastActivity = {
+  date?: string | null
+  status: string
+  label: string
+  tone: 'success' | 'danger' | 'neutral' | 'warning' | 'info' | string
+}
+
+export type TenantCustomerListSummary = {
+  totalClients?: number
+  total_clients?: number
+  averageTrustScore?: number
+  average_trust_score?: number
+  activePawnLoans?: number
+  active_pawn_loans?: number
+  riskFlagged?: number
+  risk_flagged?: number
+}
+
 export type TenantCustomerListPage = {
   items: TenantCustomer[]
+  summary?: TenantCustomerListSummary
   currentPage?: number
   current_page?: number
   lastPage?: number
