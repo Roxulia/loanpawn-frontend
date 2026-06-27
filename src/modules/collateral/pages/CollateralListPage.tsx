@@ -127,11 +127,27 @@ export function CollateralListPage() {
   }
 
   return (
-    <section className="page">
-      <SectionHeader
-        title="Collateral"
-        subtitle="Review registered collateral items and remove invalid records."
-      />
+    <section className="page ops-page ops-page--register">
+      <div className="ops-hero">
+        <SectionHeader
+          title="Collateral"
+          subtitle="Review registered collateral items and remove invalid records."
+        />
+        <div className="ops-metrics" aria-label="Collateral register summary">
+          <div className="ops-metric">
+            <span>Total items</span>
+            <strong>{formatNumber(total)}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>Visible records</span>
+            <strong>{formatNumber(items.length)}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>Current page</span>
+            <strong>{currentPage}/{lastPage}</strong>
+          </div>
+        </div>
+      </div>
 
       <Card title="Collateral items" description={`${total} total collateral item${total === 1 ? '' : 's'}`}>
         <div className="customer-management">
@@ -204,6 +220,10 @@ export function CollateralListPage() {
       />
     </section>
   )
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('en-US').format(value)
 }
 
 function getPageValue(

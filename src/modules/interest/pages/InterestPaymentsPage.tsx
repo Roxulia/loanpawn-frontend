@@ -179,12 +179,28 @@ export function InterestPaymentsPage() {
   ]
 
   return (
-    <section className="page">
-      <SectionHeader title="Interest Payments" subtitle="Calculate due interest, record payment, and create debt when needed." />
+    <section className="page ops-page ops-page--cashier">
+      <div className="ops-hero">
+        <SectionHeader title="Interest Payments" subtitle="Calculate due interest, record payment, and create debt when needed." />
+        <div className="ops-metrics" aria-label={t('Interest payment summary')}>
+          <div className="ops-metric ops-metric--amount">
+            <span>Total interest</span>
+            <strong>{formatMoney(totalInterest)}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>Accrual rows</span>
+            <strong>{rows.length}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>History total</span>
+            <strong>{formatNumber(total)}</strong>
+          </div>
+        </div>
+      </div>
 
-      <div className="module-tabs" role="tablist" aria-label={t('Interest payment sections')}>
-        <Button onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
-        <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
+      <div className="module-tabs ops-tabs" role="tablist" aria-label={t('Interest payment sections')}>
+        <Button aria-pressed={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
+        <Button aria-pressed={activeTab === 'history'} onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
       </div>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Interest action failed" tone="danger" />}
@@ -193,50 +209,54 @@ export function InterestPaymentsPage() {
       {activeTab === 'workflow' ? (
         <div className="workflow-stack">
           <Card title="Slip Lookup">
-            <form className="inline-form" onSubmit={(event) => void handleCalculate(event)}>
+            <form className="inline-form ops-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
               <FormField id="interest-slip-no" label="Slip Number or Barcode">
                 <Input id="interest-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
               </FormField>
               <Button isLoading={isCalculating} type="submit" variant="primary">Load Slip</Button>
             </form>
-            {calculation && (
-              <KeyValueList items={[
-                { key: 'Slip No', value: normalizedSlipNo },
-                { key: 'Current Date', value: formatDate(calculation.currentDate ?? calculation.current_date) },
-                { key: 'Total Interest', value: formatMoney(totalInterest) },
-              ]} />
-            )}
           </Card>
 
-          <Card title="Accrual Breakdown">
-            <DataTable
-              columns={columns}
-              emptyDescription={calculation ? 'No unpaid interest is due for this slip.' : 'Load a slip to calculate due interest.'}
-              emptyTitle={calculation ? 'No interest due' : 'No calculation yet'}
-              getItemId={(row) => row.id}
-              getItemTitle={(row) => `${formatDate(row.start_date)} to ${formatDate(row.end_date)}`}
-              items={rows}
-            />
-          </Card>
+          {calculation && (
+            <div className="ops-post-lookup-grid">
+              <Card title="Accrual Breakdown">
+                <div className="ops-amount-panel ops-amount-panel--summary">
+                  <KeyValueList items={[
+                    { key: 'Slip No', value: normalizedSlipNo },
+                    { key: 'Current Date', value: formatDate(calculation.currentDate ?? calculation.current_date) },
+                    { key: 'Total Interest', value: formatMoney(totalInterest) },
+                  ]} />
+                </div>
+                <DataTable
+                  columns={columns}
+                  emptyDescription="No unpaid interest is due for this slip."
+                  emptyTitle="No interest due"
+                  getItemId={(row) => row.id}
+                  getItemTitle={(row) => `${formatDate(row.start_date)} to ${formatDate(row.end_date)}`}
+                  items={rows}
+                />
+              </Card>
 
-          <Card title="Record Payment">
-            <form className="workflow-stack" onSubmit={handlePaymentSubmit}>
-              <FormField id="interest-payment-amount" label="Payment Amount">
-                <Input id="interest-payment-amount" min="0.01" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
-              </FormField>
-              <label className="checkbox-line">
-                <input checked={recordDebt} onChange={(event) => setRecordDebt(event.target.checked)} type="checkbox" />
-                <span><LocalizedText text="Create debt if payment is insufficient" /></span>
-              </label>
-              {isInsufficient && !recordDebt && (
-                <Alert message="Payment is less than calculated interest. Confirm debt recording before submitting." title="Insufficient payment" tone="warning" />
-              )}
-              <ActionBar>
-                <Button onClick={() => { setPaymentAmount(''); setRecordDebt(false); setPaymentResult(null) }} variant="secondary">Reset</Button>
-                <Button disabled={!calculation} isLoading={isPaying} type="submit" variant="primary">Record Payment</Button>
-              </ActionBar>
-            </form>
-          </Card>
+              <Card title="Record Payment">
+                <form className="workflow-stack" onSubmit={handlePaymentSubmit}>
+                  <FormField id="interest-payment-amount" label="Payment Amount">
+                    <Input id="interest-payment-amount" min="0.01" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
+                  </FormField>
+                  <label className="checkbox-line">
+                    <input checked={recordDebt} onChange={(event) => setRecordDebt(event.target.checked)} type="checkbox" />
+                    <span><LocalizedText text="Create debt if payment is insufficient" /></span>
+                  </label>
+                  {isInsufficient && !recordDebt && (
+                    <Alert message="Payment is less than calculated interest. Confirm debt recording before submitting." title="Insufficient payment" tone="warning" />
+                  )}
+                  <ActionBar>
+                    <Button onClick={() => { setPaymentAmount(''); setRecordDebt(false); setPaymentResult(null) }} variant="secondary">Reset</Button>
+                    <Button disabled={!calculation} isLoading={isPaying} type="submit" variant="primary">Record Payment</Button>
+                  </ActionBar>
+                </form>
+              </Card>
+            </div>
+          )}
         </div>
       ) : (
         <Card title="Interest History" description={`${total} total payment${total === 1 ? '' : 's'}`}>
@@ -285,6 +305,10 @@ export function InterestPaymentsPage() {
       </Modal>
     </section>
   )
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('en-US').format(value)
 }
 
 function getBreakdown(calculation: InterestCalculationResult | null) {

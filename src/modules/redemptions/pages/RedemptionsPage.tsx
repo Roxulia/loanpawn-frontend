@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { Button, Input, Textarea } from '../../../components/atoms'
+import { Badge, Button, Input, Textarea } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
 import { ActionBar, Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
@@ -165,12 +165,28 @@ export function RedemptionsPage() {
   ]
 
   return (
-    <section className="page">
-      <SectionHeader title="Redemptions" subtitle="Calculate redemption totals, receive payment, and review redemption records." />
+    <section className="page ops-page ops-page--settlement">
+      <div className="ops-hero">
+        <SectionHeader title="Redemptions" subtitle="Calculate redemption totals, receive payment, and review redemption records." />
+        <div className="ops-metrics" aria-label={t('Redemption summary')}>
+          <div className="ops-metric ops-metric--amount">
+            <span>Total to pay</span>
+            <strong>{formatMoney(totalToPay)}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>Change</span>
+            <strong>{formatMoney(changeAmount)}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>History total</span>
+            <strong>{formatNumber(total)}</strong>
+          </div>
+        </div>
+      </div>
 
-      <div className="module-tabs" role="tablist" aria-label={t('Redemption sections')}>
-        <Button onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
-        <Button onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
+      <div className="module-tabs ops-tabs" role="tablist" aria-label={t('Redemption sections')}>
+        <Button aria-pressed={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
+        <Button aria-pressed={activeTab === 'history'} onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
       </div>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Redemption action failed" tone="danger" />}
@@ -179,42 +195,55 @@ export function RedemptionsPage() {
       {activeTab === 'workflow' ? (
         <div className="workflow-stack">
           <Card title="Slip Lookup">
-            <form className="inline-form" onSubmit={(event) => void handleCalculate(event)}>
+            <form className="inline-form ops-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
               <FormField id="redemption-slip-no" label="Slip Number or Barcode">
                 <Input id="redemption-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
               </FormField>
               <Button isLoading={isCalculating} type="submit" variant="primary">Load Detail</Button>
             </form>
-            {calculation && <RedemptionSummary calculation={calculation} />}
           </Card>
 
-          <Card title="Receive Payment">
-            <form className="workflow-stack" onSubmit={(event) => void handleRedeem(event)}>
-              <div className="form-grid-compact">
-                <FormField id="redemption-payment" label="Payment Amount">
-                  <Input id="redemption-payment" min="0" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
-                </FormField>
-                <FormField id="redemption-date" label="Redemption Date">
-                  <Input id="redemption-date" type="date" value={redemptionDate} onChange={(event) => setRedemptionDate(event.target.value)} />
-                </FormField>
-              </div>
-              <FormField id="redemption-notes" label="Notes">
-                <Textarea id="redemption-notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
-              </FormField>
-              <KeyValueList items={[
-                { key: 'Total Amount To Pay', value: formatMoney(totalToPay) },
-                { key: 'Received', value: formatMoney(paymentAmount) },
-                { key: 'Change', value: formatMoney(changeAmount) },
-              ]} />
-              <ActionBar>
-                <Button onClick={() => { resetRedemptionForm(); setRedemptionResult(null) }} variant="secondary">Reset</Button>
-                <Button disabled={!calculation} isLoading={isRedeeming} type="submit" variant="primary">Redeem</Button>
-              </ActionBar>
-            </form>
-          </Card>
+          {calculation && (
+            <div className="ops-post-lookup-grid">
+              <Card title="Redemption Detail">
+                <RedemptionSummary calculation={calculation} />
+              </Card>
+
+              <Card title="Receive Payment">
+                <form className="workflow-stack" onSubmit={(event) => void handleRedeem(event)}>
+                  <div className="form-grid-compact">
+                    <FormField id="redemption-payment" label="Payment Amount">
+                      <Input id="redemption-payment" min="0" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
+                    </FormField>
+                    <FormField id="redemption-date" label="Redemption Date">
+                      <Input id="redemption-date" type="date" value={redemptionDate} onChange={(event) => setRedemptionDate(event.target.value)} />
+                    </FormField>
+                  </div>
+                  <FormField id="redemption-notes" label="Notes">
+                    <Textarea id="redemption-notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
+                  </FormField>
+                  <div className="ops-amount-panel">
+                    <KeyValueList items={[
+                      { key: 'Total Amount To Pay', value: formatMoney(totalToPay) },
+                      { key: 'Received', value: formatMoney(paymentAmount) },
+                      { key: 'Change', value: formatMoney(changeAmount) },
+                    ]} />
+                  </div>
+                  <ActionBar>
+                    <Button onClick={() => { resetRedemptionForm(); setRedemptionResult(null) }} variant="secondary">Reset</Button>
+                    <Button disabled={!calculation} isLoading={isRedeeming} type="submit" variant="primary">Redeem</Button>
+                  </ActionBar>
+                </form>
+                <div className="redemption-caution">
+                  <strong><LocalizedText text="Before finalizing" /></strong>
+                  <span><LocalizedText text="Inspect returned collateral before redeeming. Redeem will permanently update this slip." /></span>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="split-workspace">
+        <div className="split-workspace ops-history-workspace">
           <Card title="Redemption History" description={`${total} total redemption${total === 1 ? '' : 's'}`}>
             <DataTable
               columns={historyColumns}
@@ -251,22 +280,48 @@ export function RedemptionsPage() {
   )
 }
 
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('en-US').format(value)
+}
+
 function RedemptionSummary({ calculation }: { calculation: RedemptionCalculationResult }) {
   const interestPayments = getInterestPayments(calculation)
   const unpaidDebts = getUnpaidDebts(calculation)
 
   return (
-    <div className="workflow-stack">
-      <KeyValueList items={[
-        { key: 'Slip No', value: calculation.slip.slip_no },
-        { key: 'Customer', value: calculation.customer?.name ?? getSlipCustomerName(calculation.slip) },
-        { key: 'Loan Amount', value: formatMoney(calculation.loan_amount) },
-        { key: 'Interest', value: formatMoney(calculation.calculated_interest) },
-        { key: 'Debt', value: formatMoney(calculation.total_debt) },
-        { key: 'Total Amount To Pay', value: formatMoney(calculation.total_amount_to_pay) },
-      ]} />
-      <section className="detail-list">
-        <strong><LocalizedText text="Collateral Summary" /></strong>
+    <div className="redemption-detail-panel">
+      <div className="redemption-summary-grid">
+        <div>
+          <span>Slip No</span>
+          <strong>{calculation.slip.slip_no}</strong>
+        </div>
+        <div>
+          <span>Customer</span>
+          <strong>{calculation.customer?.name ?? getSlipCustomerName(calculation.slip)}</strong>
+        </div>
+        <div>
+          <span>Loan Amount</span>
+          <strong>{formatMoney(calculation.loan_amount)}</strong>
+        </div>
+        <div>
+          <span>Interest</span>
+          <strong>{formatMoney(calculation.calculated_interest)}</strong>
+        </div>
+        <div>
+          <span>Debt</span>
+          <strong>{formatMoney(calculation.total_debt)}</strong>
+        </div>
+        <div className="redemption-summary-grid__total">
+          <span>Total Amount To Pay</span>
+          <strong>{formatMoney(calculation.total_amount_to_pay)}</strong>
+        </div>
+      </div>
+
+      <section className="redemption-snapshot-section">
+        <header>
+          <strong><LocalizedText text="Collateral Summary" /></strong>
+          <span>{(calculation.collateral_items ?? calculation.slip.items ?? []).length} item(s)</span>
+        </header>
         {(calculation.collateral_items ?? calculation.slip.items ?? []).length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
           <DataTable
             columns={[
@@ -281,14 +336,19 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
           />
         )}
       </section>
-      <section className="detail-list">
-        <strong><LocalizedText text="Interest Snapshot" /></strong>
+
+      <section className="redemption-snapshot-section">
+        <header>
+          <strong><LocalizedText text="Interest Snapshot" /></strong>
+          <span>{interestPayments.length} row(s)</span>
+        </header>
         {interestPayments.length === 0 ? <p className="muted"><LocalizedText text="No interest rows returned." /></p> : (
           <DataTable
             columns={[
               { header: 'Start Date', key: 'start', render: (payment) => formatDate(getInterestStartDate(payment)) },
               { header: 'End Date', key: 'end', render: (payment) => formatDate(getInterestEndDate(payment)) },
               { header: 'Interest', key: 'interest', render: (payment) => formatMoney(getInterestAmount(payment)) },
+              { header: 'Status', key: 'status', render: (payment) => <Badge tone={isInterestPaid(payment) ? 'success' : 'warning'}>{isInterestPaid(payment) ? 'Paid' : 'Unpaid'}</Badge> },
             ]}
             getItemId={(payment) => payment.id}
             getItemTitle={(payment) => `${formatDate(getInterestStartDate(payment))} - ${formatDate(getInterestEndDate(payment))}`}
@@ -296,8 +356,12 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
           />
         )}
       </section>
-      <section className="detail-list">
-        <strong><LocalizedText text="Debt Snapshot" /></strong>
+
+      <section className="redemption-snapshot-section">
+        <header>
+          <strong><LocalizedText text="Debt Snapshot" /></strong>
+          <span>{unpaidDebts.length} unpaid</span>
+        </header>
         {unpaidDebts.length === 0 ? <p className="muted"><LocalizedText text="No unpaid debts returned." /></p> : (
           <DataTable
             columns={[
@@ -367,6 +431,10 @@ function getInterestPayments(calculation: RedemptionCalculationResult | null) {
 
 function getUnpaidDebts(calculation: RedemptionCalculationResult | null) {
   return (calculation?.debts ?? []).filter((debt) => !(debt.is_paid ?? debt.isPaid ?? false))
+}
+
+function isInterestPaid(payment: RedemptionInterestPayment) {
+  return Boolean(payment.is_paid ?? payment.isPaid ?? false)
 }
 
 function getInterestUpdateKey(payment: RedemptionInterestPayment) {

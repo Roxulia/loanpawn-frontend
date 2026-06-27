@@ -1,7 +1,11 @@
+# Notes
+- Do not run dev server if i dont command.
 
 ## UI Redesign Workflow
 
 When the user asks to redesign a page or work with UI:
+
+Only do the following if user didn't give you reference UI or UI description.
 
 1. Inspect the existing React page/component using filesystem access.
 2. Identify:
@@ -20,12 +24,12 @@ When the user asks to redesign a page or work with UI:
    - current user workflow
 
 3. Build a Stitch design prompt containing:
+   - current UI composition detail
    - screen purpose
    - data request/response examples
    - UI workflow
    - layout requirements
    - design style
-   - Tailwind-friendly structure
    - responsive behavior
 
 4. Use Stitch MCP to generate the redesigned UI.
@@ -55,3 +59,4 @@ When the user asks to redesign a page or work with UI:
 - Do not change backend endpoints.
 - Do not change permission logic.
 - Do not change validation rules unless explicitly requested.
+- Do not run dev server if i dont command.

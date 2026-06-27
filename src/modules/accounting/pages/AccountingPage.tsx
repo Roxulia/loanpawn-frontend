@@ -1,163 +1,94 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Badge, Button, Input } from '../../../components/atoms'
-import { Alert } from '../../../components/feedback'
-import { Card, FormField, SectionHeader } from '../../../components/molecules'
-import { DataTable, type DataTableColumn } from '../../../components/organisms'
-import type { PaginatedResult } from '../../../dataobjects/common/api'
-import type { AccountingLedger, AccountingLedgerEntry, AccountingTransaction } from '../../../dataobjects/tenant/finance'
+import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
+import { FormField, SearchField } from '../../../components/molecules'
+import { Modal } from '../../../components/organisms'
+import type { AccountingOverview, AccountingTransaction } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { usePermissions } from '../../auth'
 import {
-  formatDate,
   formatMoney,
-  getNumberField,
   getStringField,
   transactionTypeLabel,
 } from '../../finance/financeFormat'
 
 const perPage = 10
 const today = new Date().toISOString().slice(0, 10)
-
-const transactionColumns: Array<DataTableColumn<AccountingTransaction>> = [
-  {
-    header: 'Time',
-    key: 'created',
-    render: (item) => formatDate(getStringField(item, 'created_at', 'createdAt')),
-  },
-  {
-    header: 'Description',
-    key: 'description',
-    render: (item) => <strong>{item.description}</strong>,
-  },
-  {
-    header: 'Amount',
-    key: 'amount',
-    render: (item) => formatMoney(item.amount),
-  },
-  {
-    header: 'Reference',
-    key: 'reference',
-    render: (item) => formatReference(item),
-  },
-]
-
-const ledgerColumns: Array<DataTableColumn<AccountingLedgerEntry>> = [
-  {
-    header: 'Date',
-    key: 'date',
-    render: (item) => formatDate(getStringField(item, 'created_at', 'createdAt')),
-  },
-  {
-    header: 'Description',
-    key: 'description',
-    render: (item) => <strong>{item.description}</strong>,
-  },
-  {
-    header: 'Reference',
-    key: 'reference',
-    render: (item) => formatReference(item),
-  },
-  {
-    header: 'Debit',
-    key: 'debit',
-    render: (item) => formatMoney(item.debit),
-  },
-  {
-    header: 'Credit',
-    key: 'credit',
-    render: (item) => formatMoney(item.credit),
-  },
-  {
-    header: 'Balance',
-    key: 'balance',
-    render: (item) => <strong>{formatMoney(item.balance)}</strong>,
-  },
-]
+const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
 
 export function AccountingPage() {
   const { hasPermission } = usePermissions()
   const canList = hasPermission('list_accounting')
-  const [incoming, setIncoming] = useState<AccountingTransaction[]>([])
-  const [outgoing, setOutgoing] = useState<AccountingTransaction[]>([])
-  const [incomingPage, setIncomingPage] = useState(1)
-  const [outgoingPage, setOutgoingPage] = useState(1)
-  const [incomingMeta, setIncomingMeta] = useState({ lastPage: 1, total: 0 })
-  const [outgoingMeta, setOutgoingMeta] = useState({ lastPage: 1, total: 0 })
-  const [startDate, setStartDate] = useState(today)
+  const [overview, setOverview] = useState<AccountingOverview | null>(null)
+  const [transactions, setTransactions] = useState<AccountingTransaction[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [lastPage, setLastPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [startDate, setStartDate] = useState(monthStart)
   const [endDate, setEndDate] = useState(today)
-  const [ledgerPage, setLedgerPage] = useState(1)
-  const [ledger, setLedger] = useState<AccountingLedger | null>(null)
-  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadTodayTransactions = useCallback(async () => {
+  const loadAccounting = useCallback(async (page: number, search = debouncedSearchTerm) => {
     if (!canList) {
-      setIncoming([])
-      setOutgoing([])
+      setOverview(null)
+      setTransactions([])
+      setCurrentPage(1)
+      setLastPage(1)
+      setTotal(0)
       return
     }
 
-    setIsLoadingTransactions(true)
+    setIsLoading(true)
     setError(null)
 
     try {
-      const [incomingResponse, outgoingResponse] = await Promise.all([
-        tenantResourceService.listIncomingAccounting({ page: incomingPage, perPage }),
-        tenantResourceService.listOutgoingAccounting({ page: outgoingPage, perPage }),
+      const [overviewResponse, transactionResponse] = await Promise.all([
+        tenantResourceService.getAccountingOverview(),
+        tenantResourceService.listAccounting({ page, perPage, search }),
       ])
 
-      setIncoming(incomingResponse.items)
-      setOutgoing(outgoingResponse.items)
-      setIncomingMeta(readPageMeta(incomingResponse))
-      setOutgoingMeta(readPageMeta(outgoingResponse))
+      setOverview(overviewResponse)
+      setTransactions(transactionResponse.items)
+      setCurrentPage(transactionResponse.current_page ?? page)
+      setLastPage(transactionResponse.last_page ?? 1)
+      setTotal(transactionResponse.total)
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load today transactions.')
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load accounting ledger.')
     } finally {
-      setIsLoadingTransactions(false)
+      setIsLoading(false)
     }
-  }, [canList, incomingPage, outgoingPage])
-
-  const generateLedger = useCallback(async (page = ledgerPage) => {
-    if (!canList) {
-      return
-    }
-
-    if (!startDate || !endDate) {
-      setError('Choose both start date and end date.')
-      return
-    }
-
-    setIsGenerating(true)
-    setError(null)
-
-    try {
-      const response = await tenantResourceService.generateAccountingLedger({
-        endDate,
-        page,
-        perPage,
-        startDate,
-      })
-      setLedger(response)
-      setLedgerPage(getPageValue(response, 'currentPage', 'current_page', page))
-    } catch (ledgerError) {
-      setError(ledgerError instanceof Error ? ledgerError.message : 'Unable to generate ledger.')
-    } finally {
-      setIsGenerating(false)
-    }
-  }, [canList, endDate, ledgerPage, startDate])
+  }, [canList, debouncedSearchTerm])
 
   useEffect(() => {
-    void loadTodayTransactions()
-  }, [loadTodayTransactions])
+    const searchTimer = window.setTimeout(() => {
+      setCurrentPage(1)
+      setDebouncedSearchTerm(searchTerm.trim())
+    }, 300)
 
-  const ledgerLastPage = ledger ? getPageValue(ledger, 'lastPage', 'last_page', 1) : 1
-  const ledgerTotal = ledger?.total ?? 0
-  const ledgerEntries = useMemo(() => ledger?.entries ?? [], [ledger])
+    return () => window.clearTimeout(searchTimer)
+  }, [searchTerm])
 
-  async function downloadLedger() {
-    if (!ledger || !startDate || !endDate) {
+  useEffect(() => {
+    void loadAccounting(currentPage, debouncedSearchTerm)
+  }, [currentPage, debouncedSearchTerm, loadAccounting])
+
+  useEffect(() => {
+    const refreshTimer = window.setInterval(() => {
+      void loadAccounting(currentPage, debouncedSearchTerm)
+    }, 300000)
+
+    return () => window.clearInterval(refreshTimer)
+  }, [currentPage, debouncedSearchTerm, loadAccounting])
+
+  async function generateReport() {
+    if (!startDate || !endDate) {
+      setError('Choose both start date and end date.')
       return
     }
 
@@ -175,191 +106,294 @@ export function AccountingPage() {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (downloadError) {
-      setError(downloadError instanceof Error ? downloadError.message : 'Unable to download ledger.')
+      setError(downloadError instanceof Error ? downloadError.message : 'Unable to download ledger report.')
     } finally {
       setIsDownloading(false)
     }
   }
 
   return (
-    <section className="page accounting-page">
-      <SectionHeader
-        title="Accounting"
-        subtitle="Review today's incoming and outgoing transactions, then generate a general ledger by date range."
-        action={<Badge tone="info">General ledger</Badge>}
-      />
+    <section className="page accounting-page accounting-serene-page">
+      <header className="accounting-serene-header">
+        <div>
+          <span className="eyebrow">Finance / Ledger</span>
+          <h1>Accounting Ledger</h1>
+          <p>Monitor capital movement, verify ledger activity, and export date-range accounting reports.</p>
+        </div>
+      </header>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Accounting action failed" tone="danger" />}
 
-      <div className="accounting-page__transactions">
-        <TransactionTable
-          currentPage={incomingPage}
-          emptyTitle="No incoming transactions"
-          isLoading={isLoadingTransactions}
-          items={incoming}
-          lastPage={incomingMeta.lastPage}
-          onNext={() => setIncomingPage((page) => page + 1)}
-          onPrevious={() => setIncomingPage((page) => page - 1)}
-          title="Incoming Transactions Today"
-          total={incomingMeta.total}
-          type="incoming"
+      <section className="accounting-serene-metrics" aria-label="Accounting overview">
+        <AccountingMetricCard
+          icon={<VaultIcon />}
+          label="System Vault"
+          meta="Total Liquid Capital"
+          trend="Live ledger balance"
+          value={formatMoney(getOverviewNumber(overview, 'liquidCapital', 'liquid_capital'))}
+          variant="primary"
         />
-        <TransactionTable
-          currentPage={outgoingPage}
-          emptyTitle="No outgoing transactions"
-          isLoading={isLoadingTransactions}
-          items={outgoing}
-          lastPage={outgoingMeta.lastPage}
-          onNext={() => setOutgoingPage((page) => page + 1)}
-          onPrevious={() => setOutgoingPage((page) => page - 1)}
-          title="Outgoing Transactions Today"
-          total={outgoingMeta.total}
-          type="outgoing"
+        <AccountingMetricCard
+          label="Incoming Flows"
+          meta={`${formatPercent(getOverviewNumber(overview, 'incomingProgress', 'incoming_progress'))} of monthly flow`}
+          progress={getOverviewNumber(overview, 'incomingProgress', 'incoming_progress')}
+          value={formatMoney(getOverviewNumber(overview, 'monthIncoming', 'month_incoming'))}
+          variant="incoming"
         />
-      </div>
+        <AccountingMetricCard
+          label="Operational Outgo"
+          meta={`${formatPercent(getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress'))} of monthly movement`}
+          progress={getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress')}
+          value={formatMoney(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'))}
+          variant="outgoing"
+        />
+      </section>
 
-      <Card
-        title="Generate Ledger"
-        description="Rows are shown in general ledger format with debit, credit, and running balance."
-        action={
-          ledger ? (
-            <Button isLoading={isDownloading} onClick={() => void downloadLedger()} variant="secondary">
-              Download Excel
+      <section className="accounting-serene-controls" aria-label="Accounting filters">
+        <SearchField
+          id="ledger-search"
+          label="Search ledger"
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search ledger..."
+          value={searchTerm}
+        />
+        <Button
+          aria-label="Filter report dates"
+          className="ui-button--icon accounting-serene-icon-button"
+          onClick={() => setIsFilterModalOpen(true)}
+          title="Filter report dates"
+          variant="secondary"
+        >
+          <FilterIcon />
+        </Button>
+        <Button
+          aria-label="Download ledger report"
+          className="ui-button--icon accounting-serene-icon-button"
+          isLoading={isDownloading}
+          onClick={() => void generateReport()}
+          title="Download ledger report"
+          variant="primary"
+        >
+          <DownloadIcon />
+        </Button>
+      </section>
+
+      <section className="accounting-serene-ledger" aria-label="Recent transactions">
+        <header className="accounting-serene-ledger__header">
+          <div>
+            <h2>Recent Transactions</h2>
+            <p>{total} ledger record{total === 1 ? '' : 's'}</p>
+          </div>
+          <Badge tone="info">Verified ledger</Badge>
+        </header>
+
+        {isLoading ? (
+          <LoadingState rows={6} />
+        ) : transactions.length === 0 ? (
+          <EmptyState
+            description={debouncedSearchTerm ? 'No ledger records match this search.' : 'No accounting records have been posted yet.'}
+            title={debouncedSearchTerm ? 'No matching transactions' : 'No transactions'}
+          />
+        ) : (
+          <>
+            <div className="accounting-serene-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Entity</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Verification</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((transaction) => (
+                    <TransactionRow item={transaction} key={transaction.id} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <footer className="accounting-serene-pagination">
+              <span>Page {currentPage} of {lastPage} - {total} records</span>
+              <div>
+                <Button disabled={currentPage <= 1} onClick={() => setCurrentPage((page) => page - 1)} variant="secondary">
+                  Previous
+                </Button>
+                <Button disabled={currentPage >= lastPage} onClick={() => setCurrentPage((page) => page + 1)} variant="secondary">
+                  Next
+                </Button>
+              </div>
+            </footer>
+          </>
+        )}
+      </section>
+
+      <Modal
+        footer={(
+          <>
+            <Button onClick={() => setIsFilterModalOpen(false)} variant="secondary">
+              Close
             </Button>
-          ) : null
-        }
+            <Button onClick={() => setIsFilterModalOpen(false)} variant="primary">
+              Apply Filter
+            </Button>
+          </>
+        )}
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        title="Filter report dates"
       >
-        <div className="accounting-page__ledger-controls">
-          <FormField id="ledger-start-date" label="Start date">
+        <div className="accounting-serene-filter-modal">
+          <FormField id="ledger-start-date" label="From date">
             <Input id="ledger-start-date" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
           </FormField>
-          <FormField id="ledger-end-date" label="End date">
+          <FormField id="ledger-end-date" label="To date">
             <Input id="ledger-end-date" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
           </FormField>
-          <Button isLoading={isGenerating} onClick={() => void generateLedger(1)} variant="primary">
-            Generate Ledger
-          </Button>
         </div>
-
-        {ledger && (
-          <div className="accounting-page__ledger-summary">
-            <Badge tone="info">Opening {formatMoney(getNumberValue(ledger, 'openingBalance', 'opening_balance'))}</Badge>
-            <Badge tone="success">Debit {formatMoney(getNumberValue(ledger, 'totalDebit', 'total_debit'))}</Badge>
-            <Badge tone="warning">Credit {formatMoney(getNumberValue(ledger, 'totalCredit', 'total_credit'))}</Badge>
-            <Badge tone="info">Final {formatMoney(getNumberValue(ledger, 'finalBalance', 'final_balance'))}</Badge>
-          </div>
-        )}
-
-        <DataTable
-          columns={ledgerColumns}
-          emptyDescription="Choose a start date and end date, then generate the ledger."
-          emptyTitle="No ledger generated"
-          getItemId={(item) => item.id}
-          getItemTitle={(item) => item.description}
-          isLoading={isGenerating}
-          items={ledgerEntries}
-          pagination={ledger ? {
-            currentPage: ledgerPage,
-            lastPage: ledgerLastPage,
-            onNext: () => {
-              const nextPage = ledgerPage + 1
-              setLedgerPage(nextPage)
-              void generateLedger(nextPage)
-            },
-            onPrevious: () => {
-              const previousPage = ledgerPage - 1
-              setLedgerPage(previousPage)
-              void generateLedger(previousPage)
-            },
-            total: ledgerTotal,
-          } : undefined}
-        />
-      </Card>
+      </Modal>
     </section>
   )
 }
 
-function TransactionTable({
-  currentPage,
-  emptyTitle,
-  isLoading,
-  items,
-  lastPage,
-  onNext,
-  onPrevious,
-  title,
-  total,
-  type,
+function AccountingMetricCard({
+  icon,
+  label,
+  meta,
+  progress,
+  trend,
+  value,
+  variant,
 }: {
-  currentPage: number
-  emptyTitle: string
-  isLoading: boolean
-  items: AccountingTransaction[]
-  lastPage: number
-  onNext: () => void
-  onPrevious: () => void
-  title: string
-  total: number
-  type: 'incoming' | 'outgoing'
+  icon?: ReactNode
+  label: string
+  meta: string
+  progress?: number
+  trend?: string
+  value: string
+  variant: 'primary' | 'incoming' | 'outgoing'
 }) {
   return (
-    <Card
-      title={title}
-      description={`${total} total transaction${total === 1 ? '' : 's'}`}
-      action={<Badge tone={type === 'incoming' ? 'success' : 'warning'}>{transactionTypeLabel(type)}</Badge>}
-    >
-      <DataTable
-        columns={transactionColumns}
-        emptyDescription={`No ${type} transactions have been recorded today.`}
-        emptyTitle={emptyTitle}
-        getItemId={(item) => item.id}
-        getItemTitle={(item) => item.description}
-        isLoading={isLoading}
-        items={items}
-        pagination={{
-          currentPage,
-          lastPage,
-          onNext,
-          onPrevious,
-          total,
-        }}
-      />
-    </Card>
+    <article className={`accounting-serene-metric accounting-serene-metric--${variant}`}>
+      <div className="accounting-serene-metric__top">
+        <span>{label}</span>
+        {icon}
+      </div>
+      <strong>{value}</strong>
+      <small>{trend ?? meta}</small>
+      {progress !== undefined ? (
+        <div className="accounting-serene-metric__progress" aria-label={meta}>
+          <span style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+        </div>
+      ) : null}
+      {progress !== undefined ? <em>{meta}</em> : null}
+    </article>
   )
 }
 
-function readPageMeta<TItem>(page: PaginatedResult<TItem>) {
-  return {
-    lastPage: getPageValue(page, 'lastPage', 'last_page', 1),
-    total: page.total,
-  }
-}
-
-function getPageValue<TData>(
-  data: TData,
-  camelKey: 'currentPage' | 'lastPage',
-  snakeKey: 'current_page' | 'last_page',
-  fallback: number,
-) {
-  const withOptionalKeys = data as TData & Partial<Record<typeof camelKey | typeof snakeKey, number>>
-
-  return withOptionalKeys[camelKey] ?? withOptionalKeys[snakeKey] ?? fallback
-}
-
-function getNumberValue<TData>(data: TData, camelKey: string, snakeKey: string) {
-  const withOptionalKeys = data as TData & Record<string, number | undefined>
-
-  return withOptionalKeys[camelKey] ?? withOptionalKeys[snakeKey] ?? 0
-}
-
-function formatReference(item: AccountingTransaction | AccountingLedgerEntry) {
+function TransactionRow({ item }: { item: AccountingTransaction }) {
+  const transactionType = getStringField(item, 'transaction_type', 'transactionType') || 'incoming'
+  const isIncoming = transactionType === 'incoming'
   const referenceLabel = getStringField(item, 'reference_label', 'referenceLabel')
-  const referenceType = getStringField(item, 'reference_type', 'referenceType')
-  const referenceId = getNumberField(item, 'reference_id', 'referenceId')
+  const description = item.description
 
-  if (!referenceLabel && !referenceType && referenceId === null) {
-    return '-'
-  }
+  return (
+    <tr>
+      <td data-label="Transaction ID">
+        <strong className="accounting-serene-transaction-id">{formatTransactionId(item.id)}</strong>
+      </td>
+      <td data-label="Entity">
+        <div className="accounting-serene-entity">
+          <span>{getInitials(description)}</span>
+          <div>
+            <strong>{description}</strong>
+            <small>{referenceLabel || transactionTypeLabel(transactionType as 'incoming' | 'outgoing')}</small>
+          </div>
+        </div>
+      </td>
+      <td data-label="Category">
+        <span className={`accounting-serene-category accounting-serene-category--${isIncoming ? 'incoming' : 'outgoing'}`}>
+          {referenceLabel || (isIncoming ? 'Asset Inflow' : 'Operational Ex')}
+        </span>
+      </td>
+      <td data-label="Amount">
+        <strong className={`accounting-serene-amount accounting-serene-amount--${isIncoming ? 'incoming' : 'outgoing'}`}>
+          {isIncoming ? '' : '-'}{formatMoney(item.amount)}
+        </strong>
+      </td>
+      <td data-label="Status">
+        <span className="accounting-serene-status"><span />Completed</span>
+      </td>
+      <td data-label="Verification">
+        <span className="accounting-serene-verified" title="Verified against ledger">
+          <CheckIcon />
+        </span>
+      </td>
+    </tr>
+  )
+}
 
-  return `${referenceLabel || referenceType || 'Reference'}${referenceId === null ? '' : ` #${referenceId}`}`
+function getOverviewNumber(overview: AccountingOverview | null, camelKey: keyof AccountingOverview, snakeKey: keyof AccountingOverview) {
+  return Number(overview?.[camelKey] ?? overview?.[snakeKey] ?? 0)
+}
+
+function formatTransactionId(id: number) {
+  return `#TX-${String(id).padStart(5, '0')}`
+}
+
+function formatPercent(value: number) {
+  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)}%`
+}
+
+function getInitials(value: string) {
+  const initials = value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
+
+  return initials || 'TX'
+}
+
+function VaultIcon() {
+  return (
+    <svg aria-hidden="true" className="accounting-serene-icon" viewBox="0 0 24 24">
+      <path d="M4 7h16v13H4V7Z" />
+      <path d="M7 7V4h10v3" />
+      <path d="M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+      <path d="M12 10v6" />
+      <path d="M9 13h6" />
+    </svg>
+  )
+}
+
+function FilterIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="M4 6h16" />
+      <path d="M7 12h10" />
+      <path d="M10 18h4" />
+    </svg>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden="true" className="accounting-serene-check" viewBox="0 0 24 24">
+      <path d="m5 12 4 4L19 6" />
+    </svg>
+  )
 }
