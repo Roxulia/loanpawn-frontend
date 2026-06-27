@@ -1,110 +1,134 @@
+
 ---
-name: Serene Professional
-colors:
-  surface: '#f6f9ff'
-  surface-dim: '#c9dcf0'
-  surface-bright: '#f6f9ff'
-  surface-container-lowest: '#ffffff'
-  surface-container-low: '#ecf5ff'
-  surface-container: '#e1f0ff'
-  surface-container-high: '#d7ebfe'
-  surface-container-highest: '#d1e5f8'
-  on-surface: '#091d2b'
-  on-surface-variant: '#41484a'
-  inverse-surface: '#203241'
-  inverse-on-surface: '#e6f2ff'
-  outline: '#71787a'
-  outline-variant: '#c1c8ca'
-  surface-tint: '#00677f'
-  primary: '#00677f'
-  on-primary: '#ffffff'
-  primary-container: '#13a0c3'
-  on-primary-container: '#00313e'
-  inverse-primary: '#62d4f9'
-  secondary: '#356575'
-  on-secondary: '#ffffff'
-  secondary-container: '#b7e7fa'
-  on-secondary-container: '#396979'
-  tertiary: '#46636a'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#7b99a0'
-  on-tertiary-container: '#123137'
-  error: '#ba1a1a'
-  on-error: '#ffffff'
-  error-container: '#ffdad6'
-  on-error-container: '#93000a'
-  primary-fixed: '#b6ebff'
-  primary-fixed-dim: '#62d4f9'
-  on-primary-fixed: '#001f28'
-  on-primary-fixed-variant: '#004e60'
-  secondary-fixed: '#baeafd'
-  secondary-fixed-dim: '#9ecee1'
-  on-secondary-fixed: '#001f28'
-  on-secondary-fixed-variant: '#194d5c'
-  tertiary-fixed: '#c9e8f0'
-  tertiary-fixed-dim: '#adccd4'
-  on-tertiary-fixed: '#001f25'
-  on-tertiary-fixed-variant: '#2e4b52'
-  background: '#f6f9ff'
-  on-background: '#091d2b'
-  surface-variant: '#d1e5f8'
-typography:
-  headline-xl:
-    fontFamily: Manrope
-    fontSize: 40px
-    fontWeight: '700'
-    lineHeight: 48px
-    letterSpacing: -0.02em
-  headline-lg:
-    fontFamily: Manrope
-    fontSize: 32px
-    fontWeight: '600'
-    lineHeight: 40px
-    letterSpacing: -0.01em
-  headline-md:
-    fontFamily: Manrope
-    fontSize: 24px
-    fontWeight: '600'
-    lineHeight: 32px
-  body-lg:
-    fontFamily: Inter
-    fontSize: 18px
-    fontWeight: '400'
-    lineHeight: 28px
-  body-md:
-    fontFamily: Inter
-    fontSize: 16px
-    fontWeight: '400'
-    lineHeight: 24px
-  label-md:
-    fontFamily: Inter
-    fontSize: 14px
-    fontWeight: '500'
-    lineHeight: 20px
-    letterSpacing: 0.01em
-  label-sm:
-    fontFamily: Inter
-    fontSize: 12px
-    fontWeight: '600'
-    lineHeight: 16px
-rounded:
-  sm: 0.25rem
-  DEFAULT: 0.5rem
-  md: 0.75rem
-  lg: 1rem
-  xl: 1.5rem
-  full: 9999px
-spacing:
-  unit: 4px
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 32px
-  gutter: 24px
-  margin-mobile: 16px
-  margin-desktop: 48px
 ---
+name: Serene Professional Operational System
+version: 1.1.0
+description: A high-trust, professional design system for financial and operational management, characterized by tonal teal layering, crisp typography, and responsive efficiency.
+
+## 🎨 Color Palette
+
+### Brand Colors
+| Token | Hex | Usage |
+|---|---|---|
+| Primary | #00677f | Main brand color, primary CTAs, and active states. |
+| Secondary | #2babce | Supporting actions, accents, and visual hierarchy. |
+| Tertiary | #e0f2f1 | Soft backgrounds, progress bars, and subtle highlights. |
+
+### Surface & Neutral
+| Token | Hex | Usage |
+|---|---|---|
+| Surface | #f6f9ff | Primary app background. |
+| Surface-Dim | #c9dcf0 | Secondary backgrounds and containers. |
+| Surface-Bright | #f6f9ff | Elevated surfaces and cards. |
+| Container-Lowest | #ffffff | Cards, modals, and input fields. |
+| Container-Low | #ecf5ff | Subtle sectional backgrounds. |
+| Outline | #b0bec5 | Borders and dividers. |
+
+### Semantic States
+| State | Color | Hex |
+|---|---|---|
+| Success | Emerald | #10b981 |
+| Warning | Amber | #f59e0b |
+| Error | Rose | #ef4444 |
+| Info | Sky | #0ea5e9 |
+
+## Typography
+
+**Primary Font:** Manrope (Headlines, CTAs)
+**Secondary Font:** Inter (Body, Data, Labels)
+
+### Type Scale
+- **Headline-LG:** 32px / 40px Leading (Bold)
+- **Headline-MD:** 24px / 32px Leading (Semi-Bold)
+- **Headline-SM:** 20px / 28px Leading (Semi-Bold)
+- **Body-LG:** 18px / 26px Leading (Regular)
+- **Body-MD:** 16px / 24px Leading (Regular)
+- **Label-MD:** 14px / 20px Leading (Medium/Semi-Bold)
+- **Label-SM:** 12px / 16px Leading (Medium)
+
+## 🔘 Buttons & Interactions
+
+### Primary Button
+- **Default:** `bg-[#00677f] text-white`
+- **Hover:** `bg-[#005266]` (10% Darker)
+- **Active:** `scale-95 bg-[#004050]`
+- **Disabled:** `bg-[#b0bec5] text-[#f6f9ff] cursor-not-allowed`
+- **Shape:** Round-Eight (8px)
+
+### Secondary/Outline Button
+- **Default:** `border border-[#00677f] text-[#00677f] bg-transparent`
+- **Hover:** `bg-[#e0f2f1]` (Tertiary tint)
+- **Active:** `bg-[#c9dcf0]`
+- **Disabled:** `border-[#b0bec5] text-[#b0bec5]`
+
+### Ghost/Text Button
+- **Default:** `text-[#00677f] bg-transparent`
+- **Hover:** `bg-[#ecf5ff]`
+- **Active:** `bg-[#c9dcf0]`
+
+## 📝 Form Elements
+
+### Text Inputs & Textareas
+- **Default:** `bg-white border border-[#b0bec5] rounded-lg px-4 py-2 text-body-md`
+- **Focus:** `border-[#00677f] ring-2 ring-[#2babce]/20 outline-none`
+- **Error:** `border-[#ef4444] text-[#ef4444]`
+- **Disabled:** `bg-[#f6f9ff] border-[#c9dcf0] text-[#b0bec5]`
+
+### Selects & Checkboxes
+- **Selects:** Custom chevron-down icon in Primary color, same border logic as inputs.
+- **Checkboxes:** `rounded-sm border-[#00677f] text-[#00677f] focus:ring-[#2babce]`
+
+## 📊 Tables & Data Grids
+
+### Desktop Table
+- **Header:** `bg-[#ecf5ff] text-label-md font-bold uppercase tracking-wider py-3 px-4 border-b border-[#b0bec5]`
+- **Row:** `bg-white hover:bg-[#f6f9ff] transition-colors border-b border-[#ecf5ff]`
+- **Cell:** `py-4 px-4 text-body-md align-middle`
+- **Empty State:** Centered illustration in tonal teal with #00677f CTA.
+
+## 🗂️ Cards & Containers
+
+### Data Card
+- **Background:** `bg-white`
+- **Elevation:** None (Border-based layering)
+- **Border:** `border border-[#ecf5ff]` or tonal shadow `shadow-[0_2px_12px_rgba(0,103,127,0.05)]`
+- **Radius:** 12px (Large) for major sections, 8px for nested items.
+
+## 🏗️ Desktop Navigation
+
+### SideNavBar
+- **Width:** 256px (Fixed)
+- **Background:** `bg-surface-container-low` (#ecf5ff)
+- **Active State:** `bg-[#2babce]/10 text-[#00677f]` with 4px left border in `#2babce`.
+- **Typography:** font-label-caps.
+
+### TopNavBar
+- **Height:** 64px
+- **Features:** Global search, notifications, profile avatar, and breadcrumbs.
+- **Separation:** `border-b border-[#b0bec5]`.
+
+## 📱 Mobile Components
+
+### TopAppBar
+- **Layout:** Leading icon/brand, trailing avatar.
+- **Background:** `bg-[#f6f9ff]`.
+- **Separation:** Subtle shadow or `border-b border-[#ecf5ff]`.
+
+### BottomNavBar
+- **Height:** 64px
+- **Items:** 4-5 core destinations.
+- **Active State:** Icon and label in `#00677f`, with a subtle #2babce background pill.
+- **Style:** `bg-white` with top border `border-[#ecf5ff]`.
+
+### Mobile Cards
+- **Structure:** Stacked vertically, replacing horizontal table rows.
+- **Hierarchy:** High-level metrics (e.g. Total Amount) as Headline-SM, metadata as Label-SM.
+
+## 📏 Layout & Spacing
+- **Container Padding:** 16px (Mobile) / 32px (Desktop)
+- **Element Gap:** 8px (Small), 16px (Medium), 24px (Large)
+- **Corner Radius:** 8px (Standard), 12px (Large Cards/Modals)
+
 
 ## Brand & Style
 

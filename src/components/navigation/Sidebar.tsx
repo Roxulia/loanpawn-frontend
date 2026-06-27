@@ -80,11 +80,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     <aside className="sidebar" aria-label={t('Main navigation')}>
       <header className="sidebar-header">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
-          <div>
-            <strong>LonePawn</strong>
-            <span>{t('Operations')}</span>
-          </div>
+          <img className="brand-logo" src="/loanpawn.png" alt="LonePawn" width="fill"/>
+          <span>{t('Operations')}</span>
         </div>
       </header>
 
