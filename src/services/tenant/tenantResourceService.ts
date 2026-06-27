@@ -1,6 +1,7 @@
 import type { PaginatedResult } from '../../dataobjects/common/api'
 import type {
   AccountingLedger,
+  AccountingOverview,
   AccountingTransaction,
   TenantDashboardSummary,
   ExpenseTypeOption,
@@ -23,6 +24,7 @@ type MessageResponse = {
 type ListParams = {
   page?: number
   perPage?: number
+  search?: string
 }
 
 type LedgerParams = ListParams & {
@@ -45,10 +47,11 @@ function authOptions(auth: TenantAuth = {}) {
 function listOptions(params: ListParams = {}, auth?: TenantAuth) {
   return {
     ...authOptions(auth),
-    params: {
-      page: params.page,
-      per_page: params.perPage,
-    },
+      params: {
+        page: params.page,
+        per_page: params.perPage,
+        search: params.search,
+      },
   }
 }
 
@@ -75,6 +78,10 @@ export const tenantResourceService = {
 
   listAccounting(params?: ListParams, auth?: TenantAuth) {
     return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting', listOptions(params, auth))
+  },
+
+  getAccountingOverview(auth?: TenantAuth) {
+    return apiClient.get<AccountingOverview>('/tenant/accounting/overview', authOptions(auth))
   },
 
   listIncomingAccounting(params?: ListParams, auth?: TenantAuth) {

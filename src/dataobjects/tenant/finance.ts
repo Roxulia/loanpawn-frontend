@@ -23,6 +23,19 @@ export type AccountingTransaction = {
   updatedAt?: string | null
 }
 
+export type AccountingOverview = {
+  liquid_capital?: number
+  liquidCapital?: number
+  month_incoming?: number
+  monthIncoming?: number
+  month_outgoing?: number
+  monthOutgoing?: number
+  incoming_progress?: number
+  incomingProgress?: number
+  outgoing_progress?: number
+  outgoingProgress?: number
+}
+
 export type AccountingLedgerEntry = {
   id: number
   update_key?: number
