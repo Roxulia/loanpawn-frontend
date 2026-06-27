@@ -1,3 +1,5 @@
+# Notes
+- Do not run dev server if i dont command.
 
 ## UI Redesign Workflow
 
@@ -22,12 +24,12 @@ Only do the following if user didn't give you reference UI or UI description.
    - current user workflow
 
 3. Build a Stitch design prompt containing:
+   - current UI composition detail
    - screen purpose
    - data request/response examples
    - UI workflow
    - layout requirements
    - design style
-   - Tailwind-friendly structure
    - responsive behavior
 
 4. Use Stitch MCP to generate the redesigned UI.
@@ -57,3 +59,4 @@ Only do the following if user didn't give you reference UI or UI description.
 - Do not change backend endpoints.
 - Do not change permission logic.
 - Do not change validation rules unless explicitly requested.
+- Do not run dev server if i dont command.

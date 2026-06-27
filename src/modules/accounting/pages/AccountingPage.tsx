@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Badge, Button, Input } from '../../../components/atoms'
 import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
 import { FormField, SearchField } from '../../../components/molecules'
+import { Modal } from '../../../components/organisms'
 import type { AccountingOverview, AccountingTransaction } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { usePermissions } from '../../auth'
@@ -30,6 +31,7 @@ export function AccountingPage() {
   const [endDate, setEndDate] = useState(today)
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadAccounting = useCallback(async (page: number, search = debouncedSearchTerm) => {
@@ -84,8 +86,6 @@ export function AccountingPage() {
     return () => window.clearInterval(refreshTimer)
   }, [currentPage, debouncedSearchTerm, loadAccounting])
 
-  const fiscalLabel = useMemo(() => getFiscalQuarterLabel(new Date()), [])
-
   async function generateReport() {
     if (!startDate || !endDate) {
       setError('Choose both start date and end date.')
@@ -120,35 +120,9 @@ export function AccountingPage() {
           <h1>Accounting Ledger</h1>
           <p>Monitor capital movement, verify ledger activity, and export date-range accounting reports.</p>
         </div>
-        <div className="accounting-serene-header__actions">
-          <span className="accounting-serene-refresh-indicator">Auto-refreshing: 5mins</span>
-          <Button isLoading={isDownloading} onClick={() => void generateReport()} variant="primary">
-            Generate Report
-          </Button>
-        </div>
       </header>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Accounting action failed" tone="danger" />}
-
-      <section className="accounting-serene-controls" aria-label="Accounting filters">
-        <SearchField
-          id="ledger-search"
-          label="Search ledger"
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search ledger..."
-          value={searchTerm}
-        />
-        <div className="accounting-serene-period-field">
-          <label>&nbsp;</label>
-          <div className="accounting-serene-period">{fiscalLabel}</div>
-        </div>
-        <FormField id="ledger-start-date" label="Start date">
-          <Input id="ledger-start-date" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
-        </FormField>
-        <FormField id="ledger-end-date" label="End date">
-          <Input id="ledger-end-date" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
-        </FormField>
-      </section>
 
       <section className="accounting-serene-metrics" aria-label="Accounting overview">
         <AccountingMetricCard
@@ -173,6 +147,35 @@ export function AccountingPage() {
           value={formatMoney(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'))}
           variant="outgoing"
         />
+      </section>
+
+      <section className="accounting-serene-controls" aria-label="Accounting filters">
+        <SearchField
+          id="ledger-search"
+          label="Search ledger"
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search ledger..."
+          value={searchTerm}
+        />
+        <Button
+          aria-label="Filter report dates"
+          className="ui-button--icon accounting-serene-icon-button"
+          onClick={() => setIsFilterModalOpen(true)}
+          title="Filter report dates"
+          variant="secondary"
+        >
+          <FilterIcon />
+        </Button>
+        <Button
+          aria-label="Download ledger report"
+          className="ui-button--icon accounting-serene-icon-button"
+          isLoading={isDownloading}
+          onClick={() => void generateReport()}
+          title="Download ledger report"
+          variant="primary"
+        >
+          <DownloadIcon />
+        </Button>
       </section>
 
       <section className="accounting-serene-ledger" aria-label="Recent transactions">
@@ -226,6 +229,31 @@ export function AccountingPage() {
           </>
         )}
       </section>
+
+      <Modal
+        footer={(
+          <>
+            <Button onClick={() => setIsFilterModalOpen(false)} variant="secondary">
+              Close
+            </Button>
+            <Button onClick={() => setIsFilterModalOpen(false)} variant="primary">
+              Apply Filter
+            </Button>
+          </>
+        )}
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        title="Filter report dates"
+      >
+        <div className="accounting-serene-filter-modal">
+          <FormField id="ledger-start-date" label="From date">
+            <Input id="ledger-start-date" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
+          </FormField>
+          <FormField id="ledger-end-date" label="To date">
+            <Input id="ledger-end-date" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
+          </FormField>
+        </div>
+      </Modal>
     </section>
   )
 }
@@ -273,10 +301,10 @@ function TransactionRow({ item }: { item: AccountingTransaction }) {
 
   return (
     <tr>
-      <td>
+      <td data-label="Transaction ID">
         <strong className="accounting-serene-transaction-id">{formatTransactionId(item.id)}</strong>
       </td>
-      <td>
+      <td data-label="Entity">
         <div className="accounting-serene-entity">
           <span>{getInitials(description)}</span>
           <div>
@@ -285,20 +313,20 @@ function TransactionRow({ item }: { item: AccountingTransaction }) {
           </div>
         </div>
       </td>
-      <td>
+      <td data-label="Category">
         <span className={`accounting-serene-category accounting-serene-category--${isIncoming ? 'incoming' : 'outgoing'}`}>
           {referenceLabel || (isIncoming ? 'Asset Inflow' : 'Operational Ex')}
         </span>
       </td>
-      <td>
+      <td data-label="Amount">
         <strong className={`accounting-serene-amount accounting-serene-amount--${isIncoming ? 'incoming' : 'outgoing'}`}>
           {isIncoming ? '' : '-'}{formatMoney(item.amount)}
         </strong>
       </td>
-      <td>
+      <td data-label="Status">
         <span className="accounting-serene-status"><span />Completed</span>
       </td>
-      <td>
+      <td data-label="Verification">
         <span className="accounting-serene-verified" title="Verified against ledger">
           <CheckIcon />
         </span>
@@ -330,12 +358,6 @@ function getInitials(value: string) {
   return initials || 'TX'
 }
 
-function getFiscalQuarterLabel(date: Date) {
-  const quarter = Math.floor(date.getMonth() / 3) + 1
-
-  return `FY ${date.getFullYear()} - Q${quarter}`
-}
-
 function VaultIcon() {
   return (
     <svg aria-hidden="true" className="accounting-serene-icon" viewBox="0 0 24 24">
@@ -344,6 +366,26 @@ function VaultIcon() {
       <path d="M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
       <path d="M12 10v6" />
       <path d="M9 13h6" />
+    </svg>
+  )
+}
+
+function FilterIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="M4 6h16" />
+      <path d="M7 12h10" />
+      <path d="M10 18h4" />
+    </svg>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
     </svg>
   )
 }
