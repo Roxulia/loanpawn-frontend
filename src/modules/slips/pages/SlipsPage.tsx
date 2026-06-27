@@ -298,23 +298,42 @@ export function SlipsPage() {
     setItems((current) => current.map((item) => item.key === key ? { ...item, ...patch } : item))
   }
 
-  return (
-    <section className="page">
-      <SectionHeader
-        title="Loan Slips"
-        subtitle="Create pawn loan contracts and manage active slip records from the desktop workflow."
-      />
+  const normalItemCount = items.filter((item) => item.type === 'Normal').length
+  const jewelleryItemCount = items.filter((item) => item.type === 'Jewellery').length
 
-      <div className="module-tabs" role="tablist" aria-label={t('Loan slip sections')}>
-        <Button onClick={() => setActiveTab('application')} variant={activeTab === 'application' ? 'primary' : 'secondary'}>Loan Application</Button>
-        <Button onClick={() => setActiveTab('management')} variant={activeTab === 'management' ? 'primary' : 'secondary'}>Management</Button>
+  return (
+    <section className="page ops-page ops-page--slips">
+      <div className="ops-hero">
+        <SectionHeader
+          title="Loan Slips"
+          subtitle="Create pawn loan contracts and manage active slip records from the desktop workflow."
+        />
+        <div className="ops-metrics" aria-label={t('Loan slip workspace summary')}>
+          <div className="ops-metric">
+            <span>Registry total</span>
+            <strong>{formatNumber(total)}</strong>
+          </div>
+          <div className="ops-metric">
+            <span>Draft collateral</span>
+            <strong>{items.length}</strong>
+          </div>
+          <div className="ops-metric ops-metric--amount">
+            <span>Retail floor</span>
+            <strong>{formatMoney(suggestedMinimumRetail)}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="module-tabs ops-tabs" role="tablist" aria-label={t('Loan slip sections')}>
+        <Button aria-pressed={activeTab === 'application'} onClick={() => setActiveTab('application')} variant={activeTab === 'application' ? 'primary' : 'secondary'}>Loan Application</Button>
+        <Button aria-pressed={activeTab === 'management'} onClick={() => setActiveTab('management')} variant={activeTab === 'management' ? 'primary' : 'secondary'}>Management</Button>
       </div>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Loan slip action failed" tone="danger" />}
       {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Loan slip updated" tone="success" />}
 
       {activeTab === 'application' && (
-        <form className="workflow-stack" onSubmit={(event) => void handleCreate(event)}>
+        <form className="workflow-stack ops-contract-workspace" onSubmit={(event) => void handleCreate(event)}>
           <Card title="Customer Details">
             <FormGroup columns={2}>
               <FormField id="slip-customer-name" label="Name" error={formErrors.customerName}>
@@ -340,9 +359,9 @@ export function SlipsPage() {
 
           <Card
             title="Collateral Details"
-            description={`${items.filter((item) => item.type === 'Normal').length} normal, ${items.filter((item) => item.type === 'Jewellery').length} jewellery`}
+            description={`${normalItemCount} normal, ${jewelleryItemCount} jewellery`}
             action={(
-              <div className="row-actions">
+              <div className="row-actions ops-card-actions">
                 <Button onClick={() => setItems((current) => [...current, makeItem('Normal')])} variant="secondary">Add Normal Item</Button>
                 <Button onClick={() => setItems((current) => [...current, makeItem('Jewellery')])} variant="secondary">Add Jewellery Item</Button>
               </div>
@@ -496,7 +515,7 @@ export function SlipsPage() {
       )}
 
       {activeTab === 'management' && (
-        <div className="workflow-stack">
+        <div className="workflow-stack ops-register-workspace">
           <Card title="All Slips" description={`${total} total slip${total === 1 ? '' : 's'}`}>
             <TableToolbar
               actions={<Button disabled={!canList} onClick={() => void loadSlips(currentPage)} variant="secondary">Refresh</Button>}
@@ -699,6 +718,10 @@ function calculateJewelleryWeightInKyat(item: ItemForm) {
 
 function roundMoney(value: number) {
   return Number.isFinite(value) ? Math.round(value) : 0
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('en-US').format(value)
 }
 
 function getPageValue(
