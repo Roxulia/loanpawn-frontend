@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Badge, Button, Input } from '../../../components/atoms'
 import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
+import { CheckIcon, DownloadIcon, FilterIcon, VaultIcon } from '../../../components/icons/icon'
 import { FormField, SearchField } from '../../../components/molecules'
 import { Modal } from '../../../components/organisms'
 import type { AccountingOverview, AccountingTransaction } from '../../../dataobjects/tenant/finance'
@@ -358,42 +359,3 @@ function getInitials(value: string) {
   return initials || 'TX'
 }
 
-function VaultIcon() {
-  return (
-    <svg aria-hidden="true" className="accounting-serene-icon" viewBox="0 0 24 24">
-      <path d="M4 7h16v13H4V7Z" />
-      <path d="M7 7V4h10v3" />
-      <path d="M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-      <path d="M12 10v6" />
-      <path d="M9 13h6" />
-    </svg>
-  )
-}
-
-function FilterIcon() {
-  return (
-    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
-      <path d="M4 6h16" />
-      <path d="M7 12h10" />
-      <path d="M10 18h4" />
-    </svg>
-  )
-}
-
-function DownloadIcon() {
-  return (
-    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
-      <path d="M12 3v12" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M5 21h14" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg aria-hidden="true" className="accounting-serene-check" viewBox="0 0 24 24">
-      <path d="m5 12 4 4L19 6" />
-    </svg>
-  )
-}

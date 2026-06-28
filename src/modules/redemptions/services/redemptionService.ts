@@ -123,7 +123,7 @@ function authOptions(auth: TenantAuth = {}) {
 }
 
 export const redemptionService = {
-  listRedemptions(params: { page?: number; perPage?: number } = {}, auth?: TenantAuth) {
+  listRedemptions(params: { endDate?: string; page?: number; perPage?: number; startDate?: string } = {}, auth?: TenantAuth) {
     const searchParams = new URLSearchParams()
 
     if (params.page !== undefined) {
@@ -132,6 +132,14 @@ export const redemptionService = {
 
     if (params.perPage !== undefined) {
       searchParams.set('per_page', String(params.perPage))
+    }
+
+    if (params.startDate) {
+      searchParams.set('start_date', params.startDate)
+    }
+
+    if (params.endDate) {
+      searchParams.set('end_date', params.endDate)
     }
 
     const query = searchParams.toString()

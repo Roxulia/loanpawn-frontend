@@ -1,0 +1,501 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Customer Detail - PawnPro Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#3b6b7b",
+                    "primary-fixed": "#b6ebff",
+                    "inverse-on-surface": "#e6f2ff",
+                    "background": "#f6f9ff",
+                    "on-tertiary-container": "#bfdee6",
+                    "placeholder": "#8BAFB7",
+                    "on-surface": "#091d2b",
+                    "surface-container-low": "#ecf5ff",
+                    "surface-container-high": "#d7ebfe",
+                    "tertiary-fixed-dim": "#adccd4",
+                    "surface-dim": "#c9dcf0",
+                    "error-container": "#ffdad6",
+                    "surface-tint": "#00677f",
+                    "secondary-container": "#b9eafd",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#bfc8cd",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#004e60",
+                    "on-tertiary-fixed-variant": "#2e4b52",
+                    "on-surface-variant": "#3f484c",
+                    "primary-fixed-dim": "#62d4f9",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#f6f9ff",
+                    "primary-container": "#00677f",
+                    "on-secondary-fixed-variant": "#194d5c",
+                    "surface-container-highest": "#d1e5f8",
+                    "secondary-fixed-dim": "#9ecee0",
+                    "tertiary-fixed": "#c9e8f0",
+                    "surface": "#F6F9FF",
+                    "on-secondary-fixed": "#001f28",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed": "#001f28",
+                    "inverse-primary": "#62d4f9",
+                    "surface-container": "#e1f0ff",
+                    "primary": "#004e60",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#d1e5f8",
+                    "tertiary-container": "#46636a",
+                    "error": "#BA1A1A",
+                    "on-primary-container": "#97e3ff",
+                    "secondary": "#356575",
+                    "on-tertiary-fixed": "#001f25",
+                    "secondary-fixed": "#b9eafd",
+                    "outline": "#71787A",
+                    "on-background": "#091d2b",
+                    "inverse-surface": "#203241",
+                    "tertiary": "#2e4b52"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "xl": "32px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "margin-desktop": "48px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Manrope"],
+                    "headline-lg": ["Manrope"],
+                    "headline-xl": ["Manrope"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .custom-shadow {
+            box-shadow: 0px 4px 20px rgba(11, 31, 45, 0.05);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f6f9ff;
+            color: #091d2b;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col py-lg z-50">
+<div class="px-md mb-xl">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaFcn5RwiTxfLMOLP6dnWH7LgbSnfv7nnNCr2tJ41EeR2BwVumjCGg3g6e1L_1dHtksfBW93L3Xkh0P6lj-Oaex0VmlXK948FVpG26tX4iS4MGARRtJYV4X5gcg3V0ofvDX1LNypJtRlgvoJiBUyotdEWLG7ntGY_gSk7OJjwh90akXK6d9lWbdDPsCuti-vqK7YFYx_a1gX7j-sLa7vyg7AwV-ApoLQtVJB9YizfFyjaHDIIXthmtKniQvYyVIwQ0lSdVq6A8bdc" alt="LoanPawn Logo" class="h-10 w-auto object-contain mb-1">
+<p class="font-label-sm text-on-surface-variant">Main Branch • Active Session</p>
+</div>
+<nav class="flex-grow">
+<ul class="space-y-1">
+<li class="">
+<a class="flex items-center gap-sm text-on-surface-variant py-3 px-md hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Dashboard</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-sm bg-secondary-container text-on-secondary-container border-l-4 border-primary rounded-r-full py-3 px-md" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md font-bold">Customers</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-sm text-on-surface-variant py-3 px-md hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-md">Active Loans</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-sm text-on-surface-variant py-3 px-md hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md">Interest Payments</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-sm text-on-surface-variant py-3 px-md hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md">Inventory</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-sm text-on-surface-variant py-3 px-md hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="px-md mt-auto">
+<button class="w-full flex items-center justify-center gap-sm bg-[#2BABCE] text-white py-3 rounded-lg font-label-md hover:opacity-90 transition-opacity active:scale-95">
+<span class="material-symbols-outlined">add</span>
+                New Transaction
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="w-full h-16 bg-surface shadow-sm flex justify-between items-center px-lg sticky top-0 z-40">
+<div class="flex items-center gap-md bg-surface-container border border-outline-variant rounded-full px-md py-1.5 w-96">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md w-full placeholder-placeholder" placeholder="Search customer ID or name..." type="text">
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm">
+<button class="p-2 hover:bg-surface-container transition-colors rounded-full relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<button class="p-2 hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant">help</span>
+</button>
+</div>
+<div class="flex items-center gap-sm">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-on-surface font-bold">Admin User</p>
+<p class="font-label-sm text-on-surface-variant">Store Manager</p>
+</div>
+<img class="w-10 h-10 rounded-full border border-outline-variant object-cover" data-alt="A portrait of a professional male store manager in his late 40s wearing a clean white shirt and a dark vest, smiling warmly at the camera. The background is a blurred high-end pawn shop office with wooden textures and warm, soft lighting. The style is professional and trustworthy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDb3sc3U-g728Mi6By3BevHN7SNg3G54OGmGXbdETA9EnUZMCO-lsB8uaMT_QQctJxb20r58F5V5sLvLcGXQVDljokiCtqG4egd7FslPV_-ZhoPUgpyttyShnGZrOjYWU-nW94aw2HC7sHqt4Qyk5c4a1uqeSsXQJ-UAen_Rqvx5qf64INewWhruVJ5vk8_Y-wGZcNfkB5EXH1iQlQMyl8un34NfMQkZ8RpTaMA6njmU5pwYY5Mr0f3XsxU24803fAOpCybYYxnbso">
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-xl max-w-7xl mx-auto space-y-lg">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-sm text-label-sm text-outline">
+<a class="hover:text-primary transition-colors" href="#">Customers</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-on-surface font-bold">Daw Mya Mya</span>
+</nav>
+<!-- Summary Header Card -->
+<section class="bg-white rounded-xl p-lg custom-shadow flex flex-col md:flex-row items-center md:items-start gap-lg border-l-8 border-primary relative overflow-hidden" style="opacity: 1; transform: translateY(0px); transition: opacity 0.5s, transform 0.5s;">
+<!-- Tonal Layering Gradient Background -->
+<div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-surface-container-low to-transparent opacity-50 -z-10 pointer-events-none"></div>
+<div class="relative">
+<img class="w-32 h-32 rounded-xl object-cover border-4 border-surface-container" data-alt="A close-up high-quality portrait of a respectable Burmese elderly lady named Daw Mya Mya, wearing traditional attire with a gentle and wise expression. The lighting is soft and natural, emphasizing a warm, high-trust professional atmosphere. The aesthetic matches a clean, modern corporate UI design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3neAYGWNV4IR95tRLhsnH_D6Rqf0o9yI4wVzKLqeWbdq94RJtftPZ6jC3PTzZfaBwfrFpFylg9BICIJroyboYz3P2cBz8g6Zubn9z2DT820W1MSRtZwfbkjK9iQ07906q6gfCc4OezuAJqfBtsHJn5oO0IPrjkPvlP0rQINbO1a7GiodBaKUKXDN6bpEnyW5CmBiBEdfRLhfL_-tF_xs6ZyQMbKu81hilA-1IJCFORa2eDG3M36MvUbCFa9_kKSBmsNOwBi4HVC8">
+<div class="absolute -bottom-3 -right-3 bg-white p-1.5 rounded-full custom-shadow" style="opacity: 1; transform: translateY(0px); transition: opacity 0.5s 0.1s, transform 0.5s 0.1s;">
+<div class="bg-primary-fixed text-primary px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span class="font-label-sm">Verified</span>
+</div>
+</div>
+</div>
+<div class="flex-grow space-y-md text-center md:text-left">
+<div>
+<div class="flex flex-col md:flex-row md:items-center gap-sm">
+<h2 class="font-headline-lg text-on-surface">Daw Mya Mya</h2>
+<span class="font-label-md bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded-full self-center">CUS-001</span>
+</div>
+<p class="font-body-md text-on-surface-variant">Customer since January 2022 • VIP Gold Member</p>
+</div>
+<div class="flex flex-wrap justify-center md:justify-start gap-lg">
+<div class="bg-surface-container-low rounded-lg p-md min-w-[140px]">
+<p class="font-label-sm text-on-surface-variant mb-1">Trust Score</p>
+<div class="flex items-end gap-1">
+<span class="font-headline-md text-primary font-bold">94</span>
+<span class="font-label-md text-secondary mb-1">/ 100</span>
+</div>
+<p class="text-[12px] font-bold text-[#00677f]">Excellent</p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md min-w-[140px]">
+<p class="font-label-sm text-on-surface-variant mb-1">Total Loans</p>
+<span class="font-headline-md text-on-surface font-bold">12</span>
+<p class="text-[12px] font-medium text-on-surface-variant">4 Active Slips</p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md min-w-[140px]">
+<p class="font-label-sm text-on-surface-variant mb-1">Net Worth Limit</p>
+<span class="font-headline-md text-on-surface font-bold">50.0M</span>
+<p class="text-[12px] font-medium text-on-surface-variant">MMK Available</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-sm w-full md:w-auto">
+<button class="bg-[#2BABCE] text-white px-lg py-3 rounded-lg font-label-md flex items-center justify-center gap-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined">edit</span>
+                        Edit Customer
+                    </button>
+<button class="border border-[#2BABCE] text-[#2BABCE] bg-transparent px-lg py-3 rounded-lg font-label-md flex items-center justify-center gap-sm active:scale-95 transition-transform hover:bg-secondary-container/30">
+<span class="material-symbols-outlined">add_card</span>
+                        New Loan Slip
+                    </button>
+</div>
+</section>
+<!-- Grid Layout for Detailed Sections -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Left Column: Personal Information -->
+<div class="lg:col-span-1 space-y-lg">
+<!-- Contact Info Card -->
+<div class="bg-white rounded-xl p-lg custom-shadow space-y-md" style="opacity: 1; transform: translateY(0px); transition: opacity 0.5s 0.2s, transform 0.5s 0.2s;">
+<div class="flex items-center gap-sm border-b border-surface-container pb-md">
+<span class="material-symbols-outlined text-primary">contact_page</span>
+<h3 class="font-headline-md text-on-surface !text-[18px]">Contact Details</h3>
+</div>
+<div class="space-y-md">
+<div>
+<label class="font-label-sm text-outline block mb-1">Primary Phone</label>
+<p class="font-body-md text-on-surface">+95 912345678</p>
+</div>
+<div>
+<label class="font-label-sm text-outline block mb-1">Email Address</label>
+<p class="font-body-md text-on-surface">daw.myamya@email.com</p>
+</div>
+<div>
+<label class="font-label-sm text-outline block mb-1">Residential Address</label>
+<p class="font-body-md text-on-surface">No. 123, Pyay Road, Mayangone Township, Yangon, Myanmar</p>
+</div>
+</div>
+<button class="w-full text-center text-[#2BABCE] font-label-md py-2 border border-dashed border-[#B8D7DF] rounded-lg mt-md hover:bg-surface-container transition-colors">
+                            View Document Proofs
+                        </button>
+</div>
+<!-- Account Status Card -->
+<div class="bg-white rounded-xl p-lg custom-shadow space-y-md" style="opacity: 1; transform: translateY(0px); transition: opacity 0.5s 0.3s, transform 0.5s 0.3s;">
+<div class="flex items-center gap-sm border-b border-surface-container pb-md">
+<span class="material-symbols-outlined text-primary">security</span>
+<h3 class="font-headline-md text-on-surface !text-[18px]">Account Security</h3>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-md text-on-surface-variant">KYC Status</span>
+<div class="flex items-center gap-1 bg-[#B8D7DF] text-[#1F5161] px-3 py-1 rounded-full font-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Fully Verified
+                            </div>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-md text-on-surface-variant">Account Type</span>
+<span class="font-label-md font-bold text-on-surface">Personal Standard</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-md text-on-surface-variant">Last Visit</span>
+<span class="font-label-md text-on-surface">2 days ago</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Active Loans -->
+<div class="lg:col-span-2 space-y-lg">
+<div class="bg-white rounded-xl p-lg custom-shadow space-y-md h-full" style="opacity: 1; transform: translateY(0px); transition: opacity 0.5s 0.4s, transform 0.5s 0.4s;">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md border-b border-surface-container pb-md">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">rebase_edit</span>
+<h3 class="font-headline-md text-on-surface !text-[18px]">Active Pawn Slips</h3>
+</div>
+<div class="flex gap-sm">
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-[12px] font-bold">4 Ongoing</span>
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded-full text-[12px] font-bold">8 Completed</span>
+</div>
+</div>
+<!-- Loan Slips List -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-label-sm text-outline border-b border-surface-container">
+<th class="py-md px-sm">Slip ID</th>
+<th class="py-md px-sm">Pawned Item</th>
+<th class="py-md px-sm">Loan Amount</th>
+<th class="py-md px-sm">Interest</th>
+<th class="py-md px-sm">Due Date</th>
+<th class="py-md px-sm">Status</th>
+<th class="py-md px-sm text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-md px-sm font-bold text-primary">SLIP-7701</td>
+<td class="py-md px-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]">diamond</span>
+</div>
+<span class="text-label-md">24K Gold Necklace</span>
+</div>
+</td>
+<td class="py-md px-sm font-label-md">1,200,000 MMK</td>
+<td class="py-md px-sm font-label-md text-error">24,000 MMK</td>
+<td class="py-md px-sm font-label-md text-on-surface-variant">15 Oct 2023</td>
+<td class="py-md px-sm">
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-0.5 rounded-full text-[12px]">Healthy</span>
+</td>
+<td class="py-md px-sm text-right">
+<button class="p-1 hover:bg-primary-fixed text-primary rounded-full transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-md px-sm font-bold text-primary">SLIP-8242</td>
+<td class="py-md px-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]">watch</span>
+</div>
+<span class="text-label-md">Rolex Datejust 36</span>
+</div>
+</td>
+<td class="py-md px-sm font-label-md">8,500,000 MMK</td>
+<td class="py-md px-sm font-label-md text-error">170,000 MMK</td>
+<td class="py-md px-sm font-label-md text-error font-bold">Overdue 2d</td>
+<td class="py-md px-sm">
+<span class="bg-error-container text-on-error-container px-3 py-0.5 rounded-full text-[12px]">Alert</span>
+</td>
+<td class="py-md px-sm text-right">
+<button class="p-1 hover:bg-primary-fixed text-primary rounded-full transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-md px-sm font-bold text-primary">SLIP-8551</td>
+<td class="py-md px-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]">laptop_mac</span>
+</div>
+<span class="text-label-md">MacBook Pro M2</span>
+</div>
+</td>
+<td class="py-md px-sm font-label-md">2,400,000 MMK</td>
+<td class="py-md px-sm font-label-md text-error">48,000 MMK</td>
+<td class="py-md px-sm font-label-md text-on-surface-variant">22 Nov 2023</td>
+<td class="py-md px-sm">
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-0.5 rounded-full text-[12px]">Healthy</span>
+</td>
+<td class="py-md px-sm text-right">
+<button class="p-1 hover:bg-primary-fixed text-primary rounded-full transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-md px-sm font-bold text-primary">SLIP-8900</td>
+<td class="py-md px-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]">blinds</span>
+</div>
+<span class="text-label-md">Emerald Ring Set</span>
+</div>
+</td>
+<td class="py-md px-sm font-label-md">3,000,000 MMK</td>
+<td class="py-md px-sm font-label-md text-error">60,000 MMK</td>
+<td class="py-md px-sm font-label-md text-on-surface-variant">05 Dec 2023</td>
+<td class="py-md px-sm">
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-0.5 rounded-full text-[12px]">Healthy</span>
+</td>
+<td class="py-md px-sm text-right">
+<button class="p-1 hover:bg-primary-fixed text-primary rounded-full transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex justify-between items-center pt-md">
+<p class="text-label-sm text-outline">Showing 4 of 4 active loans</p>
+<button class="text-primary font-label-md hover:underline">View History Slips</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Extra Info -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg">
+<div class="md:col-span-1 bg-[#1F5161] text-white rounded-xl p-lg space-y-md flex flex-col justify-between overflow-hidden relative">
+<div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+<div>
+<span class="material-symbols-outlined text-primary-fixed mb-2" style="font-variation-settings: 'FILL' 1;">stars</span>
+<h4 class="font-headline-md !text-[20px]">VIP Benefits</h4>
+<p class="text-white/80 font-label-sm mt-2">Zero-documentation renewal on loans below 5M MMK.</p>
+</div>
+<a class="text-primary-fixed font-label-md flex items-center gap-1" href="#">
+                        Upgrade Tier <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="md:col-span-3 bg-surface-container rounded-xl p-lg grid grid-cols-1 sm:grid-cols-3 gap-lg">
+<div class="space-y-sm">
+<label class="font-label-sm text-on-surface-variant">Total Interest Paid</label>
+<p class="font-headline-md text-on-surface">4.2M <span class="text-label-md font-normal">MMK</span></p>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 65%;"></div>
+</div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-sm text-on-surface-variant">Average Loan Term</label>
+<p class="font-headline-md text-on-surface">45 <span class="text-label-md font-normal">Days</span></p>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 40%;"></div>
+</div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-sm text-on-surface-variant">Redemption Rate</label>
+<p class="font-headline-md text-on-surface">100%</p>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 100%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Micro-interaction script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('click', () => {
+                    row.classList.add('scale-[0.99]');
+                    setTimeout(() => row.classList.remove('scale-[0.99]'), 150);
+                });
+            });
+
+            // Smooth fade-in animation for cards
+            const cards = document.querySelectorAll('.custom-shadow');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(10px)';
+                card.style.transition = `opacity 0.5s ease ${index * 0.1}s, transform 0.5s ease ${index * 0.1}s`;
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+    </script>
+
+
+</body></html>

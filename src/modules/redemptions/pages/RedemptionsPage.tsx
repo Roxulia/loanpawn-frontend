@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Badge, Button, Input, Textarea } from '../../../components/atoms'
-import { Alert } from '../../../components/feedback'
-import { ActionBar, Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
+import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
+import { CloseIcon, FilterIcon, SearchIcon } from '../../../components/icons/icon'
+import { ActionBar, Card, FilterBar, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
@@ -12,8 +13,23 @@ const perPage = 10
 
 type RedemptionTab = 'workflow' | 'history'
 
+function formatDateInputValue(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
 function initialRedemptionDate() {
-  return new Date().toISOString().slice(0, 10)
+  return formatDateInputValue(new Date())
+}
+
+function initialMonthStartDate() {
+  const today = new Date()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+
+  return `${today.getFullYear()}-${month}-01`
 }
 
 export function RedemptionsPage() {
@@ -30,6 +46,12 @@ export function RedemptionsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [managementStartDate, setManagementStartDate] = useState(initialMonthStartDate)
+  const [managementEndDate, setManagementEndDate] = useState(initialRedemptionDate)
+  const [draftManagementStartDate, setDraftManagementStartDate] = useState(initialMonthStartDate)
+  const [draftManagementEndDate, setDraftManagementEndDate] = useState(initialRedemptionDate)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+  const [isManagementDetailModalOpen, setIsManagementDetailModalOpen] = useState(false)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isRedeeming, setIsRedeeming] = useState(false)
   const [isLoadingRecords, setIsLoadingRecords] = useState(false)
@@ -45,7 +67,12 @@ export function RedemptionsPage() {
     setError(null)
 
     try {
-      const response = await redemptionService.listRedemptions({ page, perPage })
+      const response = await redemptionService.listRedemptions({
+        endDate: managementEndDate,
+        page,
+        perPage,
+        startDate: managementStartDate,
+      })
       const pageData = response
       const nextItems = pageData.items ?? []
       const nextPerPage = pageData.per_page ?? pageData.perPage ?? perPage
@@ -60,7 +87,7 @@ export function RedemptionsPage() {
     } finally {
       setIsLoadingRecords(false)
     }
-  }, [])
+  }, [managementEndDate, managementStartDate])
 
   useEffect(() => {
     if (activeTab === 'history') {
@@ -156,6 +183,34 @@ export function RedemptionsPage() {
     setCalculation(null)
   }
 
+  function applyManagementFilters() {
+    if (draftManagementStartDate && draftManagementEndDate && draftManagementEndDate < draftManagementStartDate) {
+      setError('To date must be on or after from date.')
+      return
+    }
+
+    setManagementStartDate(draftManagementStartDate)
+    setManagementEndDate(draftManagementEndDate)
+    setSelectedRecord(null)
+    setCurrentPage(1)
+    setIsFilterModalOpen(false)
+  }
+
+  function clearManagementFilters() {
+    setDraftManagementStartDate('')
+    setDraftManagementEndDate('')
+    setManagementStartDate('')
+    setManagementEndDate('')
+    setSelectedRecord(null)
+    setCurrentPage(1)
+    setIsFilterModalOpen(false)
+  }
+
+  function openMobileManagementDetail(record: RedemptionDetail) {
+    setSelectedRecord(record)
+    setIsManagementDetailModalOpen(true)
+  }
+
   const historyColumns: Array<DataTableColumn<RedemptionDetail>> = [
     { header: 'Slip No', key: 'slip', render: (record) => <strong>{getRedemptionSlipNumber(record)}</strong> },
     { header: 'Net Amount', key: 'net', render: (record) => formatMoney(getRedemptionAmount(record, 'net')) },
@@ -184,9 +239,9 @@ export function RedemptionsPage() {
         </div>
       </div>
 
-      <div className="module-tabs ops-tabs" role="tablist" aria-label={t('Redemption sections')}>
-        <Button aria-pressed={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
-        <Button aria-pressed={activeTab === 'history'} onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
+      <div className="module-tabs ops-tabs redemption-mobile-tabs" role="tablist" aria-label={t('Redemption sections')}>
+        <Button aria-pressed={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Creation</Button>
+        <Button aria-pressed={activeTab === 'history'} onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>Management</Button>
       </div>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Redemption action failed" tone="danger" />}
@@ -195,11 +250,11 @@ export function RedemptionsPage() {
       {activeTab === 'workflow' ? (
         <div className="workflow-stack">
           <Card title="Slip Lookup">
-            <form className="inline-form ops-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
+            <form className="inline-form ops-lookup-form redemption-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
               <FormField id="redemption-slip-no" label="Slip Number or Barcode">
                 <Input id="redemption-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
               </FormField>
-              <Button isLoading={isCalculating} type="submit" variant="primary">Load Detail</Button>
+              <Button aria-label="Load Detail" className="redemption-lookup-submit" isLoading={isCalculating} leftIcon={<SearchIcon />} title="Load Detail" type="submit" variant="primary">Load Detail</Button>
             </form>
           </Card>
 
@@ -210,8 +265,8 @@ export function RedemptionsPage() {
               </Card>
 
               <Card title="Receive Payment">
-                <form className="workflow-stack" onSubmit={(event) => void handleRedeem(event)}>
-                  <div className="form-grid-compact">
+                <form className="workflow-stack redemption-payment-form" onSubmit={(event) => void handleRedeem(event)}>
+                  <div className="form-grid-compact redemption-payment-form__fields">
                     <FormField id="redemption-payment" label="Payment Amount">
                       <Input id="redemption-payment" min="0" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
                     </FormField>
@@ -222,7 +277,7 @@ export function RedemptionsPage() {
                   <FormField id="redemption-notes" label="Notes">
                     <Textarea id="redemption-notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
                   </FormField>
-                  <div className="ops-amount-panel">
+                  <div className="ops-amount-panel redemption-payment-info">
                     <KeyValueList items={[
                       { key: 'Total Amount To Pay', value: formatMoney(totalToPay) },
                       { key: 'Received', value: formatMoney(paymentAmount) },
@@ -243,29 +298,72 @@ export function RedemptionsPage() {
           )}
         </div>
       ) : (
-        <div className="split-workspace ops-history-workspace">
-          <Card title="Redemption History" description={`${total} total redemption${total === 1 ? '' : 's'}`}>
-            <DataTable
-              columns={historyColumns}
-              emptyDescription="Completed redemptions will appear here."
-              emptyTitle="No redemptions yet"
-              getItemId={(record) => record.id}
-              getItemTitle={(record) => `Slip ${getRedemptionSlipNumber(record)}`}
+        <div className="split-workspace ops-history-workspace redemption-management-workspace">
+          <Card
+            action={(
+              <Button
+                aria-label="Filter redemption dates"
+                className="ui-button--icon redemption-management-mobile-filter-button"
+                leftIcon={<FilterIcon />}
+                onClick={() => setIsFilterModalOpen(true)}
+                title="Filter redemption dates"
+                variant="secondary"
+              >
+                Filter
+              </Button>
+            )}
+            title="Redemption History"
+            description={`${total} total redemption${total === 1 ? '' : 's'}`}
+          >
+            <div className="redemption-management-desktop-filter">
+              <RedemptionManagementFilterFields
+                endDate={draftManagementEndDate}
+                onApply={applyManagementFilters}
+                onClear={clearManagementFilters}
+                onEndDateChange={setDraftManagementEndDate}
+                onStartDateChange={setDraftManagementStartDate}
+                startDate={draftManagementStartDate}
+              />
+            </div>
+            <div className="redemption-management-desktop-list">
+              <DataTable
+                columns={historyColumns}
+                emptyDescription="Completed redemptions will appear here."
+                emptyTitle="No redemptions yet"
+                getItemId={(record) => record.id}
+                getItemTitle={(record) => `Slip ${getRedemptionSlipNumber(record)}`}
+                isLoading={isLoadingRecords}
+                items={records}
+                onRowClick={(record) => setSelectedRecord(record)}
+                pagination={{
+                  currentPage,
+                  lastPage,
+                  onNext: () => setCurrentPage((page) => page + 1),
+                  onPrevious: () => setCurrentPage((page) => page - 1),
+                  total,
+                }}
+              />
+            </div>
+            <RedemptionManagementMobileList
+              currentPage={currentPage}
               isLoading={isLoadingRecords}
-              items={records}
-              onRowClick={(record) => setSelectedRecord(record)}
-              pagination={{
-                currentPage,
-                lastPage,
-                onNext: () => setCurrentPage((page) => page + 1),
-                onPrevious: () => setCurrentPage((page) => page - 1),
-                total,
-              }}
+              lastPage={lastPage}
+              onNext={() => setCurrentPage((page) => page + 1)}
+              onPrevious={() => setCurrentPage((page) => page - 1)}
+              onSelect={openMobileManagementDetail}
+              records={records}
+              total={total}
             />
           </Card>
-          <Card title="Redemption Detail" description={selectedRecord ? `Slip ${getRedemptionSlipNumber(selectedRecord)}` : 'Select a redemption record'}>
-            {selectedRecord ? <RedemptionDetailPanel record={selectedRecord} /> : <p className="muted"><LocalizedText text="No redemption selected." /></p>}
-          </Card>
+          <div className="redemption-management-desktop-detail">
+            {selectedRecord ? (
+              <RedemptionManagementDetailCard record={selectedRecord} onClose={() => setSelectedRecord(null)} />
+            ) : (
+              <Card title="Redemption Detail" description="Select a redemption record">
+                <p className="muted"><LocalizedText text="No redemption selected." /></p>
+              </Card>
+            )}
+          </div>
         </div>
       )}
       <Modal
@@ -276,6 +374,33 @@ export function RedemptionsPage() {
       >
         {redemptionResult && <RedemptionDetailPanel record={redemptionResult} />}
       </Modal>
+      <Modal
+        footer={(
+          <>
+            <Button onClick={clearManagementFilters} variant="secondary">Clear</Button>
+            <Button onClick={applyManagementFilters} variant="primary">Apply Filter</Button>
+          </>
+        )}
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        title="Filter redemption dates"
+      >
+        <div className="redemption-management-mobile-filter-modal">
+          <RedemptionManagementDateFields
+            endDate={draftManagementEndDate}
+            onEndDateChange={setDraftManagementEndDate}
+            onStartDateChange={setDraftManagementStartDate}
+            startDate={draftManagementStartDate}
+          />
+        </div>
+      </Modal>
+      {isManagementDetailModalOpen && selectedRecord && (
+        <div className="redemption-management-mobile-detail-backdrop" role="presentation" onMouseDown={() => setIsManagementDetailModalOpen(false)}>
+          <div className="redemption-management-mobile-detail-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <RedemptionManagementDetailCard record={selectedRecord} onClose={() => setIsManagementDetailModalOpen(false)} />
+          </div>
+        </div>
+      )}
     </section>
   )
 }
@@ -284,12 +409,183 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat('en-US').format(value)
 }
 
+function RedemptionManagementDateFields({
+  endDate,
+  onEndDateChange,
+  onStartDateChange,
+  startDate,
+}: {
+  endDate: string
+  onEndDateChange: (value: string) => void
+  onStartDateChange: (value: string) => void
+  startDate: string
+}) {
+  return (
+    <div className="redemption-management-filter-fields">
+      <FormField id="redemption-management-start-date" label="From date">
+        <Input id="redemption-management-start-date" onChange={(event) => onStartDateChange(event.target.value)} type="date" value={startDate} />
+      </FormField>
+      <FormField id="redemption-management-end-date" label="To date">
+        <Input id="redemption-management-end-date" onChange={(event) => onEndDateChange(event.target.value)} type="date" value={endDate} />
+      </FormField>
+    </div>
+  )
+}
+
+function RedemptionManagementFilterFields({
+  endDate,
+  onApply,
+  onClear,
+  onEndDateChange,
+  onStartDateChange,
+  startDate,
+}: {
+  endDate: string
+  onApply: () => void
+  onClear: () => void
+  onEndDateChange: (value: string) => void
+  onStartDateChange: (value: string) => void
+  startDate: string
+}) {
+  return (
+    <FilterBar
+      actions={(
+        <>
+          <Button onClick={onClear} variant="secondary">Clear</Button>
+          <Button onClick={onApply} variant="primary">Apply Filter</Button>
+        </>
+      )}
+    >
+      <RedemptionManagementDateFields
+        endDate={endDate}
+        onEndDateChange={onEndDateChange}
+        onStartDateChange={onStartDateChange}
+        startDate={startDate}
+      />
+    </FilterBar>
+  )
+}
+
+function RedemptionManagementMobileList({
+  currentPage,
+  isLoading,
+  lastPage,
+  onNext,
+  onPrevious,
+  onSelect,
+  records,
+  total,
+}: {
+  currentPage: number
+  isLoading: boolean
+  lastPage: number
+  onNext: () => void
+  onPrevious: () => void
+  onSelect: (record: RedemptionDetail) => void
+  records: RedemptionDetail[]
+  total: number
+}) {
+  if (isLoading) {
+    return (
+      <div className="redemption-management-mobile-list">
+        <LoadingState rows={5} />
+      </div>
+    )
+  }
+
+  if (records.length === 0) {
+    return (
+      <div className="redemption-management-mobile-list">
+        <EmptyState description="Completed redemptions will appear here." title="No redemptions yet" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="redemption-management-mobile-list">
+      <div className="redemption-management-mobile-cards">
+        {records.map((record) => (
+          <button className="redemption-management-mobile-card" key={record.id} onClick={() => onSelect(record)} type="button">
+            <strong>{getRedemptionSlipNumber(record)}</strong>
+            <span>
+              <span>
+                <small>Total Amount</small>
+                <b>{formatMoney(getRedemptionAmount(record, 'net'))}</b>
+              </span>
+              <span>
+                <small>Redeemed Date</small>
+                <b>{formatDate(getRedemptionDate(record))}</b>
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="ui-pagination redemption-management-mobile-pagination">
+        <span className="ui-pagination__meta">
+          Page {currentPage} of {lastPage} - {total} records
+        </span>
+        <Button disabled={currentPage <= 1} onClick={onPrevious} variant="secondary">Previous</Button>
+        <Button disabled={currentPage >= lastPage} onClick={onNext} variant="secondary">Next</Button>
+      </div>
+    </div>
+  )
+}
+
 function RedemptionSummary({ calculation }: { calculation: RedemptionCalculationResult }) {
   const interestPayments = getInterestPayments(calculation)
   const unpaidDebts = getUnpaidDebts(calculation)
+  const collateralItems = calculation.collateral_items ?? calculation.slip.items ?? []
 
   return (
     <div className="redemption-detail-panel">
+      <div className="redemption-mobile-summary-card">
+        <div className="redemption-mobile-summary-card__header">
+          <span>Slip No</span>
+          <strong>{calculation.slip.slip_no}</strong>
+        </div>
+        <div className="redemption-mobile-summary-card__total">
+          <span>Total Amount To Pay</span>
+          <strong>{formatMoney(calculation.total_amount_to_pay)}</strong>
+        </div>
+        <div className="redemption-mobile-summary-card__metrics">
+          <div>
+            <span>Customer Name</span>
+            <strong>{calculation.customer?.name ?? getSlipCustomerName(calculation.slip)}</strong>
+          </div>
+          <div>
+            <span>Loan Amount</span>
+            <strong>{formatMoney(calculation.loan_amount)}</strong>
+          </div>
+          <div>
+            <span>Total Unpaid Interest</span>
+            <strong>{formatMoney(calculation.calculated_interest)}</strong>
+          </div>
+          <div>
+            <span>Total Unpaid Debt</span>
+            <strong>{formatMoney(calculation.total_debt)}</strong>
+          </div>
+        </div>
+        <div className="redemption-mobile-collateral-list">
+          <div className="redemption-mobile-collateral-list__header">
+            <strong>Collateral Items</strong>
+            <span>{collateralItems.length} item(s)</span>
+          </div>
+          {collateralItems.length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
+            <div className="redemption-mobile-collateral-list__items">
+              {collateralItems.map((item) => (
+                <article className="redemption-mobile-collateral-item" key={item.code ?? item.id}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span>{item.code ?? '-'}</span>
+                  </div>
+                  <span>{item.type}</span>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="redemption-summary-grid">
         <div>
           <span>Slip No</span>
@@ -317,12 +613,12 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         </div>
       </div>
 
-      <section className="redemption-snapshot-section">
+      <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>
           <strong><LocalizedText text="Collateral Summary" /></strong>
-          <span>{(calculation.collateral_items ?? calculation.slip.items ?? []).length} item(s)</span>
+          <span>{collateralItems.length} item(s)</span>
         </header>
-        {(calculation.collateral_items ?? calculation.slip.items ?? []).length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
+        {collateralItems.length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
           <DataTable
             columns={[
               { header: 'Code', key: 'code', render: (item) => item.code ?? '-' },
@@ -332,12 +628,12 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
             ]}
             getItemId={(item) => item.code ?? item.id}
             getItemTitle={(item) => item.name}
-            items={calculation.collateral_items ?? calculation.slip.items ?? []}
+            items={collateralItems}
           />
         )}
       </section>
 
-      <section className="redemption-snapshot-section">
+      <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>
           <strong><LocalizedText text="Interest Snapshot" /></strong>
           <span>{interestPayments.length} row(s)</span>
@@ -357,7 +653,7 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         )}
       </section>
 
-      <section className="redemption-snapshot-section">
+      <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>
           <strong><LocalizedText text="Debt Snapshot" /></strong>
           <span>{unpaidDebts.length} unpaid</span>
@@ -375,6 +671,52 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
           />
         )}
       </section>
+    </div>
+  )
+}
+
+function RedemptionManagementDetailCard({ onClose, record }: { onClose: () => void; record: RedemptionDetail }) {
+  const slipNumber = getRedemptionSlipNumber(record)
+
+  return (
+    <section className="redemption-management-detail-card">
+      <header className="redemption-management-detail-card__header">
+        <div>
+          <h3>Redemption Detail</h3>
+          <p>Slip {slipNumber}</p>
+        </div>
+        <button aria-label="Close detail view" onClick={onClose} type="button">
+          <CloseIcon />
+        </button>
+      </header>
+
+      <div className="redemption-management-detail-card__body">
+        <div className="redemption-management-detail-card__metrics">
+          <RedemptionMetricRow label="Slip No" tone="primary" value={slipNumber} />
+          <RedemptionMetricRow label="Gross Amount" value={formatMoney(getRedemptionAmount(record, 'gross'))} />
+          <RedemptionMetricRow label="Net Amount" tone="primary" value={formatMoney(getRedemptionAmount(record, 'net'))} />
+          <RedemptionMetricRow label="Interest" tone="warning" value={formatMoney(getRedemptionAmount(record, 'interest'))} />
+          <RedemptionMetricRow label="Received" tone="success" value={formatMoney(getRedemptionAmount(record, 'received'))} />
+          <RedemptionMetricRow label="Change" value={formatMoney(getRedemptionAmount(record, 'change'))} />
+          <RedemptionMetricRow label="Redeemed At" value={formatDate(getRedemptionDate(record))} />
+        </div>
+
+        <section className="redemption-management-detail-card__notes">
+          <h4>Internal Notes</h4>
+          <div>{record.notes || 'No notes recorded for this redemption.'}</div>
+        </section>
+      </div>
+    </section>
+  )
+}
+
+function RedemptionMetricRow({ label, tone, value }: { label: string; tone?: 'primary' | 'success' | 'warning'; value: string }) {
+  const toneClass = tone ? ` redemption-management-detail-card__row--${tone}` : ''
+
+  return (
+    <div className={`redemption-management-detail-card__row${toneClass}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   )
 }

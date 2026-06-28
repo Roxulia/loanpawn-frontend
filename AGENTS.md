@@ -1,5 +1,6 @@
 # Notes
 - Do not run dev server if i dont command.
+- If for Website UI , create seperate class name and components to create different CSS for mobile and desktop screen size. (For example : <div classname ="mobile-card"> or <div classname ="desktop-card"> in CSS , use display = hidden for each screen type using @media constraint.)
 
 ## UI Redesign Workflow
 

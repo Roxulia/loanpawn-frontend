@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
 import { Button } from '../../../components/atoms'
 import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
-import { CirclePlusIcon, EditIcon, TrashIcon } from '../../../components/icons/icon'
+import { ChevronRightIcon, CirclePlusIcon, ClockIcon, EditIcon, LocationPinIcon, RefreshIcon, TrashIcon } from '../../../components/icons/icon'
 import { SearchField } from '../../../components/molecules'
 import { ConfirmDialog } from '../../../components/organisms'
 import { usePermissions } from '../../auth'
@@ -486,43 +486,6 @@ function LastActivityCell({ activity }: { activity: TenantCustomerLastActivity }
       <strong className={`customer-serene-status customer-serene-status--${getStatusTone(activity.tone)}`}>{activity.status}</strong>
       <small>{activity.label}</small>
     </div>
-  )
-}
-
-function RefreshIcon() {
-  return (
-    <svg aria-hidden="true" className="customer-serene-refresh__icon" viewBox="0 0 24 24">
-      <path d="M20 6v5h-5" />
-      <path d="M4 18v-5h5" />
-      <path d="M18.2 9A7 7 0 0 0 6.3 6.8L4 9" />
-      <path d="M5.8 15A7 7 0 0 0 17.7 17.2L20 15" />
-    </svg>
-  )
-}
-
-function LocationPinIcon() {
-  return (
-    <svg aria-hidden="true" className="customer-serene-location__icon" viewBox="0 0 24 24">
-      <path d="M12 21s7-5.3 7-12a7 7 0 1 0-14 0c0 6.7 7 12 7 12Z" />
-      <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-    </svg>
-  )
-}
-
-function ClockIcon() {
-  return (
-    <svg aria-hidden="true" className="customer-record-card__meta-icon" viewBox="0 0 24 24">
-      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" />
-      <path d="M12 6v6l4 2" />
-    </svg>
-  )
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg aria-hidden="true" className="customer-record-card__chevron" viewBox="0 0 24 24">
-      <path d="m9 18 6-6-6-6" />
-    </svg>
   )
 }
 

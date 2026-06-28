@@ -17,10 +17,8 @@ export function FormField({ children, error, helperText, id, label }: FormFieldP
     <div className="ui-form-field">
       <Label htmlFor={id}>{label}</Label>
       {children}
-      <div className="ui-form-field__hint">{helperText ? t(helperText) : helperText}</div>
-      <div className="ui-form-field__error" role={error ? 'alert' : undefined}>
-        {error ? t(error) : error}
-      </div>
+      {helperText && <div className="ui-form-field__hint">{t(helperText)}</div>}
+      {error && <div className="ui-form-field__error" role="alert">{t(error)}</div>}
     </div>
   )
 }

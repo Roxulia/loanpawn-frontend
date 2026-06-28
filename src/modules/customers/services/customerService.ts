@@ -42,6 +42,12 @@ export type TenantCustomer = {
   isDeleted?: boolean
   deleted_at?: string | null
   deletedAt?: string | null
+  created_at?: string | null
+  createdAt?: string | null
+  loanMetrics?: TenantCustomerLoanMetrics
+  loan_metrics?: TenantCustomerLoanMetrics
+  activeSlips?: TenantCustomerActiveSlip[]
+  active_slips?: TenantCustomerActiveSlip[]
 }
 
 export type TenantCustomerLastActivity = {
@@ -49,6 +55,46 @@ export type TenantCustomerLastActivity = {
   status: string
   label: string
   tone: 'success' | 'danger' | 'neutral' | 'warning' | 'info' | string
+}
+
+export type TenantCustomerLoanMetrics = {
+  total_slips?: number
+  totalSlips?: number
+  active_slips?: number
+  activeSlips?: number
+  completed_slips?: number
+  completedSlips?: number
+  total_loan_amount?: number
+  totalLoanAmount?: number
+  active_loan_amount?: number
+  activeLoanAmount?: number
+  total_interest_paid?: number
+  totalInterestPaid?: number
+  average_loan_term_days?: number
+  averageLoanTermDays?: number
+  redemption_rate?: number
+  redemptionRate?: number
+  latest_activity_date?: string | null
+  latestActivityDate?: string | null
+  first_slip_date?: string | null
+  firstSlipDate?: string | null
+}
+
+export type TenantCustomerActiveSlip = {
+  id: number
+  slip_no?: string
+  slipNo?: string
+  pawned_item?: string
+  pawnedItem?: string
+  loan_amount?: number
+  loanAmount?: number
+  interest_rate?: number
+  interestRate?: number
+  interest_type_name?: string | null
+  interestTypeName?: string | null
+  expire_date?: string | null
+  expireDate?: string | null
+  status?: string
 }
 
 export type TenantCustomerListSummary = {

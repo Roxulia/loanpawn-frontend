@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>LonePawn - Redemptions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f1f4f6",
+                        "on-tertiary-container": "#cadcdb",
+                        "outline": "#b0bec5",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-surface": "#181c1e",
+                        "inverse-on-surface": "#eff1f3",
+                        "info": "#0ea5e9",
+                        "surface-dim": "#d8dadc",
+                        "secondary-fixed": "#b6ebff",
+                        "primary": "#004d60",
+                        "on-background": "#181c1e",
+                        "primary-fixed-dim": "#86d1ec",
+                        "on-tertiary-fixed": "#0e1e1e",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#004e60",
+                        "error": "#ef4444",
+                        "success": "#10b981",
+                        "outline-variant": "#bfc8cd",
+                        "tertiary-fixed-dim": "#b8cac9",
+                        "secondary": "#00677f",
+                        "on-surface-variant": "#3f484c",
+                        "inverse-primary": "#86d1ec",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#62d4f9",
+                        "surface-tint": "#00677f",
+                        "primary-container": "#004d60",
+                        "container-lowest": "#ffffff",
+                        "on-primary-container": "#98e3ff",
+                        "secondary-container": "#69daff",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary": "#394949",
+                        "on-tertiary-fixed-variant": "#3a4a49",
+                        "tertiary-fixed": "#d4e6e5",
+                        "on-secondary-container": "#005e74",
+                        "background": "#f7fafc",
+                        "tertiary-container": "#516161",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "surface": "#f6f9ff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#001f28",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "on-primary-fixed": "#001f28",
+                        "container-low": "#ecf5ff",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-fixed-variant": "#004e60",
+                        "warning": "#f59e0b",
+                        "primary-fixed": "#b6eaff",
+                        "surface-bright": "#f7fafc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar-width": "256px",
+                        "gap-md": "16px",
+                        "margin-mobile": "16px",
+                        "gap-sm": "8px",
+                        "gap-lg": "24px",
+                        "navbar-height": "64px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "label-sm": ["Inter"],
+                        "headline-sm": ["Manrope"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f7fafc;
+            color: #181c1e;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .safe-pb {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .glass-effect {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        /* Custom elevation */
+        .tonal-shadow {
+            box-shadow: 0px 2px 12px rgba(0, 103, 127, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md pb-24">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant h-navbar-height flex justify-between items-center px-margin-mobile">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">LonePawn</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="mt-20 px-margin-mobile flex flex-col gap-lg">
+<!-- Welcome & Description -->
+<section class="flex flex-col gap-sm">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Redemptions</h2>
+<p class="text-on-surface-variant font-label-md text-label-md">Process loan closures and collateral returns.</p>
+</section>
+<!-- Notification Banner (Dynamic State) -->
+<div class="flex items-center gap-md p-4 bg-success/10 border border-success/20 rounded-xl">
+<span class="material-symbols-outlined text-success" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="flex flex-col">
+<p class="font-label-md text-label-md text-on-surface">Redemption updated</p>
+<p class="text-xs text-on-surface-variant">Slip LS202606ZLH07ED002 details loaded.</p>
+</div>
+</div>
+<!-- Slip Lookup Section -->
+<section class="flex flex-col gap-md">
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-primary ml-1">Slip Number or Barcode</label>
+<div class="relative flex gap-sm">
+<input class="w-full bg-container-lowest border border-outline rounded-lg px-4 py-3 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" placeholder="Enter slip #" type="text" value="LS202606ZLH07ED002"/>
+<button class="bg-secondary text-on-secondary px-4 rounded-lg font-label-md text-label-md whitespace-nowrap active:scale-95 transition-transform">
+                        Load Detail
+                    </button>
+</div>
+</div>
+</section>
+<!-- Loan Summary Card (High Detail) -->
+<div class="bg-container-lowest border border-container-low rounded-xl tonal-shadow overflow-hidden">
+<div class="bg-primary p-4 flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-primary-container/80 uppercase tracking-wider">Total to Pay</span>
+<span class="material-symbols-outlined text-on-primary-container">payments</span>
+</div>
+<div class="p-6 bg-primary-container flex flex-col items-center gap-1">
+<span class="text-[32px] font-bold text-on-primary-container leading-none">10,500,000</span>
+<span class="font-label-sm text-label-sm text-on-primary-container/70">MMK</span>
+</div>
+<div class="p-4 grid grid-cols-2 gap-y-4">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Customer</span>
+<span class="font-label-md text-label-md">Zin Lin Htet</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Loan Amount</span>
+<span class="font-label-md text-label-md">10,000,000</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Interest</span>
+<span class="font-label-md text-label-md">500,000</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Late Debt</span>
+<span class="font-label-md text-label-md">0</span>
+</div>
+</div>
+</div>
+<!-- Collateral Bento -->
+<section class="flex flex-col gap-sm">
+<h3 class="font-label-md text-label-md text-on-surface-variant px-1">Collateral Assets</h3>
+<div class="grid grid-cols-1 gap-md">
+<div class="bg-container-lowest border border-container-low p-4 rounded-xl flex items-center gap-md tonal-shadow">
+<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">diamond</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface">Gold Necklace</span>
+<span class="text-xs bg-surface-variant px-2 py-0.5 rounded-full text-on-surface-variant">Jewellery</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-0.5">Code: CI202606ZLH07ED002</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Payment Input Section -->
+<section class="bg-container-low/50 p-6 rounded-2xl border border-container-low flex flex-col gap-lg">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Receive Payment</h3>
+<div class="flex flex-col gap-md">
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">Payment Amount</label>
+<input class="bg-container-lowest border border-outline rounded-lg px-4 py-3 font-headline-sm text-headline-sm focus:ring-2 focus:ring-primary/20 outline-none" type="number" value="10500000"/>
+</div>
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">Redemption Date</label>
+<div class="relative">
+<input class="w-full bg-container-lowest border border-outline rounded-lg px-4 py-3 outline-none" type="date" value="2026-06-27"/>
+</div>
+</div>
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">Notes</label>
+<textarea class="bg-container-lowest border border-outline rounded-lg px-4 py-2 outline-none resize-none" placeholder="Add specific notes about this redemption..." rows="3"></textarea>
+</div>
+</div>
+<!-- Transaction Calculator -->
+<div class="bg-primary/5 rounded-xl p-4 flex flex-col gap-sm">
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Remaining Balance</span>
+<span class="font-bold text-on-surface">0 MMK</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Change to Return</span>
+<span class="font-bold text-secondary">0 MMK</span>
+</div>
+</div>
+<div class="flex flex-col gap-sm">
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-headline-sm text-headline-sm shadow-lg active:scale-[0.98] transition-all">
+                    Process Redemption
+                </button>
+<button class="w-full bg-transparent text-on-surface-variant py-2 rounded-xl font-label-md text-label-md hover:bg-surface-container active:scale-[0.98] transition-all">
+                    Reset Form
+                </button>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-container-lowest border-t border-outline-variant h-navbar-height flex justify-around items-center px-margin-mobile pb-safe">
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-sm text-label-sm">Customers</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary font-bold bg-secondary-container/20 rounded-full px-4 py-1 transition-transform active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label-sm text-label-sm">Slips</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</button>
+</nav>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const ripple = document.createElement('div');
+                ripple.className = 'absolute inset-0 bg-current opacity-10 rounded-inherit animate-ping pointer-events-none';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 400);
+            });
+        });
+    </script>
+</body></html>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button, Input } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
+import { ArrowRightIcon, SearchIcon } from '../../../components/icons/icon'
 import { ActionBar, Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
@@ -209,31 +210,39 @@ export function InterestPaymentsPage() {
       {activeTab === 'workflow' ? (
         <div className="workflow-stack">
           <Card title="Slip Lookup">
-            <form className="inline-form ops-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
+            <form className="inline-form ops-lookup-form interest-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
               <FormField id="interest-slip-no" label="Slip Number or Barcode">
                 <Input id="interest-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
               </FormField>
-              <Button isLoading={isCalculating} type="submit" variant="primary">Load Slip</Button>
+              <Button aria-label="Load Slip" className="interest-lookup-submit" isLoading={isCalculating} leftIcon={<SearchIcon />} title="Load Slip" type="submit" variant="primary">Load Slip</Button>
             </form>
           </Card>
 
           {calculation && (
             <div className="ops-post-lookup-grid">
               <Card title="Accrual Breakdown">
-                <div className="ops-amount-panel ops-amount-panel--summary">
+                <div className="ops-amount-panel ops-amount-panel--summary interest-accrual-desktop-detail">
                   <KeyValueList items={[
                     { key: 'Slip No', value: normalizedSlipNo },
                     { key: 'Current Date', value: formatDate(calculation.currentDate ?? calculation.current_date) },
                     { key: 'Total Interest', value: formatMoney(totalInterest) },
                   ]} />
                 </div>
-                <DataTable
-                  columns={columns}
-                  emptyDescription="No unpaid interest is due for this slip."
-                  emptyTitle="No interest due"
-                  getItemId={(row) => row.id}
-                  getItemTitle={(row) => `${formatDate(row.start_date)} to ${formatDate(row.end_date)}`}
-                  items={rows}
+                <div className="interest-accrual-desktop-detail">
+                  <DataTable
+                    columns={columns}
+                    emptyDescription="No unpaid interest is due for this slip."
+                    emptyTitle="No interest due"
+                    getItemId={(row) => row.id}
+                    getItemTitle={(row) => `${formatDate(row.start_date)} to ${formatDate(row.end_date)}`}
+                    items={rows}
+                  />
+                </div>
+                <InterestAccrualMobileDetail
+                  currentDate={formatDate(calculation.currentDate ?? calculation.current_date)}
+                  rows={rows}
+                  slipNo={normalizedSlipNo}
+                  totalInterest={totalInterest}
                 />
               </Card>
 
@@ -309,6 +318,64 @@ export function InterestPaymentsPage() {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat('en-US').format(value)
+}
+
+function InterestAccrualMobileDetail({
+  currentDate,
+  rows,
+  slipNo,
+  totalInterest,
+}: {
+  currentDate: string
+  rows: InterestBreakdownRow[]
+  slipNo: string
+  totalInterest: number
+}) {
+  return (
+    <section className="interest-accrual-mobile-detail">
+      <div className="interest-accrual-mobile-detail__header">
+        <h3>Accrual Breakdown</h3>
+        <span>{rows.length} Record{rows.length === 1 ? '' : 's'} Found</span>
+      </div>
+
+      <div className="interest-accrual-mobile-summary">
+        <div className="interest-accrual-mobile-summary__header">
+          <p>Slip No</p>
+          <strong>{slipNo || '-'}</strong>
+        </div>
+        <div className="interest-accrual-mobile-summary__content">
+          <div>
+            <p>Current Date</p>
+            <strong>{currentDate}</strong>
+          </div>
+          <div>
+            <p>Total Interest</p>
+            <strong>{formatMoney(totalInterest)}</strong>
+          </div>
+        </div>
+      </div>
+
+      {rows.map((row, index) => (
+        <article className="interest-accrual-mobile-row" key={row.id}>
+          <div className="interest-accrual-mobile-row__top">
+            <span>{index === 0 ? 'Active Row' : `Row ${index + 1}`}</span>
+            <strong>{formatMoney(getInterestAmount(row))}</strong>
+          </div>
+          <div className="interest-accrual-mobile-row__period">
+            <div>
+              <span>Start Date</span>
+              <strong>{formatDate(row.start_date ?? row.startDate)}</strong>
+            </div>
+            <ArrowRightIcon />
+            <div>
+              <span>End Date</span>
+              <strong>{formatDate(row.end_date ?? row.endDate)}</strong>
+            </div>
+          </div>
+        </article>
+      ))}
+    </section>
+  )
 }
 
 function getBreakdown(calculation: InterestCalculationResult | null) {
