@@ -124,76 +124,85 @@ export type TenantDebt = {
   updated_at?: string | null
 }
 
-export type DashboardNearlyExpiredSlip = {
-  slipNo: string
-  customerName: string
+export type DashboardTimeFilter = 'this_day' | 'this_week' | 'this_month' | 'custom'
+
+export type DashboardFinancialChartPoint = {
+  date: string
   loanAmount: number
-  expireDate: string | null
-  daysRemaining: number
+  returnedAmount: number
+  interest: number
+  expenses: number
 }
 
-export type DashboardTrustedCustomer = {
+export type DashboardLoanAttention = {
+  customerName: string
+  loanCode: string
+  dueDate: string | null
+  loanAmount: number
+  overdueDays: number
+  riskLevel: 'Low' | 'Medium' | 'High'
+  trustPercent: number
+}
+
+export type DashboardCollateralCategory = {
+  category: string
+  value: number
+  count: number
+}
+
+export type DashboardCollateralReviewItem = {
   code: string
-  name: string
-  trustScore: number | null
-  activeLoanAmount: number
-  activeSlipCount: number
-}
-
-export type DashboardCustomerLoanUsage = {
-  code: string
-  name: string
-  totalLoanAmount: number
-  activeLoanAmount: number
-  slipCount: number
-  lastLoanDate: string | null
-}
-
-export type DashboardRecentExpense = {
-  code: string
-  description: string
-  amount: number
-  expenseTypeName: string | null
-  createdAt: string | null
-}
-
-export type DashboardExpenseTypeTotal = {
-  name: string
-  total: number
+  itemName: string
+  category: string
+  estimatedMarketValue: number
+  loanAmount: number
+  ltvRatio: number
+  status: 'Safe' | 'Low Margin' | 'Expired'
+  isJewellery: boolean
+  materialTypeId: number | null
+  materialTypeName: string | null
+  kyat: number
+  pal: number
+  yway: number
 }
 
 export type TenantDashboardSummary = {
+  filters: {
+    timeFilter: DashboardTimeFilter
+    startDate: string
+    endDate: string
+  }
   financial: {
-    todayIncome: number
-    todayExpense: number
-    netToday: number
-    activeLoanPrincipal: number
-    outstandingDebt: number
+    cashAvailable: number
+    activeLoanAmount: number
+    activeLoanCount: number
+    interestCollected: number
+    totalIncome: number
+    totalExpenses: number
+    netProfit: number
+    previousIncome: number
+    previousExpenses: number
+    previousInterestCollected: number
+    previousNetProfit: number
+    chart: DashboardFinancialChartPoint[]
+  }
+  risk: {
+    dueToday: number
+    dueThisWeek: number
+    overdueLoans: number
+    overdueAmount: number
+    highRiskCustomers: number
+    badRepaymentHistoryCount: number
+    loansRequiringAttention: DashboardLoanAttention[]
   }
   collateral: {
-    totalItems: number
-    jewelleryItems: number
-    normalItems: number
-    activeItems: number
-    redeemedItems: number
-    confiscatedItems: number
-    estimatedValue: number
-  }
-  loans: {
-    activeSlips: number
-    expiredSlips: number
-    redeemedSlips: number
-    nearlyExpiredSlips: DashboardNearlyExpiredSlip[]
-  }
-  customers: {
-    totalCustomers: number
-    trustedCustomers: DashboardTrustedCustomer[]
-    topLoanUsage: DashboardCustomerLoanUsage[]
-  }
-  expenses: {
-    todayTotal: number
-    monthTotal: number
-    recent: DashboardRecentExpense[]
-    byType: DashboardExpenseTypeTotal[]
+    totalCollateralValue: number
+    averageLtvRatio: number
+    goldJewelryValue: number
+    expiredCollateralCount: number
+    lowMarginCollateralItems: number
+    categoryBreakdown: DashboardCollateralCategory[]
+    items: DashboardCollateralReviewItem[]
+    itemsNeedingReview: DashboardCollateralReviewItem[]
   }
 }

@@ -3,6 +3,7 @@ import type {
   AccountingLedger,
   AccountingOverview,
   AccountingTransaction,
+  DashboardTimeFilter,
   TenantDashboardSummary,
   ExpenseTypeOption,
   TenantDebt,
@@ -32,6 +33,12 @@ type LedgerParams = ListParams & {
   endDate: string
 }
 
+type DashboardSummaryParams = {
+  endDate?: string
+  startDate?: string
+  timeFilter?: DashboardTimeFilter
+}
+
 type TenantBrandingSlipLayouts = {
   data: unknown
 }
@@ -56,8 +63,15 @@ function listOptions(params: ListParams = {}, auth?: TenantAuth) {
 }
 
 export const tenantResourceService = {
-  getDashboardSummary(auth?: TenantAuth) {
-    return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', authOptions(auth))
+  getDashboardSummary(params: DashboardSummaryParams = {}, auth?: TenantAuth) {
+    return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', {
+      ...authOptions(auth),
+      params: {
+        end_date: params.endDate,
+        start_date: params.startDate,
+        time_filter: params.timeFilter,
+      },
+    })
   },
 
   listUsers(auth?: TenantAuth) {
