@@ -15,6 +15,7 @@ type IconName =
   | 'interest'
   | 'redemptions'
   | 'accounting'
+  | 'capitals'
   | 'expenses'
   | 'debts'
   | 'staff'
@@ -53,6 +54,7 @@ const navigationGroups: NavigationGroup[] = [
     label: 'Finance',
     items: [
       { label: 'Accounting', to: routePaths.accounting, icon: 'accounting', permissions: ['list_accounting'] },
+      { label: 'Capital Management', to: routePaths.capitals, icon: 'capitals', permissions: ['list_capital', 'create_capital', 'update_capital', 'delete_capital'] },
       { label: 'Expenses', to: routePaths.expenses, icon: 'expenses', permissions: ['list_expense', 'create_expense', 'update_expense', 'delete_expense'] },
       { label: 'Debts', to: routePaths.debts, icon: 'debts', permissions: ['list_debt', 'create_debt', 'update_debt', 'delete_debt'] },
     ],
@@ -119,6 +121,7 @@ function SidebarIcon({ name }: { name: IconName }) {
     interest: ['M12 1v22', 'M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6'],
     redemptions: ['M21 12a9 9 0 1 1-3-6.7', 'M21 3v6h-6', 'M8 12l3 3 5-6'],
     accounting: ['M4 3h16v18H4V3Z', 'M8 7h8', 'M8 11h8', 'M8 15h3', 'M15 15h1'],
+    capitals: ['M12 2v20', 'M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6', 'M19 9l3-3-3-3', 'M22 6h-7'],
     expenses: ['M3 6h18', 'M8 6V4h8v2', 'M6 6l1 15h10l1-15', 'M10 11v5', 'M14 11v5'],
     debts: ['M4 4h16v16H4V4Z', 'M8 8h8', 'M8 12h8', 'M8 16h4'],
     staff: ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M19 8v6', 'M22 11h-6'],

@@ -3,8 +3,10 @@ import type {
   AccountingLedger,
   AccountingOverview,
   AccountingTransaction,
+  DashboardTimeFilter,
   TenantDashboardSummary,
   ExpenseTypeOption,
+  TenantCapital,
   TenantDebt,
   TenantExpense,
 } from '../../dataobjects/tenant/finance'
@@ -32,6 +34,12 @@ type LedgerParams = ListParams & {
   endDate: string
 }
 
+type DashboardSummaryParams = {
+  endDate?: string
+  startDate?: string
+  timeFilter?: DashboardTimeFilter
+}
+
 type TenantBrandingSlipLayouts = {
   data: unknown
 }
@@ -56,8 +64,15 @@ function listOptions(params: ListParams = {}, auth?: TenantAuth) {
 }
 
 export const tenantResourceService = {
-  getDashboardSummary(auth?: TenantAuth) {
-    return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', authOptions(auth))
+  getDashboardSummary(params: DashboardSummaryParams = {}, auth?: TenantAuth) {
+    return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', {
+      ...authOptions(auth),
+      params: {
+        end_date: params.endDate,
+        start_date: params.startDate,
+        time_filter: params.timeFilter,
+      },
+    })
   },
 
   listUsers(auth?: TenantAuth) {
@@ -128,6 +143,22 @@ export const tenantResourceService = {
 
   deleteExpense(expenseCode: string, auth?: TenantAuth) {
     return apiClient.delete<MessageResponse>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
+  },
+
+  listCapitals(params?: ListParams, auth?: TenantAuth) {
+    return apiClient.get<PaginatedResult<TenantCapital>>('/tenant/capitals', listOptions(params, auth))
+  },
+
+  createCapital(payload: unknown, auth?: TenantAuth) {
+    return apiClient.post<TenantCapital>('/tenant/capitals', payload, authOptions(auth))
+  },
+
+  updateCapital(capitalCode: string, payload: unknown, auth?: TenantAuth) {
+    return apiClient.put<TenantCapital>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, payload, authOptions(auth))
+  },
+
+  deleteCapital(capitalCode: string, auth?: TenantAuth) {
+    return apiClient.delete<MessageResponse>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
   },
 
   listExpenseTypes(auth?: TenantAuth) {
