@@ -94,6 +94,19 @@ export type TenantExpense = {
   updated_at?: string | null
 }
 
+export type TenantCapital = {
+  id: number
+  code: string
+  update_key?: number
+  updateKey?: number
+  tenant_id: number
+  amount: string
+  description: string
+  created_by?: number | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
 export type ExpenseTypeOption = {
   id: number
   tenant_id?: number | null

@@ -16,6 +16,7 @@ export const routePaths = {
   interest: '/interest',
   redemptions: '/redemptions',
   accounting: '/accounting',
+  capitals: '/capitals',
   expenses: '/expenses',
   expenseCreate: '/expenses/create',
   debts: '/debts',

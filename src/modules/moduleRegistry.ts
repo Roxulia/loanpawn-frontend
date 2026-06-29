@@ -85,6 +85,16 @@ export const moduleRegistry: ModuleDefinition[] = [
     modulePermissions: ['list_expense', 'create_expense', 'update_expense', 'delete_expense'],
   },
   {
+    id: 'capitals',
+    label: 'Capital Management',
+    routeSegment: 'capitals',
+    apiBasePath: '/tenant/capitals',
+    serverModule: 'TenantModule',
+    description: 'Shop capital recording with incoming accounting transaction support.',
+    listPermission: 'list_capital',
+    modulePermissions: ['list_capital', 'create_capital', 'update_capital', 'delete_capital'],
+  },
+  {
     id: 'debts',
     label: 'Debts',
     routeSegment: 'debts',

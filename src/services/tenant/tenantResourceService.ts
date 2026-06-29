@@ -6,6 +6,7 @@ import type {
   DashboardTimeFilter,
   TenantDashboardSummary,
   ExpenseTypeOption,
+  TenantCapital,
   TenantDebt,
   TenantExpense,
 } from '../../dataobjects/tenant/finance'
@@ -142,6 +143,22 @@ export const tenantResourceService = {
 
   deleteExpense(expenseCode: string, auth?: TenantAuth) {
     return apiClient.delete<MessageResponse>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
+  },
+
+  listCapitals(params?: ListParams, auth?: TenantAuth) {
+    return apiClient.get<PaginatedResult<TenantCapital>>('/tenant/capitals', listOptions(params, auth))
+  },
+
+  createCapital(payload: unknown, auth?: TenantAuth) {
+    return apiClient.post<TenantCapital>('/tenant/capitals', payload, authOptions(auth))
+  },
+
+  updateCapital(capitalCode: string, payload: unknown, auth?: TenantAuth) {
+    return apiClient.put<TenantCapital>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, payload, authOptions(auth))
+  },
+
+  deleteCapital(capitalCode: string, auth?: TenantAuth) {
+    return apiClient.delete<MessageResponse>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
   },
 
   listExpenseTypes(auth?: TenantAuth) {
