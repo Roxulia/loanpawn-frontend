@@ -55,14 +55,16 @@ export type LoanContractSlip = {
   interest_rate: string | number
   interest_type_id?: number | null
   interest_type_name?: string | null
-  created_date?: string
-  expire_date?: string
+  created_at?: string | null
+  updated_at?: string | null
+  expire_at?: string | null
+  last_interest_added_at?: string | null
+  last_interest_paid_at?: string | null
   status: string
   notes?: string | null
   expiry_quota?: number
   expiry_quota_type?: string
   items?: SlipCollateralItem[]
-  created_at?: string | null
 }
 
 export type LoanContractSlipListPage = {

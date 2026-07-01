@@ -23,7 +23,7 @@ export type TenantDetail = {
   }
   tenant_license: {
     plan_type: TenantPlanType
-    expire_date : string,
+    expires_at: string | null
     status: TenantLicenseStatus
   }
   tenant_branding?: {

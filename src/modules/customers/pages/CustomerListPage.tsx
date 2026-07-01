@@ -6,6 +6,7 @@ import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
 import { ChevronRightIcon, CirclePlusIcon, ClockIcon, EditIcon, LocationPinIcon, RefreshIcon, TrashIcon } from '../../../components/icons/icon'
 import { SearchField } from '../../../components/molecules'
 import { ConfirmDialog } from '../../../components/organisms'
+import { formatLocalDate } from '../../../utils/localDateTime'
 import { usePermissions } from '../../auth'
 import {
   customerService,
@@ -604,21 +605,7 @@ function formatValue(value?: string | number | null) {
 }
 
 function formatDate(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(date)
+  return formatLocalDate(value)
 }
 
 function formatRelativeActivity(value?: string | null) {

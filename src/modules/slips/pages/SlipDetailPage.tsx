@@ -82,8 +82,8 @@ export function SlipDetailPage() {
               { key: 'Loan Amount', value: formatMoney(slip.loan_amount) },
               { key: 'Interest Rate', value: `${slip.interest_rate}%` },
               { key: 'Interest Type', value: slip.interest_type_name ?? '-' },
-              { key: 'Created', value: formatDate(slip.created_date ?? slip.created_at) },
-              { key: 'Expire Date', value: formatDate(slip.expire_date) },
+              { key: 'Created', value: formatDate(slip.created_at) },
+              { key: 'Expire Date', value: formatDate(slip.expire_at) },
               { key: 'Expiry Quota', value: formatExpiry(slip.expiry_quota, slip.expiry_quota_type) },
             ]} />
           </Card>

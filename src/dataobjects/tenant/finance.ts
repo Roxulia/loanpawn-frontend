@@ -55,10 +55,8 @@ export type AccountingLedgerEntry = {
 
 export type AccountingLedger = {
   entries: AccountingLedgerEntry[]
-  start_date?: string
-  startDate?: string
-  end_date?: string
-  endDate?: string
+  start_at?: string
+  end_at?: string
   tenant_name?: string | null
   tenantName?: string | null
   opening_balance?: number
@@ -181,9 +179,9 @@ export type DashboardCollateralReviewItem = {
 
 export type TenantDashboardSummary = {
   filters: {
-    timeFilter: DashboardTimeFilter
-    startDate: string
-    endDate: string
+    time_filter: DashboardTimeFilter
+    start_at: string
+    end_at: string
   }
   financial: {
     cashAvailable: number

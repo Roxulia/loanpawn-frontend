@@ -272,7 +272,7 @@ function getTrustLabel(score: number) {
 }
 
 function getCustomerSinceText(customer: TenantCustomer, metrics: TenantCustomerLoanMetrics | null) {
-  const date = customer.createdAt ?? customer.created_at ?? getMetricDate(metrics, 'firstSlipDate', 'first_slip_date')
+  const date = customer.created_at ?? getMetricDate(metrics, 'firstSlipDate', 'first_slip_date')
 
   return date ? `Customer since ${formatDate(date)}` : 'Customer profile'
 }
@@ -303,7 +303,7 @@ function getSlipAmount(slip: TenantCustomerActiveSlip, field: 'loan') {
 }
 
 function getSlipDate(slip: TenantCustomerActiveSlip) {
-  return slip.expireDate ?? slip.expire_date ?? null
+  return slip.expire_at ?? null
 }
 
 function formatInterest(slip: TenantCustomerActiveSlip) {

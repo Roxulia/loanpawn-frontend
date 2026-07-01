@@ -163,7 +163,7 @@ export function SlipsPage() {
     { header: 'Customer', key: 'customer', render: getSlipCustomerName },
     { header: 'Amount', key: 'amount', render: (slip) => formatMoney(slip.loan_amount) },
     { header: 'Status', key: 'status', render: (slip) => <Badge tone={getStatusTone(slip.status)}>{slip.status}</Badge> },
-    { header: 'Created', key: 'created', render: (slip) => formatDate(slip.created_date ?? slip.created_at) },
+    { header: 'Created', key: 'created', render: (slip) => formatDate(slip.created_at) },
   ]
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {

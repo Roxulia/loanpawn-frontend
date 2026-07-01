@@ -1,4 +1,5 @@
 import type { LoanContractSlip } from './services/slipService'
+import { formatLocalDate } from '../../utils/localDateTime'
 
 export function formatMoney(value: string | number | null | undefined) {
   const amount = Number(value ?? 0)
@@ -14,17 +15,7 @@ export function formatMoney(value: string | number | null | undefined) {
 }
 
 export function formatDate(value: string | null | undefined) {
-  if (!value) {
-    return '-'
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toLocaleDateString()
+  return formatLocalDate(value)
 }
 
 export function getSlipCustomerName(slip: LoanContractSlip) {

@@ -164,18 +164,18 @@ export function InterestPaymentsPage() {
   }
 
   const columns: Array<DataTableColumn<InterestBreakdownRow>> = [
-    { header: 'Start Date', key: 'start', render: (row) => formatDate(row.start_date ?? row.startDate) },
-    { header: 'End Date', key: 'end', render: (row) => formatDate(row.end_date ?? row.endDate) },
+    { header: 'Start Date', key: 'start', render: (row) => formatDate(row.start_period_at) },
+    { header: 'End Date', key: 'end', render: (row) => formatDate(row.end_period_at) },
     { header: 'Interest Amount', key: 'amount', render: (row) => formatMoney(getInterestAmount(row)) },
   ]
 
   const historyColumns: Array<DataTableColumn<InterestPaymentHistoryItem>> = [
     { header: 'Slip No', key: 'slip', render: (row) => <strong>{row.slip_no ?? '-'}</strong> },
-    { header: 'Period', key: 'period', render: (row) => `${formatDate(row.start_date)} - ${formatDate(row.end_date)}` },
+    { header: 'Period', key: 'period', render: (row) => `${formatDate(row.start_period_at)} - ${formatDate(row.end_period_at)}` },
     { header: 'Interest', key: 'interest', render: (row) => formatMoney(row.interest_amount) },
     { header: 'Paid Amount', key: 'paid', render: (row) => formatMoney(row.payment_amount) },
     { header: 'Change', key: 'change', render: (row) => formatMoney(row.change_amount) },
-    { header: 'Payment Date', key: 'paymentDate', render: (row) => formatDate(row.payment_date) },
+    { header: 'Payment Date', key: 'paymentDate', render: (row) => formatDate(row.payment_at) },
     { header: 'Notes', key: 'notes', render: (row) => row.notes || '-' },
   ]
 
@@ -224,7 +224,7 @@ export function InterestPaymentsPage() {
                 <div className="ops-amount-panel ops-amount-panel--summary interest-accrual-desktop-detail">
                   <KeyValueList items={[
                     { key: 'Slip No', value: normalizedSlipNo },
-                    { key: 'Current Date', value: formatDate(calculation.currentDate ?? calculation.current_date) },
+                    { key: 'Current Date', value: formatDate(calculation.current_date) },
                     { key: 'Total Interest', value: formatMoney(totalInterest) },
                   ]} />
                 </div>
@@ -234,12 +234,12 @@ export function InterestPaymentsPage() {
                     emptyDescription="No unpaid interest is due for this slip."
                     emptyTitle="No interest due"
                     getItemId={(row) => row.id}
-                    getItemTitle={(row) => `${formatDate(row.start_date)} to ${formatDate(row.end_date)}`}
+                    getItemTitle={(row) => `${formatDate(row.start_period_at)} to ${formatDate(row.end_period_at)}`}
                     items={rows}
                   />
                 </div>
                 <InterestAccrualMobileDetail
-                  currentDate={formatDate(calculation.currentDate ?? calculation.current_date)}
+                  currentDate={formatDate(calculation.current_date)}
                   rows={rows}
                   slipNo={normalizedSlipNo}
                   totalInterest={totalInterest}
@@ -306,9 +306,9 @@ export function InterestPaymentsPage() {
         {paymentResult && (
           <KeyValueList items={[
             { key: 'Status', value: paymentResult.status },
-            { key: 'Paid Amount', value: formatMoney(paymentResult.paidAmount ?? paymentResult.paid_amount) },
-            { key: 'Debt Amount', value: formatMoney(paymentResult.debtAmount ?? paymentResult.debt_amount) },
-            { key: 'Change', value: formatMoney(paymentResult.changeAmount ?? paymentResult.change_amount) },
+            { key: 'Paid Amount', value: formatMoney(paymentResult.paid_amount) },
+            { key: 'Debt Amount', value: formatMoney(paymentResult.debt_amount) },
+            { key: 'Change', value: formatMoney(paymentResult.change_amount) },
           ]} />
         )}
       </Modal>
@@ -364,12 +364,12 @@ function InterestAccrualMobileDetail({
           <div className="interest-accrual-mobile-row__period">
             <div>
               <span>Start Date</span>
-              <strong>{formatDate(row.start_date ?? row.startDate)}</strong>
+              <strong>{formatDate(row.start_period_at)}</strong>
             </div>
             <ArrowRightIcon />
             <div>
               <span>End Date</span>
-              <strong>{formatDate(row.end_date ?? row.endDate)}</strong>
+              <strong>{formatDate(row.end_period_at)}</strong>
             </div>
           </div>
         </article>
@@ -379,27 +379,27 @@ function InterestAccrualMobileDetail({
 }
 
 function getBreakdown(calculation: InterestCalculationResult | null) {
-  return calculation?.interestBreakdown ?? calculation?.interest_breakdown ?? []
+  return calculation?.interest_breakdown ?? []
 }
 
 function getTotalInterest(calculation: InterestCalculationResult | null) {
-  return calculation?.totalInterestAmount ?? calculation?.total_interest_amount ?? 0
+  return calculation?.total_interest_amount ?? 0
 }
 
 function getSlipNo(calculation: InterestCalculationResult | null) {
-  return calculation?.slipNo ?? calculation?.slip_no ?? ''
+  return calculation?.slip_no ?? ''
 }
 
 function getSlipUpdateKey(calculation: InterestCalculationResult | null) {
-  return calculation?.slipUpdateKey ?? calculation?.slip_update_key ?? null
+  return calculation?.slip_update_key ?? null
 }
 
 function getInterestAmount(row: InterestBreakdownRow) {
-  return row.interestAmount ?? row.interest_amount
+  return row.interest_amount
 }
 
 function getRowUpdateKey(row: InterestBreakdownRow) {
-  return row.updateKey ?? row.update_key ?? null
+  return row.update_key ?? null
 }
 
 function toPaymentBreakdownPayload(row: InterestBreakdownRow) {
@@ -413,7 +413,7 @@ function toPaymentBreakdownPayload(row: InterestBreakdownRow) {
     id: row.id,
     update_key: updateKey,
     interest_amount: getInterestAmount(row),
-    start_date: row.start_date ?? row.startDate ?? null,
-    end_date: row.end_date ?? row.endDate ?? null,
+    start_period_at: row.start_period_at ?? null,
+    end_period_at: row.end_period_at ?? null,
   }
 }

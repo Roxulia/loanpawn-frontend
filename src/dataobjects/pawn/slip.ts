@@ -26,9 +26,9 @@ export type LoanContractSlip = {
   interest_type_id?: number | null
   interest_type_code?: InterestType | string | null
   interest_type_name?: string | null
-  created_date: string
-  expire_date: string
-  last_interest_added_date?: string | null
+  expire_at?: string | null
+  last_interest_added_at?: string | null
+  last_interest_paid_at?: string | null
   status: SlipStatus
   notes?: string | null
   created_by?: number | null

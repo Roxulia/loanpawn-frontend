@@ -1,4 +1,5 @@
 import type { CollateralItem } from './types'
+import { formatLocalDate } from '../../utils/localDateTime'
 
 export function getItemType(item: CollateralItem) {
   return item.itemType ?? item.item_type ?? item.type
@@ -27,15 +28,7 @@ export function getStatusTone(status: string) {
 }
 
 export function formatDate(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
+  return formatLocalDate(value)
 }
 
 export function formatMoney(value?: string | number | null) {

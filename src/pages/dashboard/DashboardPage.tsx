@@ -250,7 +250,7 @@ export function DashboardPage() {
                     <h3>Financial Movement</h3>
                     <p>Loans, returns, interest, and expenses over time.</p>
                   </div>
-                  <Badge tone="info">{summary.filters.startDate} to {summary.filters.endDate}</Badge>
+                  <Badge tone="info">{formatDate(summary.filters.start_at)} to {formatDate(summary.filters.end_at)}</Badge>
                 </div>
                 <LineChart points={summary.financial.chart} />
                 <p className="dashboard-summary-message">{financialSummary(summary)}</p>
