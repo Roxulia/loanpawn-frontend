@@ -105,6 +105,7 @@ export type SlipCollateralPayload = {
   brand_name?: string
   estimated_value?: number
   material_type_id?: number
+  material_price_per_kyat?: number
   item_category_type_id?: number
   kyat?: number
   pal?: number

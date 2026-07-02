@@ -202,6 +202,13 @@
   z-index: 40;
 }
 
+.ui-select__menu--portal {
+  bottom: auto;
+  position: fixed;
+  top: auto;
+  z-index: 70;
+}
+
 .ui-select__option {
   background: transparent;
   border: 0;
@@ -2133,6 +2140,50 @@
 .subform-panel__header strong {
   color: var(--color-accent);
   font-family: var(--font-family-heading);
+}
+
+.slip-form-customer-grid .ui-form-group__grid,
+.slip-form-collateral-base-grid .ui-form-group__grid,
+.slip-form-collateral-summary-grid .ui-form-group__grid,
+.slip-form-gemstone-grid .ui-form-group__grid,
+.slip-form-jewellery-material-grid .ui-form-group__grid,
+.slip-form-jewellery-weight-grid .ui-form-group__grid,
+.slip-form-loan-grid .ui-form-group__grid {
+  align-items: start;
+  grid-template-columns: 1fr;
+}
+
+.slip-form-field--full {
+  grid-column: 1 / -1;
+}
+
+.slip-form-retail-field {
+  align-content: start;
+}
+
+.slip-form-retail-field .ui-badge {
+  justify-self: start;
+  min-height: var(--size-control-height);
+  padding-block: var(--space-2);
+}
+
+@media (min-width: 40rem) {
+  .slip-form-customer-grid .ui-form-group__grid,
+  .slip-form-collateral-base-grid .ui-form-group__grid,
+  .slip-form-gemstone-grid .ui-form-group__grid,
+  .slip-form-jewellery-material-grid .ui-form-group__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .slip-form-collateral-summary-grid .ui-form-group__grid,
+  .slip-form-jewellery-weight-grid .ui-form-group__grid,
+  .slip-form-loan-grid .ui-form-group__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .slip-form-collateral-summary-grid--jewellery .ui-form-group__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .ops-cashier-grid,

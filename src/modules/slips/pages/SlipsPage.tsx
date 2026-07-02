@@ -340,7 +340,7 @@ export function SlipsPage() {
       {activeTab === 'application' && (
         <form className="workflow-stack ops-contract-workspace" onSubmit={(event) => void handleCreate(event)}>
           <Card title="Customer Details">
-            <FormGroup columns={2}>
+            <FormGroup className="slip-form-customer-grid" columns={2}>
               <FormField id="slip-customer-name" label="Name" error={formErrors.customerName}>
                 <Input id="slip-customer-name" value={customer.name} onChange={(event) => setCustomer({ ...customer, name: event.target.value })} hasError={Boolean(formErrors.customerName)} />
               </FormField>
@@ -353,10 +353,10 @@ export function SlipsPage() {
               <FormField id="slip-customer-email" label="Email">
                 <Input id="slip-customer-email" type="email" value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} />
               </FormField>
-              <FormField id="slip-customer-address" label="Address">
+              <FormField className="slip-form-field--full" id="slip-customer-address" label="Address">
                 <Textarea id="slip-customer-address" value={customer.address} onChange={(event) => setCustomer({ ...customer, address: event.target.value })} />
               </FormField>
-              <FormField id="slip-customer-note" label="Note">
+              <FormField className="slip-form-field--full" id="slip-customer-note" label="Note">
                 <Textarea id="slip-customer-note" value={customer.note} onChange={(event) => setCustomer({ ...customer, note: event.target.value })} />
               </FormField>
             </FormGroup>
@@ -381,7 +381,7 @@ export function SlipsPage() {
                     <strong>{item.type} Item {index + 1}</strong>
                     <Button onClick={() => setItems((current) => current.filter((candidate) => candidate.key !== item.key))} variant="ghost">Remove</Button>
                   </header>
-                  <FormGroup columns={2}>
+                  <FormGroup className="slip-form-collateral-base-grid" columns={2}>
                     <FormField id={`${item.key}-name`} label="Item Name" error={formErrors[`${item.key}.name`]}>
                       <Input id={`${item.key}-name`} value={item.name} onChange={(event) => updateItem(item.key, { name: event.target.value })} hasError={Boolean(formErrors[`${item.key}.name`])} />
                     </FormField>
@@ -398,20 +398,24 @@ export function SlipsPage() {
                         </Select>
                       </FormField>
                     )}
-                    <FormField id={`${item.key}-description`} label="Description">
+                    <FormField className="slip-form-field--full" id={`${item.key}-description`} label="Description">
                       <Textarea id={`${item.key}-description`} value={item.description ?? ''} onChange={(event) => updateItem(item.key, { description: event.target.value })} />
                     </FormField>
                   </FormGroup>
                   {item.type === 'Normal' && (
-                    <FormGroup columns={2}>
+                    <FormGroup className="slip-form-collateral-summary-grid" columns={3}>
                       <FormField id={`${item.key}-estimated`} label="Estimated Value">
                         <Input id={`${item.key}-estimated`} min="0" type="number" value={item.estimated_value ?? ''} onChange={(event) => updateItem(item.key, { estimated_value: Number(event.target.value) })} />
                       </FormField>
+                      <FormField id={`${item.key}-quantity`} label="Quantity">
+                        <Input id={`${item.key}-quantity`} min="1" type="number" value={item.quantity ?? 1} onChange={(event) => updateItem(item.key, { quantity: Number(event.target.value) })} />
+                      </FormField>
+                      <RetailPriceField item={item} />
                     </FormGroup>
                   )}
                   {item.type === 'Jewellery' && (
                     <>
-                      <FormGroup columns={2} title="Material">
+                      <FormGroup className="slip-form-jewellery-material-grid" columns={2} title="Material">
                         <FormField id={`${item.key}-material`} label="Material Type">
                           <Select id={`${item.key}-material`} value={item.material_type_id ?? ''} onChange={(event) => updateItem(item.key, { material_type_id: Number(event.target.value) || undefined })}>
                             <option value="">Select material</option>
@@ -422,7 +426,7 @@ export function SlipsPage() {
                           <Input id={`${item.key}-material-price`} min="0" type="number" value={item.material_price_per_kyat ?? ''} onChange={(event) => updateItem(item.key, { material_price_per_kyat: Number(event.target.value) })} />
                         </FormField>
                       </FormGroup>
-                      <FormGroup columns={3} title="Weight">
+                      <FormGroup className="slip-form-jewellery-weight-grid" columns={3} title="Weight">
                         <FormField id={`${item.key}-kyat`} label="Kyat">
                           <Input id={`${item.key}-kyat`} min="0" type="number" value={item.kyat ?? ''} onChange={(event) => updateItem(item.key, { kyat: Number(event.target.value) })} />
                         </FormField>
@@ -454,7 +458,7 @@ export function SlipsPage() {
                         <span><LocalizedText text="Have Gem Stone" /></span>
                       </label>
                       {item.contains_gemstones && (
-                        <FormGroup columns={2}>
+                        <FormGroup className="slip-form-gemstone-grid" columns={2}>
                           <FormField id={`${item.key}-gemstone-type`} label="Gemstone Type">
                             <Input id={`${item.key}-gemstone-type`} value={item.gemstone_type ?? ''} onChange={(event) => updateItem(item.key, { gemstone_type: event.target.value })} />
                           </FormField>
@@ -471,23 +475,21 @@ export function SlipsPage() {
                       )}
                     </div>
                   )}
-                  <FormGroup columns={1}>
-                    <FormField id={`${item.key}-quantity`} label="Quantity">
-                      <Input id={`${item.key}-quantity`} min="1" type="number" value={item.quantity ?? 1} onChange={(event) => updateItem(item.key, { quantity: Number(event.target.value) })} />
-                    </FormField>
-                    <div className="ui-form-field">
-                      <span className="ui-label"><LocalizedText text="Minimum Retail Price" /></span>
-                      <Badge tone="info">{formatMoney(calculateMinimumRetailPrice(item))}</Badge>
-                      <div className="ui-form-field__hint"><LocalizedText text="Calculated from item value, quantity, and jewellery weight where applicable." /></div>
-                    </div>
-                  </FormGroup>
+                  {item.type === 'Jewellery' && (
+                    <FormGroup className="slip-form-collateral-summary-grid slip-form-collateral-summary-grid--jewellery" columns={2}>
+                      <FormField id={`${item.key}-quantity`} label="Quantity">
+                        <Input id={`${item.key}-quantity`} min="1" type="number" value={item.quantity ?? 1} onChange={(event) => updateItem(item.key, { quantity: Number(event.target.value) })} />
+                      </FormField>
+                      <RetailPriceField item={item} />
+                    </FormGroup>
+                  )}
                 </section>
               ))}
             </div>
           </Card>
 
           <Card title="Loan Details" description={`Suggested minimum retail total: ${formatMoney(suggestedMinimumRetail)}`}>
-            <FormGroup columns={3}>
+            <FormGroup className="slip-form-loan-grid" columns={3}>
               <FormField id="loan-amount" label="Loan Amount" error={formErrors.loanAmount}>
                 <Input id="loan-amount" min="0.01" step="0.01" type="number" value={loan.loan_amount} onChange={(event) => setLoan({ ...loan, loan_amount: event.target.value })} hasError={Boolean(formErrors.loanAmount)} />
               </FormField>
@@ -511,7 +513,7 @@ export function SlipsPage() {
                   <option value="Year">Year</option>
                 </Select>
               </FormField>
-              <FormField id="loan-notes" label="Loan Notes">
+              <FormField className="slip-form-field--full" id="loan-notes" label="Loan Notes">
                 <Textarea id="loan-notes" value={loan.notes} onChange={(event) => setLoan({ ...loan, notes: event.target.value })} />
               </FormField>
             </FormGroup>
@@ -615,6 +617,16 @@ export function SlipsPage() {
   )
 }
 
+function RetailPriceField({ item }: { item: ItemForm }) {
+  return (
+    <div className="ui-form-field slip-form-retail-field">
+      <span className="ui-label"><LocalizedText text="Minimum Retail Price" /></span>
+      <Badge tone="info">{formatMoney(calculateMinimumRetailPrice(item))}</Badge>
+      <div className="ui-form-field__hint"><LocalizedText text="Calculated from item value, quantity, and jewellery weight where applicable." /></div>
+    </div>
+  )
+}
+
 function makeItem(type: 'Normal' | 'Jewellery'): ItemForm {
   return {
     key: `${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -691,6 +703,7 @@ function toPayloadItem(item: ItemForm): SlipCollateralPayload {
     brand_name: item.type === 'Jewellery' ? 'None' : item.brand_name?.trim() || undefined,
     estimated_value: item.type === 'Jewellery' ? 0 : Number(item.estimated_value ?? 0),
     material_type_id: item.material_type_id,
+    material_price_per_kyat: item.type === 'Jewellery' ? Number(item.material_price_per_kyat ?? 0) : undefined,
     item_category_type_id: item.type === 'Normal' ? item.item_category_type_id : undefined,
     kyat: Number(item.kyat ?? 0),
     pal: Number(item.pal ?? 0),
@@ -720,7 +733,7 @@ function makeGemstoneDetails(item: ItemForm) {
 
 function calculateMinimumRetailPrice(item: ItemForm) {
   if (item.type === 'Jewellery') {
-    return roundMoney(Number(item.material_price_per_kyat ?? 0) * calculateJewelleryWeightInKyat(item))
+    return roundMoney(Number(item.material_price_per_kyat ?? 0) * calculateJewelleryWeightInKyat(item) * Number(item.quantity ?? 1))
   }
 
   return roundMoney(Number(item.estimated_value ?? 0) * Number(item.quantity ?? 1))

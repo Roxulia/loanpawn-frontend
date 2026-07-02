@@ -5,16 +5,17 @@ type FormGroupColumns = 1 | 2 | 3
 
 type FormGroupProps = {
   children: ReactNode
+  className?: string
   columns?: FormGroupColumns
   description?: string
   title?: string
 }
 
-export function FormGroup({ children, columns = 2, description, title }: FormGroupProps) {
+export function FormGroup({ children, className = '', columns = 2, description, title }: FormGroupProps) {
   const { t } = useUiLocale()
 
   return (
-    <section className="ui-form-group">
+    <section className={['ui-form-group', className].filter(Boolean).join(' ')}>
       {(title || description) && (
         <header className="ui-form-group__header">
           {title && <h2 className="ui-form-group__title">{t(title)}</h2>}
