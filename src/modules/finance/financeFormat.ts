@@ -12,17 +12,7 @@ export function formatMoney(value: string | number | null | undefined) {
 }
 
 export function formatDate(value: string | null | undefined) {
-  if (!value) {
-    return '-'
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toLocaleDateString()
+  return formatLocalDate(value)
 }
 
 export function normalizeTransactionType(value: string | null | undefined) {
@@ -86,3 +76,4 @@ export function optionalInteger(value: string) {
 export function nullableNumber(value: string) {
   return value.trim() ? Number(value) : null
 }
+import { formatLocalDate } from '../../utils/localDateTime'

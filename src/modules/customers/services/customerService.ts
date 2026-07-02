@@ -92,8 +92,7 @@ export type TenantCustomerActiveSlip = {
   interestRate?: number
   interest_type_name?: string | null
   interestTypeName?: string | null
-  expire_date?: string | null
-  expireDate?: string | null
+  expire_at?: string | null
   status?: string
 }
 

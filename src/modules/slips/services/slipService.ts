@@ -37,6 +37,8 @@ export type SlipCollateralItem = {
   brand_name?: string | null
   estimated_value?: string | number
   material_type_name?: string | null
+  item_category_type_id?: number | null
+  item_category_type_name?: string | null
   kyat?: string | number
   pal?: string | number
   yway?: string | number
@@ -55,14 +57,16 @@ export type LoanContractSlip = {
   interest_rate: string | number
   interest_type_id?: number | null
   interest_type_name?: string | null
-  created_date?: string
-  expire_date?: string
+  created_at?: string | null
+  updated_at?: string | null
+  expire_at?: string | null
+  last_interest_added_at?: string | null
+  last_interest_paid_at?: string | null
   status: string
   notes?: string | null
   expiry_quota?: number
   expiry_quota_type?: string
   items?: SlipCollateralItem[]
-  created_at?: string | null
 }
 
 export type LoanContractSlipListPage = {
@@ -88,6 +92,12 @@ export type MaterialType = {
   code?: string
 }
 
+export type ItemCategoryType = {
+  id: number
+  name: string
+  code?: string
+}
+
 export type SlipCollateralPayload = {
   type: 'Normal' | 'Jewellery'
   name: string
@@ -95,6 +105,7 @@ export type SlipCollateralPayload = {
   brand_name?: string
   estimated_value?: number
   material_type_id?: number
+  item_category_type_id?: number
   kyat?: number
   pal?: number
   yway?: number
@@ -192,5 +203,9 @@ export const slipService = {
 
   listMaterialTypes(auth?: TenantAuth) {
     return apiClient.get<MaterialType[]>('/tenant/material-types', authOptions(auth))
+  },
+
+  listItemCategoryTypes(auth?: TenantAuth) {
+    return apiClient.get<ItemCategoryType[]>('/tenant/item-category-types', authOptions(auth))
   },
 }

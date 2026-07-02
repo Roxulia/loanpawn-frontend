@@ -11,13 +11,9 @@ type IdempotentRequestOptions = {
 
 export type InterestBreakdownRow = {
   id: number
-  updateKey?: number
   update_key?: number
-  startDate?: string | null
-  start_date?: string | null
-  endDate?: string | null
-  end_date?: string | null
-  interestAmount?: number
+  start_period_at?: string | null
+  end_period_at?: string | null
   interest_amount: number
 }
 
@@ -29,43 +25,35 @@ export type InterestPaymentPayload = {
     id: number
     update_key: number
     interest_amount: number
-    start_date?: string | null
-    end_date?: string | null
+    start_period_at?: string | null
+    end_period_at?: string | null
   }>
 }
 
 export type InterestCalculationResult = {
-  slipNo?: string
   slip_no?: string
-  slipUpdateKey?: number
   slip_update_key?: number
-  currentDate?: string
   current_date?: string
-  interestBreakdown?: InterestBreakdownRow[]
   interest_breakdown?: InterestBreakdownRow[]
-  totalInterestAmount?: number
   total_interest_amount?: number
 }
 
 export type InterestPaymentResult = {
   status: string
-  debtAmount?: number
   debt_amount?: number
-  changeAmount?: number
   change_amount?: number
-  paidAmount?: number
   paid_amount?: number
 }
 
 export type InterestPaymentHistoryItem = {
   id: number
   slip_no?: string | null
-  start_date?: string | null
-  end_date?: string | null
+  start_period_at?: string | null
+  end_period_at?: string | null
   interest_amount: number
   payment_amount: number
   change_amount: number
-  payment_date?: string | null
+  payment_at?: string | null
   is_paid: boolean
   notes?: string | null
 }

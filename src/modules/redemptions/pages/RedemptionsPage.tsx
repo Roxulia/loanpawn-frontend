@@ -75,7 +75,7 @@ export function RedemptionsPage() {
       })
       const pageData = response
       const nextItems = pageData.items ?? []
-      const nextPerPage = pageData.per_page ?? pageData.perPage ?? perPage
+      const nextPerPage = pageData.per_page ?? perPage
 
       setRecords(nextItems)
       setSelectedRecord((current) => current ?? nextItems[0] ?? null)
@@ -155,7 +155,7 @@ export function RedemptionsPage() {
         payment_amount: Number(paymentAmount),
         interests,
         debts,
-        redemption_date: redemptionDate || undefined,
+        redemption_at: redemptionDate || undefined,
         notes: notes.trim() || undefined,
       }, undefined, {
         idempotencyKey: redemptionIdempotencyKeyRef.current,
@@ -737,11 +737,11 @@ function RedemptionDetailPanel({ record }: { record: RedemptionDetail }) {
 }
 
 function getRedemptionSlipNumber(record: RedemptionDetail) {
-  return record.slip_number ?? record.slipNumber ?? '-'
+  return record.slip_number ?? '-'
 }
 
 function getRedemptionDate(record: RedemptionDetail) {
-  return record.redemption_date ?? record.redemptionDate ?? null
+  return record.redemption_at ?? null
 }
 
 function getRedemptionAmount(
@@ -749,22 +749,22 @@ function getRedemptionAmount(
   field: 'gross' | 'net' | 'interest' | 'received' | 'change',
 ) {
   if (field === 'gross') {
-    return record.gross_amount ?? record.grossAmount ?? 0
+    return record.gross_amount ?? 0
   }
 
   if (field === 'net') {
-    return record.net_amount ?? record.netAmount ?? 0
+    return record.net_amount ?? 0
   }
 
   if (field === 'interest') {
-    return record.interest_amount ?? record.interestAmount ?? 0
+    return record.interest_amount ?? 0
   }
 
   if (field === 'received') {
-    return record.received_amount ?? record.receivedAmount ?? 0
+    return record.received_amount ?? 0
   }
 
-  return record.change_amount ?? record.changeAmount ?? 0
+  return record.change_amount ?? 0
 }
 
 function getInterestPayments(calculation: RedemptionCalculationResult | null) {
@@ -772,31 +772,31 @@ function getInterestPayments(calculation: RedemptionCalculationResult | null) {
 }
 
 function getUnpaidDebts(calculation: RedemptionCalculationResult | null) {
-  return (calculation?.debts ?? []).filter((debt) => !(debt.is_paid ?? debt.isPaid ?? false))
+  return (calculation?.debts ?? []).filter((debt) => !(debt.is_paid ?? false))
 }
 
 function isInterestPaid(payment: RedemptionInterestPayment) {
-  return Boolean(payment.is_paid ?? payment.isPaid ?? false)
+  return Boolean(payment.is_paid ?? false)
 }
 
 function getInterestUpdateKey(payment: RedemptionInterestPayment) {
-  return payment.update_key ?? payment.updateKey ?? null
+  return payment.update_key ?? null
 }
 
 function getInterestAmount(payment: RedemptionInterestPayment) {
-  return payment.interest_amount ?? payment.interestAmount ?? 0
+  return payment.interest_amount ?? 0
 }
 
 function getInterestStartDate(payment: RedemptionInterestPayment) {
-  return payment.start_date ?? payment.startDate ?? null
+  return payment.start_period_at ?? null
 }
 
 function getInterestEndDate(payment: RedemptionInterestPayment) {
-  return payment.end_date ?? payment.endDate ?? null
+  return payment.end_period_at ?? null
 }
 
 function getDebtUpdateKey(debt: RedemptionDebt) {
-  return debt.update_key ?? debt.updateKey ?? null
+  return debt.update_key ?? null
 }
 
 function toRedemptionInterestPayload(payment: RedemptionInterestPayment) {
@@ -810,8 +810,8 @@ function toRedemptionInterestPayload(payment: RedemptionInterestPayment) {
     id: payment.id,
     update_key: updateKey,
     interest_amount: getInterestAmount(payment),
-    start_date: getInterestStartDate(payment),
-    end_date: getInterestEndDate(payment),
+    start_period_at: getInterestStartDate(payment),
+    end_period_at: getInterestEndDate(payment),
   }
 }
 

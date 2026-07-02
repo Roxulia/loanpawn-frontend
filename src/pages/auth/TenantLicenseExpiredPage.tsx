@@ -3,12 +3,13 @@ import { Card } from '../../components/molecules'
 import { platformBillingUrl } from '../../config'
 import { useTenantSession } from '../../contexts/useTenantSession'
 import type { TenantUser } from '../../dataobjects/tenant/auth'
+import { formatLocalDate } from '../../utils/localDateTime'
 
 export function TenantLicenseExpiredPage() {
   const { currentUser, tenantResolution } = useTenantSession()
   const tenant = tenantResolution.status === 'resolved' ? tenantResolution.tenant : null
   const isOwner = isTenantOwner(currentUser)
-  const expireDate = formatLicenseDate(tenant?.tenant_license.expire_date)
+  const expireDate = formatLicenseDate(tenant?.tenant_license.expires_at)
 
   return (
     <main className="auth-shell">
@@ -48,15 +49,5 @@ function formatLicenseDate(value: string | null | undefined) {
     return null
   }
 
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date)
+  return formatLocalDate(value)
 }

@@ -68,8 +68,8 @@ export const tenantResourceService = {
     return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', {
       ...authOptions(auth),
       params: {
-        end_date: params.endDate,
-        start_date: params.startDate,
+        end_at: params.endDate,
+        start_at: params.startDate,
         time_filter: params.timeFilter,
       },
     })
@@ -111,10 +111,10 @@ export const tenantResourceService = {
     return apiClient.get<AccountingLedger>('/tenant/accounting/ledger', {
       ...authOptions(auth),
       params: {
-        end_date: params.endDate,
+        end_at: params.endDate,
         page: params.page,
         per_page: params.perPage,
-        start_date: params.startDate,
+        start_at: params.startDate,
       },
     })
   },
@@ -123,8 +123,8 @@ export const tenantResourceService = {
     return apiClient.download('/tenant/accounting/ledger/download', {
       ...authOptions(auth),
       params: {
-        end_date: params.endDate,
-        start_date: params.startDate,
+        end_at: params.endDate,
+        start_at: params.startDate,
       },
     })
   },
