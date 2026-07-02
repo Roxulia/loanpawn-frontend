@@ -172,6 +172,8 @@ export type DashboardCollateralReviewItem = {
   isJewellery: boolean
   materialTypeId: number | null
   materialTypeName: string | null
+  itemCategoryTypeId?: number | null
+  itemCategoryTypeName?: string | null
   kyat: number
   pal: number
   yway: number

@@ -23,7 +23,7 @@ import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { usePermissions } from '../../auth'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
-import { slipService, type InterestType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
+import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
 
 const perPage = 10
 const paperTypeOptions = [
@@ -71,6 +71,7 @@ export function SlipsPage() {
   const [activeTab, setActiveTab] = useState<SlipTab>('application')
   const [interestTypes, setInterestTypes] = useState<InterestType[]>([])
   const [materialTypes, setMaterialTypes] = useState<MaterialType[]>([])
+  const [itemCategoryTypes, setItemCategoryTypes] = useState<ItemCategoryType[]>([])
   const [customer, setCustomer] = useState(emptyCustomer)
   const [loan, setLoan] = useState(emptyLoan)
   const [items, setItems] = useState<ItemForm[]>([])
@@ -146,6 +147,10 @@ export function SlipsPage() {
     void slipService.listMaterialTypes()
       .then((response) => setMaterialTypes(response ?? []))
       .catch(() => setMaterialTypes([]))
+
+    void slipService.listItemCategoryTypes()
+      .then((response) => setItemCategoryTypes(response ?? []))
+      .catch(() => setItemCategoryTypes([]))
   }, [])
 
   useEffect(() => {
@@ -383,6 +388,14 @@ export function SlipsPage() {
                     {item.type === 'Normal' && (
                       <FormField id={`${item.key}-brand`} label="Brand">
                         <Input id={`${item.key}-brand`} value={item.brand_name ?? ''} onChange={(event) => updateItem(item.key, { brand_name: event.target.value })} />
+                      </FormField>
+                    )}
+                    {item.type === 'Normal' && (
+                      <FormField id={`${item.key}-item-category`} label="Item Category">
+                        <Select id={`${item.key}-item-category`} value={item.item_category_type_id ?? ''} onChange={(event) => updateItem(item.key, { item_category_type_id: Number(event.target.value) || undefined })}>
+                          <option value="">Select category</option>
+                          {itemCategoryTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
+                        </Select>
                       </FormField>
                     )}
                     <FormField id={`${item.key}-description`} label="Description">
@@ -678,6 +691,7 @@ function toPayloadItem(item: ItemForm): SlipCollateralPayload {
     brand_name: item.type === 'Jewellery' ? 'None' : item.brand_name?.trim() || undefined,
     estimated_value: item.type === 'Jewellery' ? 0 : Number(item.estimated_value ?? 0),
     material_type_id: item.material_type_id,
+    item_category_type_id: item.type === 'Normal' ? item.item_category_type_id : undefined,
     kyat: Number(item.kyat ?? 0),
     pal: Number(item.pal ?? 0),
     yway: Number(item.yway ?? 0),

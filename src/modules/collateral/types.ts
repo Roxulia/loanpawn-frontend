@@ -13,6 +13,8 @@ export type CollateralItem = {
   estimatedValue?: string
   materialTypeId?: number | null
   materialTypeName?: string | null
+  itemCategoryTypeId?: number | null
+  itemCategoryTypeName?: string | null
   containsGemstones?: boolean
   gemstoneDetails?: unknown[] | null
   minimumRetailPrice?: string
@@ -29,6 +31,8 @@ export type CollateralItem = {
   estimated_value?: string
   material_type_id?: number | null
   material_type_name?: string | null
+  item_category_type_id?: number | null
+  item_category_type_name?: string | null
   kyat?: string
   pal?: string
   yway?: string
@@ -61,6 +65,7 @@ export type CollateralItemPayload = {
   image_url?: string | null
   estimated_value?: number
   material_type_id?: number | null
+  item_category_type_id?: number | null
   kyat?: number
   pal?: number
   yway?: number

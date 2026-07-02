@@ -306,7 +306,7 @@ export function DashboardPage() {
                 <div className="dashboard-chart-card__header">
                   <div>
                     <h3>Collateral Categories</h3>
-                    <p>Jewelry by material, normal items as Other.</p>
+                    <p>Jewelry by material, normal items by category.</p>
                   </div>
                 </div>
                 <DonutChart categories={adjustedCollateralSummary.categories} />

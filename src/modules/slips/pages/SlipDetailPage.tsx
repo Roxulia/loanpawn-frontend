@@ -124,7 +124,9 @@ function SlipItemCard({ item }: { item: SlipCollateralItem }) {
           { key: 'Kyat', value: item.kyat ?? '-' },
           { key: 'Pal', value: item.pal ?? '-' },
           { key: 'Yway', value: item.yway ?? '-' },
-        ] : []),
+        ] : [
+          { key: 'Category', value: item.item_category_type_name ?? '-' },
+        ]),
       ]} />
     </section>
   )
