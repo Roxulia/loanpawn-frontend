@@ -305,10 +305,10 @@ export function InterestPaymentsPage() {
       >
         {paymentResult && (
           <KeyValueList items={[
-            { key: 'Status', value: paymentResult.status },
-            { key: 'Paid Amount', value: formatMoney(paymentResult.paid_amount) },
-            { key: 'Debt Amount', value: formatMoney(paymentResult.debt_amount) },
-            { key: 'Change', value: formatMoney(paymentResult.change_amount) },
+            { key: 'Status', value: formatPaymentStatus(paymentResult.status) },
+            { key: 'Paid Amount', value: formatMoney(paymentResult.paidAmount) },
+            { key: 'Debt Amount', value: formatMoney(paymentResult.debtAmount) },
+            { key: 'Change', value: formatMoney(paymentResult.changeAmount) },
           ]} />
         )}
       </Modal>
@@ -316,6 +316,14 @@ export function InterestPaymentsPage() {
   )
 }
 
+function formatPaymentStatus(status: string) {
+  switch (status){
+    case 'debt_created' : return "Debt Created with leftover interest";
+    case 'change_made' : return "Change Amount needed to be returned to customer";
+    case 'success' : return "Paid in full";
+    default: return status;
+  }
+}
 function formatNumber(value: number) {
   return new Intl.NumberFormat('en-US').format(value)
 }

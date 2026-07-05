@@ -40,9 +40,9 @@ export type InterestCalculationResult = {
 
 export type InterestPaymentResult = {
   status: string
-  debt_amount?: number
-  change_amount?: number
-  paid_amount?: number
+  debtAmount?: number
+  changeAmount?: number
+  paidAmount?: number
 }
 
 export type InterestPaymentHistoryItem = {
