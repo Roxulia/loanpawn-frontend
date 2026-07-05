@@ -30,7 +30,6 @@ const paperTypeOptions = [
   { value: 'A4', label: 'A4' },
   { value: 'A5', label: 'A5' },
   { value: 'Receipt80', label: 'MM80' },
-  { value: 'Receipt58', label: 'MM58' },
 ]
 
 type SlipTab = 'application' | 'management'
