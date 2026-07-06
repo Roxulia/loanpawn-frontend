@@ -8,7 +8,7 @@ import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../compone
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { useTenantSession } from '../../../contexts/useTenantSession'
 import type { UiLocale } from '../../../locales/UiLocale'
-import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
+import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
 
 type TypeForm = {
   name: string
@@ -16,12 +16,18 @@ type TypeForm = {
   duration_in_days: string
 }
 
-type TypeKind = 'interest' | 'expense' | 'material'
+type TypeKind = 'interest' | 'expense' | 'material' | 'itemCategory'
 
 type TypeToDelete = {
   code: string
   kind: TypeKind
   name: string
+}
+
+type TypePageState = {
+  currentPage: number
+  lastPage: number
+  total: number
 }
 
 type BrandingForm = {
@@ -70,6 +76,8 @@ const emptyTypeForm: TypeForm = {
   duration_in_days: '30',
 }
 
+const typeDataPerPage = 5
+
 const brandColorOptions = [
   '#03003D',
   '#F5A700',
@@ -92,9 +100,15 @@ export function SettingsPage() {
   const [interestTypes, setInterestTypes] = useState<DefaultTypeOption[]>([])
   const [expenseTypes, setExpenseTypes] = useState<DefaultTypeOption[]>([])
   const [materialTypes, setMaterialTypes] = useState<DefaultTypeOption[]>([])
+  const [itemCategoryTypes, setItemCategoryTypes] = useState<DefaultTypeOption[]>([])
   const [interestForm, setInterestForm] = useState(emptyTypeForm)
   const [expenseForm, setExpenseForm] = useState(emptyTypeForm)
   const [materialForm, setMaterialForm] = useState(emptyTypeForm)
+  const [itemCategoryForm, setItemCategoryForm] = useState(emptyTypeForm)
+  const [interestPage, setInterestPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
+  const [expensePage, setExpensePage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
+  const [materialPage, setMaterialPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
+  const [itemCategoryPage, setItemCategoryPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
   const [selectedLanguage, setSelectedLanguage] = useState<UiLocale>('en')
   const [isLoading, setIsLoading] = useState(true)
   const [savingSection, setSavingSection] = useState<string | null>(null)
@@ -116,11 +130,12 @@ export function SettingsPage() {
     setError(null)
 
     try {
-      const [settingsResponse, interestResponse, expenseResponse, materialResponse] = await Promise.all([
+      const [settingsResponse, interestResponse, expenseResponse, materialResponse, itemCategoryResponse] = await Promise.all([
         settingsService.getSettings(),
-        settingsService.listInterestTypes(),
-        settingsService.listExpenseTypes(),
-        settingsService.listMaterialTypes(),
+        settingsService.listInterestTypes({ page: 1, perPage: typeDataPerPage }),
+        settingsService.listExpenseTypes({ page: 1, perPage: typeDataPerPage }),
+        settingsService.listMaterialTypes({ page: 1, perPage: typeDataPerPage }),
+        settingsService.listItemCategoryTypes({ page: 1, perPage: typeDataPerPage }),
       ])
       const nextBranding = normalizeBranding(settingsResponse.branding)
       const nextContact = normalizeContact(settingsResponse.contact)
@@ -132,9 +147,10 @@ export function SettingsPage() {
       setContact(nextContact)
       setTenantInitial(nextTenant)
       setTenant(nextTenant)
-      setInterestTypes(interestResponse ?? [])
-      setExpenseTypes(expenseResponse ?? [])
-      setMaterialTypes(materialResponse ?? [])
+      setTypePageData('interest', interestResponse, 1)
+      setTypePageData('expense', expenseResponse, 1)
+      setTypePageData('material', materialResponse, 1)
+      setTypePageData('itemCategory', itemCategoryResponse, 1)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.')
     } finally {
@@ -214,27 +230,21 @@ export function SettingsPage() {
     }
 
     await saveSection(`${kind}-types`, async () => {
-      let createdType: DefaultTypeOption | null = null
-
       if (kind === 'interest') {
-        const response = await settingsService.createInterestType(toTypePayload(form, true))
-        createdType = response
+        await settingsService.createInterestType(toTypePayload(form, true))
         setInterestForm(emptyTypeForm)
       } else if (kind === 'expense') {
-        const response = await settingsService.createExpenseType(toTypePayload(form, false))
-        createdType = response
+        await settingsService.createExpenseType(toTypePayload(form, false))
         setExpenseForm(emptyTypeForm)
-      } else {
-        const response = await settingsService.createMaterialType(toTypePayload(form, false))
-        createdType = response
+      } else if (kind === 'material') {
+        await settingsService.createMaterialType(toTypePayload(form, false))
         setMaterialForm(emptyTypeForm)
+      } else {
+        await settingsService.createItemCategoryType(toTypePayload(form, false))
+        setItemCategoryForm(emptyTypeForm)
       }
 
-      if (createdType) {
-        upsertTypeData(kind, createdType)
-      } else {
-        await reloadTypeData(kind)
-      }
+      await reloadTypeData(kind, 1)
     }, `${typeKindLabel(kind)} saved successfully.`)
   }
 
@@ -248,58 +258,89 @@ export function SettingsPage() {
         await settingsService.deleteInterestType(deletingType.code)
       } else if (deletingType.kind === 'expense') {
         await settingsService.deleteExpenseType(deletingType.code)
-      } else {
+      } else if (deletingType.kind === 'material') {
         await settingsService.deleteMaterialType(deletingType.code)
+      } else {
+        await settingsService.deleteItemCategoryType(deletingType.code)
       }
 
-      removeTypeData(deletingType.kind, deletingType.code)
+      const currentPage = getTypePage(deletingType.kind)
+      const nextPage = getTypeItems(deletingType.kind).length === 1 && currentPage.currentPage > 1
+        ? currentPage.currentPage - 1
+        : currentPage.currentPage
+
+      await reloadTypeData(deletingType.kind, nextPage)
+
       setDeletingType(null)
     }, `${deletingType.name} deleted successfully.`)
   }
 
-  function upsertTypeData(kind: TypeKind, item: DefaultTypeOption) {
-    const updater = (current: DefaultTypeOption[]) => {
-      const itemKey = getTypeKey(item)
-      const existingIndex = current.findIndex((candidate) => getTypeKey(candidate) === itemKey)
-
-      if (existingIndex === -1) {
-        return [...current, item]
-      }
-
-      return current.map((candidate, index) => index === existingIndex ? item : candidate)
-    }
+  function setTypePageData(kind: TypeKind, response: DefaultTypeListPage, fallbackPage: number) {
+    const pageState = toTypePageState(response, fallbackPage)
 
     if (kind === 'interest') {
-      setInterestTypes(updater)
+      setInterestPage(pageState)
+      setInterestTypes(response.items ?? [])
     } else if (kind === 'expense') {
-      setExpenseTypes(updater)
+      setExpensePage(pageState)
+      setExpenseTypes(response.items ?? [])
+    } else if (kind === 'material') {
+      setMaterialPage(pageState)
+      setMaterialTypes(response.items ?? [])
     } else {
-      setMaterialTypes(updater)
+      setItemCategoryPage(pageState)
+      setItemCategoryTypes(response.items ?? [])
     }
   }
 
-  function removeTypeData(kind: TypeKind, code: string) {
-    const updater = (current: DefaultTypeOption[]) => current.filter((item) => item.code !== code)
-
+  function getTypePage(kind: TypeKind) {
     if (kind === 'interest') {
-      setInterestTypes(updater)
-    } else if (kind === 'expense') {
-      setExpenseTypes(updater)
-    } else {
-      setMaterialTypes(updater)
+      return interestPage
     }
+
+    if (kind === 'expense') {
+      return expensePage
+    }
+
+    if (kind === 'material') {
+      return materialPage
+    }
+
+    return itemCategoryPage
   }
 
-  async function reloadTypeData(kind: TypeKind) {
+  function getTypeItems(kind: TypeKind) {
     if (kind === 'interest') {
-      const response = await settingsService.listInterestTypes()
-      setInterestTypes(response ?? [])
+      return interestTypes
+    }
+
+    if (kind === 'expense') {
+      return expenseTypes
+    }
+
+    if (kind === 'material') {
+      return materialTypes
+    }
+
+    return itemCategoryTypes
+  }
+
+  async function reloadTypeData(kind: TypeKind, page?: number) {
+    const nextPage = page ?? getTypePage(kind).currentPage
+    const params = { page: nextPage, perPage: typeDataPerPage }
+
+    if (kind === 'interest') {
+      const response = await settingsService.listInterestTypes(params)
+      setTypePageData(kind, response, nextPage)
     } else if (kind === 'expense') {
-      const response = await settingsService.listExpenseTypes()
-      setExpenseTypes(response ?? [])
+      const response = await settingsService.listExpenseTypes(params)
+      setTypePageData(kind, response, nextPage)
+    } else if (kind === 'material') {
+      const response = await settingsService.listMaterialTypes(params)
+      setTypePageData(kind, response, nextPage)
     } else {
-      const response = await settingsService.listMaterialTypes()
-      setMaterialTypes(response ?? [])
+      const response = await settingsService.listItemCategoryTypes(params)
+      setTypePageData(kind, response, nextPage)
     }
   }
 
@@ -312,7 +353,11 @@ export function SettingsPage() {
       return expenseForm
     }
 
-    return materialForm
+    if (kind === 'material') {
+      return materialForm
+    }
+
+    return itemCategoryForm
   }
 
   async function saveSection(section: string, action: () => Promise<void>, successMessage = 'Settings saved successfully.') {
@@ -449,7 +494,15 @@ export function SettingsPage() {
               onChange={setInterestForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'interest', name: item.name })}
               onSave={() => void saveTypeData('interest')}
+              pagination={{
+                currentPage: interestPage.currentPage,
+                lastPage: interestPage.lastPage,
+                onNext: () => void reloadTypeData('interest', interestPage.currentPage + 1),
+                onPrevious: () => void reloadTypeData('interest', interestPage.currentPage - 1),
+                total: interestPage.total,
+              }}
               title="Interest Types"
+              totalCount={interestPage.total}
               withDuration
             />
             <TypeDataBlock
@@ -462,7 +515,15 @@ export function SettingsPage() {
               onChange={setExpenseForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'expense', name: item.name })}
               onSave={() => void saveTypeData('expense')}
+              pagination={{
+                currentPage: expensePage.currentPage,
+                lastPage: expensePage.lastPage,
+                onNext: () => void reloadTypeData('expense', expensePage.currentPage + 1),
+                onPrevious: () => void reloadTypeData('expense', expensePage.currentPage - 1),
+                total: expensePage.total,
+              }}
               title="Expense Types"
+              totalCount={expensePage.total}
             />
             <TypeDataBlock
               form={materialForm}
@@ -474,7 +535,35 @@ export function SettingsPage() {
               onChange={setMaterialForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'material', name: item.name })}
               onSave={() => void saveTypeData('material')}
+              pagination={{
+                currentPage: materialPage.currentPage,
+                lastPage: materialPage.lastPage,
+                onNext: () => void reloadTypeData('material', materialPage.currentPage + 1),
+                onPrevious: () => void reloadTypeData('material', materialPage.currentPage - 1),
+                total: materialPage.total,
+              }}
               title="Material Types"
+              totalCount={materialPage.total}
+            />
+            <TypeDataBlock
+              form={itemCategoryForm}
+              isSaving={savingSection === 'itemCategory-types'}
+              items={itemCategoryTypes}
+              kind="itemCategory"
+              canManage={canManageMasterData}
+              onCancel={() => setItemCategoryForm(emptyTypeForm)}
+              onChange={setItemCategoryForm}
+              onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'itemCategory', name: item.name })}
+              onSave={() => void saveTypeData('itemCategory')}
+              pagination={{
+                currentPage: itemCategoryPage.currentPage,
+                lastPage: itemCategoryPage.lastPage,
+                onNext: () => void reloadTypeData('itemCategory', itemCategoryPage.currentPage + 1),
+                onPrevious: () => void reloadTypeData('itemCategory', itemCategoryPage.currentPage - 1),
+                total: itemCategoryPage.total,
+              }}
+              title="Item Category Types"
+              totalCount={itemCategoryPage.total}
             />
           </div>
         </Card>
@@ -555,7 +644,9 @@ function TypeDataBlock({
   onChange,
   onDelete,
   onSave,
+  pagination,
   title,
+  totalCount,
   withDuration = false,
 }: {
   canManage: boolean
@@ -567,7 +658,15 @@ function TypeDataBlock({
   onChange: (form: TypeForm) => void
   onDelete: (item: DefaultTypeOption) => void
   onSave: () => void
+  pagination?: {
+    currentPage: number
+    lastPage: number
+    onNext: () => void
+    onPrevious: () => void
+    total: number
+  }
   title: string
+  totalCount?: number
   withDuration?: boolean
 }) {
   const changed = isTypeFormChanged(form)
@@ -593,7 +692,7 @@ function TypeDataBlock({
     <section className="subform-panel">
       <header className="subform-panel__header">
         <strong>{title}</strong>
-        <Badge tone="info">{items.length}</Badge>
+        <Badge tone="info">{totalCount ?? items.length}</Badge>
       </header>
       <DataTable
         actions={canManage ? (item) => !isBuiltInType(item) && item.code ? (
@@ -607,6 +706,7 @@ function TypeDataBlock({
         getItemId={(item) => item.code ?? item.id}
         getItemTitle={(item) => item.name}
         items={items}
+        pagination={pagination}
         showEmptyStructure
       />
       {canManage && (
@@ -707,6 +807,23 @@ function normalizeTenant(value?: TenantSettings | null) {
   }
 }
 
+function toTypePageState(response: DefaultTypeListPage, fallbackPage: number) {
+  return {
+    currentPage: getTypePageValue(response, 'currentPage', 'current_page', fallbackPage),
+    lastPage: getTypePageValue(response, 'lastPage', 'last_page', 1),
+    total: response.total ?? response.items?.length ?? 0,
+  }
+}
+
+function getTypePageValue(
+  response: DefaultTypeListPage,
+  camelKey: 'currentPage' | 'lastPage' | 'perPage',
+  snakeKey: 'current_page' | 'last_page' | 'per_page',
+  fallback: number,
+) {
+  return response[camelKey] ?? response[snakeKey] ?? fallback
+}
+
 function hasChanged<TValue>(current: TValue, initial: TValue) {
   return JSON.stringify(current) !== JSON.stringify(initial)
 }
@@ -734,10 +851,6 @@ function getTypeDuration(item: DefaultTypeOption) {
   return item.duration_in_days ?? item.durationInDays ?? null
 }
 
-function getTypeKey(item: DefaultTypeOption) {
-  return item.code ?? String(item.id)
-}
-
 function typeKindLabel(kind: TypeKind) {
   if (kind === 'interest') {
     return 'Interest type'
@@ -747,5 +860,9 @@ function typeKindLabel(kind: TypeKind) {
     return 'Expense type'
   }
 
-  return 'Material type'
+  if (kind === 'material') {
+    return 'Material type'
+  }
+
+  return 'Item category type'
 }

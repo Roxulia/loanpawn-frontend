@@ -136,7 +136,7 @@ export function DashboardPage() {
   useEffect(() => {
     let isMounted = true
 
-    settingsService.listMaterialTypes()
+    settingsService.listMaterialTypeOptions()
       .then((response) => {
         if (isMounted) {
           setMaterialTypes(response ?? [])

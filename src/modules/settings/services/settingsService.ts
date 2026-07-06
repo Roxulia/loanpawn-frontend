@@ -14,6 +14,17 @@ export type DefaultTypeOption = {
   isDefault?: boolean
 }
 
+export type DefaultTypeListPage = {
+  items: DefaultTypeOption[]
+  current_page?: number
+  currentPage?: number
+  last_page?: number
+  lastPage?: number
+  per_page?: number
+  perPage?: number
+  total: number
+}
+
 export type BrandingSettings = {
   id?: number
   tenant_id?: number
@@ -81,6 +92,22 @@ export type ChangeLanguageResponse = Partial<TenantUser> & {
   message?: string
 }
 
+function defaultTypeListPath(path: string, params: { page?: number; perPage?: number } = {}) {
+  const searchParams = new URLSearchParams()
+
+  if (params.page !== undefined) {
+    searchParams.set('page', String(params.page))
+  }
+
+  if (params.perPage !== undefined) {
+    searchParams.set('per_page', String(params.perPage))
+  }
+
+  const query = searchParams.toString()
+
+  return `${path}${query ? `?${query}` : ''}`
+}
+
 export const settingsService = {
   getSettings() {
     return apiClient.get<SettingsResponse>('/tenant/settings')
@@ -125,16 +152,36 @@ export const settingsService = {
     })
   },
 
-  listInterestTypes() {
+  listInterestTypes(params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/interest-types/paginated', params))
+  },
+
+  listExpenseTypes(params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/expense-types/paginated', params))
+  },
+
+  listMaterialTypes(params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/material-types/paginated', params))
+  },
+
+  listItemCategoryTypes(params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/item-category-types/paginated', params))
+  },
+
+  listMaterialTypeOptions() {
+    return apiClient.get<DefaultTypeOption[]>('/tenant/material-types')
+  },
+
+  listInterestTypeOptions() {
     return apiClient.get<DefaultTypeOption[]>('/tenant/interest-types')
   },
 
-  listExpenseTypes() {
+  listExpenseTypeOptions() {
     return apiClient.get<DefaultTypeOption[]>('/tenant/expense-types')
   },
 
-  listMaterialTypes() {
-    return apiClient.get<DefaultTypeOption[]>('/tenant/material-types')
+  listItemCategoryTypeOptions() {
+    return apiClient.get<DefaultTypeOption[]>('/tenant/item-category-types')
   },
 
   createInterestType(payload: { name: string; code: string; durationInDays?: number }) {
@@ -149,6 +196,10 @@ export const settingsService = {
     return apiClient.post<DefaultTypeOption>('/tenant/material-types', payload)
   },
 
+  createItemCategoryType(payload: { name: string; code: string }) {
+    return apiClient.post<DefaultTypeOption>('/tenant/item-category-types', payload)
+  },
+
   deleteInterestType(code: string) {
     return apiClient.delete<{ message: string }>(`/tenant/interest-types/${encodeURIComponent(code)}`)
   },
@@ -159,5 +210,9 @@ export const settingsService = {
 
   deleteMaterialType(code: string) {
     return apiClient.delete<{ message: string }>(`/tenant/material-types/${encodeURIComponent(code)}`)
+  },
+
+  deleteItemCategoryType(code: string) {
+    return apiClient.delete<{ message: string }>(`/tenant/item-category-types/${encodeURIComponent(code)}`)
   },
 }
