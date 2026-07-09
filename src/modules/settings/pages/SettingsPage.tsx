@@ -575,7 +575,7 @@ export function SettingsPage() {
           </div>
           <FormGroup columns={2}>
             <FormField id="settings-default-password" label="New Default Password">
-              <Input id="settings-default-password" minLength={8} type="password" value="" onChange={(event) => setTenant({ ...tenant, default_tenant_user_password: event.target.value })} />
+              <Input id="settings-default-password" minLength={8} type="password" value={tenant.default_tenant_user_password} onChange={(event) => setTenant({ ...tenant, default_tenant_user_password: event.target.value })} />
             </FormField>
           </FormGroup>
           <ActionBar>
