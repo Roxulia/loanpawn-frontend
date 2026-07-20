@@ -6,7 +6,7 @@ import { Alert, LoadingState } from '../../../components/feedback'
 import { ActiveSlipIcon, ChevronRightIcon, CirclePlusIcon, ContactPageIcon, EditIcon, SecurityIcon } from '../../../components/icons/icon'
 import { formatDate, formatMoney } from '../../slips/slipFormat'
 import { formatCustomerDeletedState, formatValue, getTrustScore, getTrustTone } from '../customerFormat'
-import { customerService, type TenantCustomer, type TenantCustomerActiveSlip, type TenantCustomerLoanMetrics } from '../services/customerService'
+import { customerService, type TenantCustomer, type TenantCustomerActiveSlip, type TenantCustomerLoanMetrics, type TenantCustomerUnpaidDebt } from '../services/customerService'
 
 export function CustomerDetailPage() {
   const navigate = useNavigate()
@@ -48,6 +48,7 @@ export function CustomerDetailPage() {
 
   const metrics = getLoanMetrics(customer)
   const activeSlips = getActiveSlips(customer)
+  const unpaidDebts = getUnpaidDebts(customer)
   const trustScore = customer ? getTrustScore(customer) : 0
   const displayTrustScore = customer ? getDisplayTrustScore(customer) : 0
 
@@ -108,66 +109,122 @@ export function CustomerDetailPage() {
               </DetailPanel>
             </div>
 
-            <section className="customer-detail-active-slips">
-              <header>
-                <div>
-                  <ActiveSlipIcon />
-                  <h2>Active Pawn Slips</h2>
-                </div>
-                <div>
-                  <Badge tone="info">{getMetric(metrics, 'activeSlips', 'active_slips')} Ongoing</Badge>
-                  <Badge>{getMetric(metrics, 'completedSlips', 'completed_slips')} Completed</Badge>
-                </div>
-              </header>
+            <div className="customer-detail-activity-column">
+              <section className="customer-detail-active-slips">
+                <header>
+                  <div>
+                    <ActiveSlipIcon />
+                    <h2>Active Pawn Slips</h2>
+                  </div>
+                  <div>
+                    <Badge tone="info">{getMetric(metrics, 'activeSlips', 'active_slips')} Ongoing</Badge>
+                    <Badge>{getMetric(metrics, 'completedSlips', 'completed_slips')} Completed</Badge>
+                  </div>
+                </header>
 
-              {activeSlips.length === 0 ? (
-                <p className="muted">No active pawn slips for this customer.</p>
-              ) : (
-                <>
-                  <div className="customer-detail-slip-table">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Slip ID</th>
-                          <th>Pawned Item</th>
-                          <th>Loan Amount</th>
-                          <th>Interest</th>
-                          <th>Due Date</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {activeSlips.map((slip) => (
-                          <tr key={slip.id} onClick={() => navigate(routePaths.slipDetail(getSlipNo(slip)))}>
-                            <td><strong>{getSlipNo(slip)}</strong></td>
-                            <td>{getSlipItemName(slip)}</td>
-                            <td>{formatMoney(getSlipAmount(slip, 'loan'))}</td>
-                            <td>{formatInterest(slip)}</td>
-                            <td>{formatDate(getSlipDate(slip))}</td>
-                            <td><Badge tone={getSlipStatusTone(slip.status)}>{slip.status ?? 'active'}</Badge></td>
-                            <td><Button onClick={() => navigate(routePaths.slipDetail(getSlipNo(slip)))} variant="ghost">View</Button></td>
+                {activeSlips.length === 0 ? (
+                  <p className="muted">No active pawn slips for this customer.</p>
+                ) : (
+                  <>
+                    <div className="customer-detail-slip-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Slip ID</th>
+                            <th>Pawned Item</th>
+                            <th>Loan Amount</th>
+                            <th>Interest</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {activeSlips.map((slip) => (
+                            <tr key={slip.id} onClick={() => navigate(routePaths.slipDetail(getSlipNo(slip)))}>
+                              <td><strong>{getSlipNo(slip)}</strong></td>
+                              <td>{getSlipItemName(slip)}</td>
+                              <td>{formatMoney(getSlipAmount(slip, 'loan'))}</td>
+                              <td>{formatInterest(slip)}</td>
+                              <td>{formatDate(getSlipDate(slip))}</td>
+                              <td><Badge tone={getSlipStatusTone(slip.status)}>{slip.status ?? 'active'}</Badge></td>
+                              <td><Button onClick={() => navigate(routePaths.slipDetail(getSlipNo(slip)))} variant="ghost">View</Button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="customer-detail-slip-cards">
+                      {activeSlips.map((slip) => (
+                        <button className="customer-detail-slip-card" key={slip.id} onClick={() => navigate(routePaths.slipDetail(getSlipNo(slip)))} type="button">
+                          <strong>{getSlipNo(slip)}</strong>
+                          <span>{getSlipItemName(slip)}</span>
+                          <div>
+                            <span>{formatMoney(getSlipAmount(slip, 'loan'))}</span>
+                            <span>{formatDate(getSlipDate(slip))}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <footer>Showing {activeSlips.length} of {getMetric(metrics, 'activeSlips', 'active_slips')} active loans</footer>
+              </section>
+
+              <section className="customer-detail-unpaid-debts">
+                <header>
+                  <div>
+                    <ActiveSlipIcon />
+                    <h2>Unpaid Debts</h2>
                   </div>
-                  <div className="customer-detail-slip-cards">
-                    {activeSlips.map((slip) => (
-                      <button className="customer-detail-slip-card" key={slip.id} onClick={() => navigate(routePaths.slipDetail(getSlipNo(slip)))} type="button">
-                        <strong>{getSlipNo(slip)}</strong>
-                        <span>{getSlipItemName(slip)}</span>
-                        <div>
-                          <span>{formatMoney(getSlipAmount(slip, 'loan'))}</span>
-                          <span>{formatDate(getSlipDate(slip))}</span>
+                  <div>
+                    <Badge tone="warning">{unpaidDebts.length} Unpaid</Badge>
+                  </div>
+                </header>
+
+                {unpaidDebts.length === 0 ? (
+                  <p className="muted">No unpaid debts for this customer.</p>
+                ) : (
+                  <>
+                    <div className="customer-detail-debt-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>No.</th>
+                            <th>Amount</th>
+                            <th>Tag</th>
+                            <th>Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {unpaidDebts.map((debt, index) => (
+                            <tr key={debt.id}>
+                              <td><strong>{index + 1}</strong></td>
+                              <td>{formatMoney(getDebtAmount(debt))}</td>
+                              <td>{getDebtTag(debt)}</td>
+                              <td>{formatDate(getDebtCreatedAt(debt))}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="customer-detail-debt-cards">
+                      {unpaidDebts.map((debt, index) => (
+                        <div className="customer-detail-debt-card" key={debt.id}>
+                          <strong>{index + 1}</strong>
+                          <span>{getDebtTag(debt)}</span>
+                          <div>
+                            <span>{formatMoney(getDebtAmount(debt))}</span>
+                            <span>{formatDate(getDebtCreatedAt(debt))}</span>
+                          </div>
                         </div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-              <footer>Showing {activeSlips.length} of {getMetric(metrics, 'activeSlips', 'active_slips')} active loans</footer>
-            </section>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <footer>Showing {unpaidDebts.length} unpaid debts</footer>
+              </section>
+            </div>
           </div>
 
           <section className="customer-detail-stats">
@@ -239,6 +296,10 @@ function getLoanMetrics(customer: TenantCustomer | null) {
 
 function getActiveSlips(customer: TenantCustomer | null) {
   return customer?.activeSlips ?? customer?.active_slips ?? []
+}
+
+function getUnpaidDebts(customer: TenantCustomer | null) {
+  return customer?.unpaidDebts ?? customer?.unpaid_debts ?? []
 }
 
 function getMetric(metrics: TenantCustomerLoanMetrics | null, camelKey: keyof TenantCustomerLoanMetrics, snakeKey: keyof TenantCustomerLoanMetrics) {
@@ -329,6 +390,18 @@ function getSlipStatusTone(status?: string): 'success' | 'warning' | 'danger' | 
   }
 
   return 'warning'
+}
+
+function getDebtAmount(debt: TenantCustomerUnpaidDebt) {
+  return debt.amount ?? 0
+}
+
+function getDebtTag(debt: TenantCustomerUnpaidDebt) {
+  return debt.tag || '-'
+}
+
+function getDebtCreatedAt(debt: TenantCustomerUnpaidDebt) {
+  return debt.createdAt ?? debt.created_at ?? null
 }
 
 function formatNumber(value: number) {

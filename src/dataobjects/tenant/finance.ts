@@ -125,6 +125,14 @@ export type TenantDebt = {
   tenant_id: number
   slip_id?: number | null
   slip_no?: string | null
+  slipId?: number | null
+  slipNo?: string | null
+  customer_id?: number | null
+  customer_code?: string | null
+  customer_name?: string | null
+  customerId?: number | null
+  customerCode?: string | null
+  customerName?: string | null
   amount: string
   description: string
   tag?: string | null

@@ -21,9 +21,9 @@ import { debtFormToPayload, emptyDebtForm, validateDebtForm, type DebtFormErrors
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
   {
-    header: 'Slip code',
-    key: 'slip',
-    render: (item) => getStringField(item, 'slip_no', 'slipNo') || formatSlipId(item),
+    header: 'Linked to',
+    key: 'link',
+    render: (item) => formatDebtLink(item),
   },
   {
     header: 'Amount',
@@ -65,13 +65,17 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
     item.amount,
     item.tag ?? '',
     getStringField(item, 'slip_no', 'slipNo'),
+    getStringField(item, 'customer_name', 'customerName'),
+    getStringField(item, 'customer_code', 'customerCode'),
     item.is_paid ? 'paid' : 'unpaid',
   ].join(' '),
   initialForm: emptyDebtForm,
   itemToForm: (item) => ({
     amount: item.amount,
+    customer_code: getStringField(item, 'customer_code', 'customerCode'),
     description: item.description,
-    slip_id: String(getNumberField(item, 'slip_id', 'slipId') ?? ''),
+    link_mode: getStringField(item, 'customer_code', 'customerCode') ? 'customer' : 'slip',
+    slip_code: getStringField(item, 'slip_no', 'slipNo'),
     tag: item.tag ?? '',
   }),
   list: (params) => tenantResourceService.listDebts(params),
@@ -114,7 +118,19 @@ function renderForm(
   return <DebtFormFields errors={errors} onChange={(field, value) => updateField(field, value)} value={form} />
 }
 
-function formatSlipId(item: TenantDebt) {
+function formatDebtLink(item: TenantDebt) {
+  const customerName = getStringField(item, 'customer_name', 'customerName')
+  const customerCode = getStringField(item, 'customer_code', 'customerCode')
+  const slipNo = getStringField(item, 'slip_no', 'slipNo')
+
+  if (slipNo) {
+    return slipNo
+  }
+
+  if (customerName || customerCode) {
+    return [customerName, customerCode].filter(Boolean).join(' / ')
+  }
+
   const slipId = getNumberField(item, 'slip_id', 'slipId')
 
   return slipId ? `Slip #${slipId}` : '-'

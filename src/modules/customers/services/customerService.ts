@@ -48,6 +48,8 @@ export type TenantCustomer = {
   loan_metrics?: TenantCustomerLoanMetrics
   activeSlips?: TenantCustomerActiveSlip[]
   active_slips?: TenantCustomerActiveSlip[]
+  unpaidDebts?: TenantCustomerUnpaidDebt[]
+  unpaid_debts?: TenantCustomerUnpaidDebt[]
 }
 
 export type TenantCustomerLastActivity = {
@@ -94,6 +96,15 @@ export type TenantCustomerActiveSlip = {
   interestTypeName?: string | null
   expire_at?: string | null
   status?: string
+}
+
+export type TenantCustomerUnpaidDebt = {
+  id: number
+  code?: string
+  amount?: number
+  tag?: string | null
+  created_at?: string | null
+  createdAt?: string | null
 }
 
 export type TenantCustomerListSummary = {

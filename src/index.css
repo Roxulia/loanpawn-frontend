@@ -210,6 +210,79 @@ p {
   display: none;
 }
 
+.debt-link-field {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.debt-link-field__toggle {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.debt-link-field__toggle-button {
+  width: 100%;
+}
+
+.debt-customer-search {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  position: relative;
+}
+
+.debt-customer-search__menu {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.debt-customer-search__option {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  text-align: left;
+}
+
+.debt-customer-search__option:last-child {
+  border-bottom: 0;
+}
+
+.debt-customer-search__option:hover {
+  background: var(--color-surface-container);
+}
+
+.debt-customer-search__option strong,
+.debt-customer-search__option span,
+.debt-customer-search__status {
+  overflow-wrap: anywhere;
+}
+
+.debt-customer-search__option span,
+.debt-customer-search__status {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.debt-customer-search__status {
+  padding: var(--space-3);
+}
+
+.debt-customer-search__status--error {
+  color: var(--color-danger);
+}
+
 .topbar {
   align-items: center;
   background: rgb(246 249 255 / 92%);
@@ -1232,6 +1305,14 @@ p {
 
   .customer-serene-pagination__controls {
     justify-content: flex-start;
+  }
+
+  .debt-link-field__toggle {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-customer-search__menu {
+    max-height: 12rem;
   }
 
 }
