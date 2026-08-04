@@ -6,6 +6,7 @@ import { Alert } from '../../../components/feedback'
 import { SectionHeader } from '../../../components/molecules'
 import { Modal } from '../../../components/organisms'
 import type { TenantRoleOption, TenantUserCreateResponse } from '../../../dataobjects/tenant/staff'
+import { usePermissions } from '../../auth'
 import { StaffForm } from '../components/StaffForm'
 import {
   emptyStaffForm,
@@ -18,6 +19,8 @@ import { staffService } from '../services/staffService'
 
 export function StaffCreatePage() {
   const navigate = useNavigate()
+  const { hasPermission } = usePermissions()
+  const canCreateAdmin = hasPermission('create_admin_user')
   const [form, setForm] = useState<StaffFormState>(emptyStaffForm)
   const [errors, setErrors] = useState<StaffFormErrors>({})
   const [pageError, setPageError] = useState<string | null>(null)
@@ -33,16 +36,18 @@ export function StaffCreatePage() {
       setIsLoadingRoles(true)
 
       try {
-        const roles = await staffService.listRoles()
+        const roles = await staffService.listRoles({ excludeOwner: true })
 
         if (!isMounted) {
           return
         }
 
-        setRoleOptions(roles)
+        const assignableRoles = roles.filter((role) => role.role_name.toLowerCase() !== 'admin' || canCreateAdmin)
+
+        setRoleOptions(assignableRoles)
         setForm((current) => ({
           ...current,
-          role_id: current.role_id || String(roles[0]?.role_id ?? ''),
+          role_id: current.role_id || String(assignableRoles[0]?.role_id ?? ''),
         }))
       } catch (loadError) {
         if (isMounted) {
@@ -60,7 +65,7 @@ export function StaffCreatePage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [canCreateAdmin])
 
   function updateFormField<K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -150,7 +155,7 @@ export function StaffCreatePage() {
               </li>
               <li>
                 <span>Role</span>
-                <strong>{createdUser.roleName}</strong>
+                <strong>{createdUser.role_name ?? createdUser.roleName ?? '-'}</strong>
               </li>
               <li>
                 <span>Password</span>

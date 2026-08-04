@@ -15,11 +15,13 @@ export function StaffDetailPage() {
   const { staffId } = useParams()
   const staffCode = staffId?.trim() ?? ''
   const { hasPermission } = usePermissions()
-  const canEdit = hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const canEditStaff = hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const canEditAdmin = hasPermission('update_admin_user')
   const [staffUser, setStaffUser] = useState<TenantUser | null>(null)
   const [selectedPermissions, setSelectedPermissions] = useState<PermissionCode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const canEdit = staffUser && getUserRoleName(staffUser).toLowerCase() === 'admin' ? canEditAdmin : canEditStaff
 
   const loadStaffUser = useCallback(async (code: string) => {
     setIsLoading(true)

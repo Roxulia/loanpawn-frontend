@@ -29,8 +29,16 @@ export const staffService = {
     return apiClient.get<PaginatedResult<TenantUser>>('/tenant/users')
   },
 
-  listRoles() {
-    return apiClient.get<TenantRoleOption[]>('/tenant/user-roles')
+  listRoles(params: { excludeOwner?: boolean } = {}) {
+    const searchParams = new URLSearchParams()
+
+    if (params.excludeOwner) {
+      searchParams.set('exclude_owner', '1')
+    }
+
+    const query = searchParams.toString()
+
+    return apiClient.get<TenantRoleOption[]>(`/tenant/user-roles${query ? `?${query}` : ''}`)
   },
 
   createUser(payload: StaffPayload) {

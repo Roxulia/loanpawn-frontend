@@ -3,7 +3,8 @@ export type TenantUserCreateResponse = {
     name : string,
     email : string,
     password : string,
-    roleName : string
+    roleName?: string,
+    role_name?: string
 }
 
 export type TenantRoleOption = {

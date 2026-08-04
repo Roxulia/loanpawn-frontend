@@ -21,6 +21,10 @@ export const permissionGroups: PermissionGroup[] = [
       { code: 'update_user_all', label: 'Edit any staff profile', description: 'Update profile details for other staff.' },
       { code: 'update_user_own', label: 'Edit own profile', description: 'Update only their own profile details.' },
       { code: 'delete_user', label: 'Deactivate staff accounts', description: 'Disable staff accounts.' },
+      { code: 'create_admin_user', label: 'Create Admin accounts', description: 'Assign the Admin role to new staff accounts.' },
+      { code: 'update_admin_user', label: 'Edit Admin accounts', description: 'Update profiles, roles, status, and passwords for Admin accounts.' },
+      { code: 'delete_admin_user', label: 'Deactivate Admin accounts', description: 'Disable staff accounts that have the Admin role.' },
+      { code: 'assign_admin_permissions', label: 'Assign Admin permissions', description: 'Change permission settings for Admin accounts.' },
     ],
   },
   {

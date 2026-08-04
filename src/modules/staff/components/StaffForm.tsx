@@ -5,6 +5,7 @@ import type { TenantRoleOption } from '../../../dataobjects/tenant/staff'
 import type { StaffFormErrors, StaffFormState } from './staffFormModel'
 
 type StaffFormProps = {
+  disabled?: boolean
   errors: StaffFormErrors
   isLoadingRoles?: boolean
   isSaving: boolean
@@ -18,6 +19,7 @@ type StaffFormProps = {
 }
 
 export function StaffForm({
+  disabled = false,
   errors,
   isLoadingRoles = false,
   isSaving,
@@ -37,20 +39,20 @@ export function StaffForm({
       <form className="ui-form" onSubmit={onSubmit}>
         <FormGroup columns={2}>
           <FormField error={errors.name} id="staff-name" label="Name">
-            <Input hasError={Boolean(errors.name)} id="staff-name" onChange={(event) => onChange('name', event.target.value)} value={value.name} />
+            <Input disabled={disabled} hasError={Boolean(errors.name)} id="staff-name" onChange={(event) => onChange('name', event.target.value)} value={value.name} />
           </FormField>
           <FormField error={errors.nrc} id="staff-nrc" label="NRC">
-            <NrcField hasError={Boolean(errors.nrc)} id="staff-nrc" onChange={(nextNrc) => onChange('nrc', nextNrc)} required value={value.nrc} />
+            <NrcField disabled={disabled} hasError={Boolean(errors.nrc)} id="staff-nrc" onChange={(nextNrc) => onChange('nrc', nextNrc)} required value={value.nrc} />
           </FormField>
           <FormField error={errors.email} id="staff-email" label="Email">
-            <Input hasError={Boolean(errors.email)} id="staff-email" onChange={(event) => onChange('email', event.target.value)} type="email" value={value.email} />
+            <Input disabled={disabled} hasError={Boolean(errors.email)} id="staff-email" onChange={(event) => onChange('email', event.target.value)} type="email" value={value.email} />
           </FormField>
           <FormField error={errors.phone} id="staff-phone" label="Phone">
-            <Input hasError={Boolean(errors.phone)} id="staff-phone" onChange={(event) => onChange('phone', event.target.value)} value={value.phone} />
+            <Input disabled={disabled} hasError={Boolean(errors.phone)} id="staff-phone" onChange={(event) => onChange('phone', event.target.value)} value={value.phone} />
           </FormField>
           <FormField error={errors.role_id} id="staff-role" label="Role">
             <Select
-              disabled={isRoleUnavailable}
+              disabled={disabled || isRoleUnavailable}
               hasError={Boolean(errors.role_id)}
               id="staff-role"
               onChange={(event) => onChange('role_id', event.target.value)}
@@ -65,15 +67,15 @@ export function StaffForm({
             </Select>
           </FormField>
           <FormField error={errors.address} id="staff-address" label="Address">
-            <Input hasError={Boolean(errors.address)} id="staff-address" onChange={(event) => onChange('address', event.target.value)} value={value.address} />
+            <Input disabled={disabled} hasError={Boolean(errors.address)} id="staff-address" onChange={(event) => onChange('address', event.target.value)} value={value.address} />
           </FormField>
         </FormGroup>
 
         <ActionBar>
-          <Button onClick={onReset} variant="secondary">
+          <Button disabled={disabled} onClick={onReset} variant="secondary">
             Reset Changes
           </Button>
-          <Button disabled={isRoleUnavailable} isLoading={isSaving} type="submit" variant="primary">
+          <Button disabled={disabled || isRoleUnavailable} isLoading={isSaving} type="submit" variant="primary">
             {mode === 'create' ? 'Create Staff' : 'Save Staff'}
           </Button>
         </ActionBar>

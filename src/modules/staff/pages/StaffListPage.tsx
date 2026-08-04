@@ -18,6 +18,8 @@ export function StaffListPage() {
   const canCreate = hasPermission('create_user')
   const canDelete = hasPermission('delete_user')
   const canUpdate = hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const canDeleteAdmin = hasPermission('delete_admin_user')
+  const canUpdateAdmin = hasPermission('update_admin_user')
   const [users, setUsers] = useState<TenantUser[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -127,7 +129,7 @@ export function StaffListPage() {
           <DataTable
             actions={(user) => (
               <div className="row-actions">
-                {canUpdate && (
+                {(isAdminUser(user) ? canUpdateAdmin : canUpdate) && (
                   <Button
                     aria-label={`Edit ${user.name}`}
                     className="ui-button--icon"
@@ -138,7 +140,7 @@ export function StaffListPage() {
                     <EditIcon />
                   </Button>
                 )}
-                {canDelete && (
+                {(isAdminUser(user) ? canDeleteAdmin : canDelete) && (
                   <Button
                     aria-label={`Deactivate ${user.name}`}
                     className="ui-button--icon"
@@ -182,4 +184,8 @@ function getRouteNotice(state: unknown) {
   }
 
   return null
+}
+
+function isAdminUser(user: TenantUser) {
+  return getUserRoleName(user).toLowerCase() === 'admin'
 }

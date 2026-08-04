@@ -17,7 +17,7 @@ import {
   type StaffFormErrors,
   type StaffFormState,
 } from '../components/staffFormModel'
-import { staffToForm } from '../staffFormat'
+import { getUserRoleName, staffToForm } from '../staffFormat'
 import { staffService } from '../services/staffService'
 import { usePermissions } from '../../auth'
 
@@ -27,8 +27,17 @@ export function StaffEditPage() {
   const staffCode = staffId?.trim() ?? ''
   const { hasPermission } = usePermissions()
   const { currentUser, session, setSession } = useTenantSession()
-  const canManagePermissions = hasPermission('update_user_admin')
-  const canResetPassword = hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const [targetRoleName, setTargetRoleName] = useState('')
+  const isAdminTarget = targetRoleName.toLowerCase() === 'admin'
+  const canEditTarget = isAdminTarget
+    ? hasPermission('update_admin_user')
+    : hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const canManagePermissions = isAdminTarget
+    ? hasPermission('assign_admin_permissions')
+    : hasPermission('update_user_admin')
+  const canResetPassword = isAdminTarget
+    ? hasPermission('update_admin_user')
+    : hasPermission('update_user_admin') || hasPermission('update_user_all')
   const [form, setForm] = useState<StaffFormState>(emptyStaffForm)
   const [initialForm, setInitialForm] = useState<StaffFormState>(emptyStaffForm)
   const [errors, setErrors] = useState<StaffFormErrors>({})
@@ -56,6 +65,7 @@ export function StaffEditPage() {
       }
       setForm(nextFormWithRole)
       setInitialForm(nextFormWithRole)
+      setTargetRoleName(getUserRoleName(response))
       setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
     } catch (loadError) {
       setPageError(loadError instanceof Error ? loadError.message : 'Unable to load staff account.')
@@ -86,7 +96,11 @@ export function StaffEditPage() {
   }, [])
 
   useEffect(() => {
-    void loadRoleOptions()
+    const loadTimer = window.setTimeout(() => {
+      void loadRoleOptions()
+    }, 0)
+
+    return () => window.clearTimeout(loadTimer)
   }, [loadRoleOptions])
 
   useEffect(() => {
@@ -126,6 +140,12 @@ export function StaffEditPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    if (!canEditTarget) {
+      setPageError('You do not have permission to update this Admin account.')
+      return
+    }
+
     const nextErrors = validateStaffForm(form)
 
     if (Object.keys(nextErrors).length > 0) {
@@ -172,15 +192,16 @@ export function StaffEditPage() {
     try {
       const response = await staffService.resetPasswordToDefault(staffCode, { logoutFromAll: true })
       setIsResetConfirmOpen(false)
+      const resetMessage = response?.message || 'Password reset to tenant default.'
 
       if ((currentUser?.code ?? session?.user.code) === staffCode) {
-        setNotice(response.message || 'Password reset to tenant default.')
+        setNotice(resetMessage)
         setSession(null)
         navigate(routePaths.login, { replace: true })
         return
       }
 
-      setNotice(response.message || 'Password reset to tenant default.')
+      setNotice(resetMessage)
     } catch (resetError) {
       setPageError(resetError instanceof Error ? resetError.message : 'Unable to reset password.')
     } finally {
@@ -209,6 +230,7 @@ export function StaffEditPage() {
       ) : (
         <>
           <StaffForm
+            disabled={!canEditTarget}
             errors={errors}
             isLoadingRoles={isLoadingRoles}
             isSaving={isSaving}
