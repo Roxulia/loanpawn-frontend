@@ -18,6 +18,10 @@ import {
 import { getTrustScore } from '../customerFormat'
 
 const perPage = 10
+type CustomerNotice = {
+  message: string
+  title: string
+}
 
 export function CustomerListPage() {
   const navigate = useNavigate()
@@ -38,7 +42,7 @@ export function CustomerListPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(() => getRouteNotice(location.state))
+  const [notice, setNotice] = useState<CustomerNotice | null>(() => getRouteNotice(location.state))
   const [customerToDelete, setCustomerToDelete] = useState<TenantCustomer | null>(null)
 
   const loadCustomers = useCallback(async (page: number, search = debouncedSearchTerm) => {
@@ -107,7 +111,10 @@ export function CustomerListPage() {
 
     try {
       await customerService.deleteCustomer(customerToDelete.code)
-      setNotice('Customer deleted successfully.')
+      setNotice({
+        message: 'Customer deleted successfully.',
+        title: 'Customer deleted',
+      })
       setCustomerToDelete(null)
 
       const nextPage = customers.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage
@@ -212,7 +219,7 @@ export function CustomerListPage() {
 
         <div className="customer-serene-table__body">
           {error && <Alert message={error} onDismiss={() => setError(null)} title="Customer action failed" tone="danger" />}
-          {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Customer updated" tone="success" />}
+          {notice && <Alert message={notice.message} onDismiss={() => setNotice(null)} title={notice.title} tone="success" />}
 
           {isLoading ? (
             <LoadingState rows={5} />
@@ -491,8 +498,25 @@ function LastActivityCell({ activity }: { activity: TenantCustomerLastActivity }
 }
 
 function getRouteNotice(state: unknown) {
-  if (typeof state === 'object' && state !== null && 'notice' in state && typeof state.notice === 'string') {
-    return state.notice
+  if (typeof state !== 'object' || state === null || !('notice' in state)) {
+    return null
+  }
+
+  const notice = state.notice
+
+  if (
+    typeof notice === 'object' &&
+    notice !== null &&
+    'message' in notice &&
+    typeof notice.message === 'string' &&
+    'title' in notice &&
+    typeof notice.title === 'string'
+  ) {
+    return { message: notice.message, title: notice.title }
+  }
+
+  if (typeof notice === 'string') {
+    return { message: notice, title: 'Customer updated' }
   }
 
   return null

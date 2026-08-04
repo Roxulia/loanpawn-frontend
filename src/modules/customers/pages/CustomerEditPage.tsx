@@ -74,7 +74,14 @@ export function CustomerEditPage() {
 
     try {
       await customerService.updateCustomer(customerCode, formToCustomerPayload(form))
-      navigate(routePaths.customers, { state: { notice: 'Customer updated successfully.' } })
+      navigate(routePaths.customers, {
+        state: {
+          notice: {
+            message: 'Customer updated successfully.',
+            title: 'Customer updated',
+          },
+        },
+      })
     } catch (saveError) {
       setPageError(saveError instanceof Error ? saveError.message : 'Unable to update customer.')
     } finally {

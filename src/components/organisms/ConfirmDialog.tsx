@@ -21,18 +21,24 @@ export function ConfirmDialog({
   onConfirm,
   title,
 }: ConfirmDialogProps) {
+  function handleCancel() {
+    if (!isLoading) {
+      onCancel()
+    }
+  }
+
   return (
     <Modal
       footer={
         <>
-          <Button onClick={onCancel} variant="secondary">Cancel</Button>
+          <Button disabled={isLoading} onClick={handleCancel} variant="secondary">Cancel</Button>
           <Button isLoading={isLoading} onClick={onConfirm} variant="danger">
             {confirmLabel}
           </Button>
         </>
       }
       isOpen={isOpen}
-      onClose={onCancel}
+      onClose={handleCancel}
       title={title}
     >
       <Alert message={message} title="Please confirm this action" tone="warning" />

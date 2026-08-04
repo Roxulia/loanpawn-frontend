@@ -12,6 +12,7 @@ export const routePaths = {
   collateral: '/collateral',
   collateralDetail: (itemId: number | string) => `/collateral/${itemId}`,
   slips: '/slips',
+  slipsForCustomer: (customerCode: string) => `/slips?customer=${encodeURIComponent(customerCode)}`,
   slipDetail: (slipNo: number | string) => `/slips/${slipNo}`,
   interest: '/interest',
   redemptions: '/redemptions',

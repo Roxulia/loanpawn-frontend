@@ -87,7 +87,7 @@ export function CustomerDetailPage() {
             </div>
             <div className="customer-detail-summary__actions">
               <Button leftIcon={<EditIcon />} onClick={() => navigate(routePaths.customerEdit(customerCode))} variant="primary">Edit Customer</Button>
-              <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.slips)} variant="secondary">New Loan Slip</Button>
+              <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.slipsForCustomer(customer.code))} variant="secondary">New Loan Slip</Button>
               <Button onClick={() => navigate(routePaths.customers)} variant="ghost">Back</Button>
             </div>
           </section>

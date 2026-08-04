@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
-import { Alert } from '../../../components/feedback'
+import { Alert, LoadingState } from '../../../components/feedback'
 import { PrinterIcon, TrashIcon } from '../../../components/icons/icon'
 import {
   ActionBar,
@@ -13,6 +13,7 @@ import {
   isCompleteNrcValue,
   isEmptyNrcValue,
   nrcValueToPayloadFields,
+  nrcValueFromFields,
   NrcField,
   SearchField,
   SectionHeader,
@@ -22,6 +23,7 @@ import { ConfirmDialog, DataTable, ModalForm, type DataTableColumn } from '../..
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { usePermissions } from '../../auth'
+import { customerService } from '../../customers/services/customerService'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
 import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
 
@@ -62,6 +64,8 @@ const emptyLoan = {
 
 export function SlipsPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const requestedCustomerCode = searchParams.get('customer')?.trim() ?? ''
   const { t } = useUiLocale()
   const { hasPermission } = usePermissions()
   const canList = hasPermission('list_loan_contract')
@@ -72,6 +76,8 @@ export function SlipsPage() {
   const [materialTypes, setMaterialTypes] = useState<MaterialType[]>([])
   const [itemCategoryTypes, setItemCategoryTypes] = useState<ItemCategoryType[]>([])
   const [customer, setCustomer] = useState(emptyCustomer)
+  const [isCustomerPrefilling, setIsCustomerPrefilling] = useState(false)
+  const [prefilledCustomerCode, setPrefilledCustomerCode] = useState('')
   const [loan, setLoan] = useState(emptyLoan)
   const [items, setItems] = useState<ItemForm[]>([])
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -151,6 +157,50 @@ export function SlipsPage() {
       .then((response) => setItemCategoryTypes(response ?? []))
       .catch(() => setItemCategoryTypes([]))
   }, [])
+
+  useEffect(() => {
+    if (!requestedCustomerCode || requestedCustomerCode === prefilledCustomerCode) {
+      return
+    }
+
+    let isCurrent = true
+    const loadTimer = window.setTimeout(() => {
+      setIsCustomerPrefilling(true)
+      setError(null)
+
+      void customerService.getCustomer(requestedCustomerCode)
+        .then((response) => {
+          if (!isCurrent) {
+            return
+          }
+
+          setCustomer({
+            name: response.name,
+            email: response.email ?? '',
+            nrc: nrcValueFromFields(response),
+            phone: response.phone ?? '',
+            address: response.address ?? '',
+            note: response.note ?? '',
+          })
+          setPrefilledCustomerCode(requestedCustomerCode)
+        })
+        .catch((loadError) => {
+          if (isCurrent) {
+            setError(loadError instanceof Error ? loadError.message : 'Unable to load customer details.')
+          }
+        })
+        .finally(() => {
+          if (isCurrent) {
+            setIsCustomerPrefilling(false)
+          }
+        })
+    }, 0)
+
+    return () => {
+      isCurrent = false
+      window.clearTimeout(loadTimer)
+    }
+  }, [prefilledCustomerCode, requestedCustomerCode])
 
   useEffect(() => {
     if (activeTab === 'management') {
@@ -339,7 +389,10 @@ export function SlipsPage() {
       {activeTab === 'application' && (
         <form className="workflow-stack ops-contract-workspace" onSubmit={(event) => void handleCreate(event)}>
           <Card title="Customer Details">
-            <FormGroup className="slip-form-customer-grid" columns={2}>
+            {isCustomerPrefilling ? (
+              <LoadingState rows={2} />
+            ) : (
+              <FormGroup className="slip-form-customer-grid" columns={2}>
               <FormField id="slip-customer-name" label="Name" error={formErrors.customerName}>
                 <Input id="slip-customer-name" value={customer.name} onChange={(event) => setCustomer({ ...customer, name: event.target.value })} hasError={Boolean(formErrors.customerName)} />
               </FormField>
@@ -358,7 +411,8 @@ export function SlipsPage() {
               <FormField className="slip-form-field--full" id="slip-customer-note" label="Note">
                 <Textarea id="slip-customer-note" value={customer.note} onChange={(event) => setCustomer({ ...customer, note: event.target.value })} />
               </FormField>
-            </FormGroup>
+              </FormGroup>
+            )}
           </Card>
 
           <Card

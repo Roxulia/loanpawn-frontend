@@ -39,8 +39,20 @@ export function CustomerCreatePage() {
     setPageError(null)
 
     try {
-      await customerService.createCustomer(formToCustomerPayload(form))
-      navigate(routePaths.customers, { state: { notice: 'Customer created successfully.' } })
+      const result = await customerService.createCustomer(formToCustomerPayload(form))
+
+      if (!result.created) {
+        throw new Error('An active customer with the same email, phone, or NRC already exists.')
+      }
+
+      navigate(routePaths.customers, {
+        state: {
+          notice: {
+            message: 'Customer created successfully.',
+            title: 'Customer created',
+          },
+        },
+      })
     } catch (saveError) {
       setPageError(saveError instanceof Error ? saveError.message : 'Unable to create customer.')
     } finally {
