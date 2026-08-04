@@ -84,6 +84,7 @@ export type InterestType = {
   id: number
   name: string
   code?: string
+  duration_in_days: number
 }
 
 export type MaterialType = {

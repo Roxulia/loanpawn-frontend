@@ -227,7 +227,7 @@ export function SlipsPage() {
       return
     }
 
-    const nextErrors = validateSlipForm(customer, loan, items)
+    const nextErrors = validateSlipForm(customer, loan, items, interestTypes)
     setFormErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) {
@@ -695,7 +695,12 @@ function makeItem(type: 'Normal' | 'Jewellery'): ItemForm {
   }
 }
 
-function validateSlipForm(customer: typeof emptyCustomer, loan: typeof emptyLoan, items: ItemForm[]) {
+function validateSlipForm(
+  customer: typeof emptyCustomer,
+  loan: typeof emptyLoan,
+  items: ItemForm[],
+  interestTypes: InterestType[],
+) {
   const errors: Record<string, string> = {}
 
   if (!customer.name.trim()) {
@@ -732,7 +737,53 @@ function validateSlipForm(customer: typeof emptyCustomer, loan: typeof emptyLoan
     errors.expiryQuota = 'Expiry quota must be at least 1.'
   }
 
+  const interestType = interestTypes.find((type) => type.id === Number(loan.interest_type_id))
+  const expiryDurationInDays = calculateExpiryDurationInDays(
+    Number(loan.expiry_quota),
+    loan.expiry_quota_type,
+  )
+
+  if (
+    interestType &&
+    expiryDurationInDays !== null &&
+    expiryDurationInDays <= Number(interestType.duration_in_days)
+  ) {
+    errors.expiryQuota = 'Expiry duration must be longer than the selected interest duration. Please rechoose the interest type or expiry quota.'
+  }
+
   return errors
+}
+
+function calculateExpiryDurationInDays(quota: number, quotaType: string, currentDate = new Date()) {
+  if (!Number.isInteger(quota) || quota < 1) {
+    return null
+  }
+
+  const startDate = new Date(Date.UTC(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate(),
+  ))
+  const expiryDate = new Date(startDate)
+
+  switch (quotaType.trim().toLowerCase()) {
+    case 'day':
+      expiryDate.setUTCDate(expiryDate.getUTCDate() + quota)
+      break
+    case 'week':
+      expiryDate.setUTCDate(expiryDate.getUTCDate() + (quota * 7))
+      break
+    case 'month':
+      expiryDate.setUTCMonth(expiryDate.getUTCMonth() + quota)
+      break
+    case 'year':
+      expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + quota)
+      break
+    default:
+      return null
+  }
+
+  return Math.round((expiryDate.getTime() - startDate.getTime()) / 86_400_000)
 }
 
 function optionalNrcPayload(value: typeof emptyNrcValue) {
