@@ -1,5 +1,11 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from 'axios'
-import { ApiError, type ApiEnvelope, type ApiErrorData, type ValidationErrors } from '../../dataobjects/common/api'
+import {
+  ApiError,
+  type ApiEnvelope,
+  type ApiErrorData,
+  type MessageResponse,
+  type ValidationErrors,
+} from '../../dataobjects/common/api'
 
 const defaultBaseUrl = 'https://loanpawn.1morebit.tech/api'
 const csrfCookiePath = '/sanctum/csrf-cookie'
@@ -38,12 +44,24 @@ export class ApiClient {
     return this.request<TData>(path, { ...options, body, method: 'POST' })
   }
 
+  async postMessage(path: string, body?: unknown, options: RequestOptions = {}) {
+    return this.requestMessage(path, { ...options, body, method: 'POST' })
+  }
+
   async put<TData>(path: string, body?: unknown, options: RequestOptions = {}) {
     return this.request<TData>(path, { ...options, body, method: 'PUT' })
   }
 
+  async putMessage(path: string, body?: unknown, options: RequestOptions = {}) {
+    return this.requestMessage(path, { ...options, body, method: 'PUT' })
+  }
+
   async delete<TData>(path: string, options: RequestOptions = {}) {
     return this.request<TData>(path, { ...options, method: 'DELETE' })
+  }
+
+  async deleteMessage(path: string, options: RequestOptions = {}) {
+    return this.requestMessage(path, { ...options, method: 'DELETE' })
   }
 
   async download(path: string, options: RequestOptions = {}) {
@@ -66,6 +84,35 @@ export class ApiClient {
       })
 
       return this.unwrapResponse<TData>(response.data, options)
+    } catch (error) {
+      throw this.normalizeError(error)
+    }
+  }
+
+  private async requestMessage(path: string, options: RequestOptions): Promise<MessageResponse> {
+    if (this.requiresCsrf(options)) {
+      await this.ensureCsrfCookie()
+    }
+
+    try {
+      const response = await this.client.request<MessageResponse | ApiEnvelope<unknown>>({
+        ...options,
+        data: options.body,
+        headers: this.buildHeaders(options),
+        method: options.method,
+        url: path,
+        withCredentials: options.withCredentials ?? true,
+      })
+
+      if (!this.isApiEnvelope(response.data)) {
+        return response.data as MessageResponse
+      }
+
+      if (!response.data.success) {
+        throw this.errorFromEnvelope(response.data)
+      }
+
+      return { message: response.data.message }
     } catch (error) {
       throw this.normalizeError(error)
     }

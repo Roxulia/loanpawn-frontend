@@ -19,10 +19,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type MessageResponse = {
-  message: string
-}
-
 type ListParams = {
   page?: number
   perPage?: number
@@ -88,7 +84,7 @@ export const tenantResourceService = {
   },
 
   deleteUser(tenantUserCode: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/users/${encodeURIComponent(tenantUserCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/users/${encodeURIComponent(tenantUserCode)}`, authOptions(auth))
   },
 
   listAccounting(params?: ListParams, auth?: TenantAuth) {
@@ -142,7 +138,7 @@ export const tenantResourceService = {
   },
 
   deleteExpense(expenseCode: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
   },
 
   listCapitals(params?: ListParams, auth?: TenantAuth) {
@@ -158,7 +154,7 @@ export const tenantResourceService = {
   },
 
   deleteCapital(capitalCode: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
   },
 
   listExpenseTypes(auth?: TenantAuth) {
@@ -178,7 +174,7 @@ export const tenantResourceService = {
   },
 
   deleteDebt(debtCode: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/debts/${encodeURIComponent(debtCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/debts/${encodeURIComponent(debtCode)}`, authOptions(auth))
   },
 
   payDebt(debtCode: string, payload: unknown, auth?: TenantAuth) {

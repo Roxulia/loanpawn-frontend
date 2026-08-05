@@ -7,10 +7,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type MessageResponse = {
-  message: string
-}
-
 function authOptions(auth: TenantAuth = {}) {
   return {
     tenantCode: auth.tenantCode,
@@ -32,7 +28,7 @@ export const pawnService = {
   },
 
   deleteLoanContractSlip(slipNo: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
   },
 
   calculateInterest(slipNo: string, auth?: TenantAuth) {
