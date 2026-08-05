@@ -7,10 +7,6 @@ import type {
 } from '../../dataobjects/tenant/auth'
 import { apiClient } from '../http/apiClient'
 
-type MessageResponse = {
-  message: string
-}
-
 type TenantChangePasswordPayload = {
   current_password: string
   password: string
@@ -37,10 +33,10 @@ export const tenantAuthService = {
   },
 
   logout(token?: string) {
-    return apiClient.post<MessageResponse>('/tenant/logout', undefined, { token })
+    return apiClient.postMessage('/tenant/logout', undefined, { token })
   },
 
   changePassword(payload: TenantChangePasswordPayload) {
-    return apiClient.put<MessageResponse>('/tenant/me/change-password', payload)
+    return apiClient.putMessage('/tenant/me/change-password', payload)
   },
 }

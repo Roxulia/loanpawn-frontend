@@ -4,10 +4,6 @@ import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { apiClient } from '../../../services/http/apiClient'
 import type { PermissionCode } from '../../auth'
 
-type MessageResponse = {
-  message: string
-}
-
 export type StaffPayload = {
   address?: string | null
   email: string
@@ -58,10 +54,10 @@ export const staffService = {
   },
 
   resetPasswordToDefault(userCode: string, payload: { logoutFromAll?: boolean } = {}) {
-    return apiClient.put<MessageResponse>(`/tenant/users/${encodeURIComponent(userCode)}/reset-to-defaultpassword`, payload)
+    return apiClient.putMessage(`/tenant/users/${encodeURIComponent(userCode)}/reset-to-defaultpassword`, payload)
   },
 
   deleteUser(userCode: string) {
-    return apiClient.delete<MessageResponse>(`/tenant/users/${encodeURIComponent(userCode)}`)
+    return apiClient.deleteMessage(`/tenant/users/${encodeURIComponent(userCode)}`)
   },
 }

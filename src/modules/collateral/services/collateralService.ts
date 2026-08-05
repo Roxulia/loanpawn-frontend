@@ -6,10 +6,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type MessageResponse = {
-  message: string
-}
-
 function authOptions(auth: TenantAuth = {}) {
   return {
     tenantCode: auth.tenantCode,
@@ -46,6 +42,6 @@ export const collateralService = {
   },
 
   deleteCollateral(itemCode: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/collateral-items/${encodeURIComponent(itemCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/collateral-items/${encodeURIComponent(itemCode)}`, authOptions(auth))
   },
 }

@@ -9,10 +9,6 @@ type IdempotentRequestOptions = {
   idempotencyKey?: string
 }
 
-type MessageResponse = {
-  message: string
-}
-
 export type SlipCustomer = {
   id?: number
   name?: string
@@ -185,7 +181,7 @@ export const slipService = {
   },
 
   deleteSlip(slipNo: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
   },
 
   previewSlipDocument(slipNo: string,paperType:string, auth?: TenantAuth) {

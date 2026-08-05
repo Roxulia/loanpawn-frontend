@@ -7,6 +7,10 @@ export type ApiEnvelope<TData> = {
   statusCode: number
 }
 
+export type MessageResponse = {
+  message: string
+}
+
 export type ApiErrorData = {
   code?: string
   errors?: ValidationErrors

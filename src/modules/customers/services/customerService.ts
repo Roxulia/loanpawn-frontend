@@ -5,10 +5,6 @@ type TenantAuth = {
   tenantCode?: string
 }
 
-type MessageResponse = {
-  message: string
-}
-
 export type TenantCustomer = {
   id: number
   code: string
@@ -179,6 +175,6 @@ export const customerService = {
   },
 
   deleteCustomer(tenantCustomerCode: string, auth?: TenantAuth) {
-    return apiClient.delete<MessageResponse>(`/tenant/customers/${encodeURIComponent(tenantCustomerCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(`/tenant/customers/${encodeURIComponent(tenantCustomerCode)}`, authOptions(auth))
   },
 }
