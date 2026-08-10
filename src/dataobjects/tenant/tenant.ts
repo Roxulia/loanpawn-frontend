@@ -1,5 +1,5 @@
 export type TenantLicenseStatus = 'trial' | 'paid' | 'expired' | 'suspended'
-export type TenantPlanType = 'trial' | 'basic' | 'premium'
+export type TenantPlanType = string
 
 export type TenantFeatureAccess = {
   code: string
@@ -22,6 +22,10 @@ export type TenantDetail = {
     phone?: string | null
   }
   tenant_license: {
+    plan_id?: number | null
+    plan_code?: string | null
+    plan_name?: string | null
+    plan_rank?: number | null
     plan_type: TenantPlanType
     expires_at: string | null
     status: TenantLicenseStatus
@@ -36,5 +40,10 @@ export type TenantDetail = {
     slip_footer_layout?: unknown[] | null
   } | null
   tenant_setting?: unknown
+  tenant_category?: {
+    id: number
+    code: string
+    name: string
+  } | null
   tenant_features: Record<string, TenantFeatureAccess>
 }

@@ -7,15 +7,19 @@ import { Card, FormGroup } from '../../components/molecules'
 import { useTenantSession } from '../../contexts/useTenantSession'
 import { tenantAuthService } from '../../services/tenant/authService'
 import { tenantResolverService } from '../../services/tenant/tenantResolverService'
+import { savedTenantStore } from '../../services/tenant/savedTenantStore'
+import type { TenantDetail } from '../../dataobjects/tenant/tenant'
 
 export function SsoLoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { setSession, setTenantResolution } = useTenantSession()
-  const [error, setError] = useState<string | null>(null)
-  const hasConsumed = useRef(false)
   const tenantCode = searchParams.get('tenantCode')?.trim() ?? ''
   const token = searchParams.get('token')?.trim() ?? ''
+  const [error, setError] = useState<string | null>(() => (
+    !tenantCode || !token ? 'SSO link is missing tenant code or token.' : null
+  ))
+  const hasConsumed = useRef(false)
 
   useEffect(() => {
     if (hasConsumed.current) {
@@ -25,7 +29,6 @@ export function SsoLoginPage() {
     hasConsumed.current = true
 
     if (!tenantCode || !token) {
-      setError('SSO link is missing tenant code or token.')
       return
     }
 
@@ -36,6 +39,9 @@ export function SsoLoginPage() {
       .then(async (session) => {
         const tenantResponse = await tenantResolverService.resolveByCode(session.tenant_code)
 
+        savedTenantStore.saveTenantProfile(tenantResponse)
+        savedTenantStore.setActiveTenantCode(tenantResponse.code)
+
         setTenantResolution({
           status: 'resolved',
           subdomain: tenantResponse.subdomain ?? null,
@@ -44,7 +50,7 @@ export function SsoLoginPage() {
         })
 
         setSession(session)
-        navigate(routePaths.dashboard, { replace: true })
+        navigate(resolveLandingPath(tenantResponse), { replace: true })
       })
       .catch((caught) => {
         setError(caught instanceof Error ? caught.message : 'Unable to complete SSO login.')
@@ -67,4 +73,23 @@ export function SsoLoginPage() {
       </FormGroup>
     </Card>
   )
+}
+
+function resolveLandingPath(tenant: TenantDetail) {
+  const candidates = [
+    ['dashboard', routePaths.dashboard],
+    ['accounting_management', routePaths.accounting],
+    ['expense_management', routePaths.expenses],
+    ['capital_management', routePaths.capitals],
+    ['debt_management', routePaths.debts],
+    ['customer_management', routePaths.customers],
+    ['collateral_management', routePaths.collateral],
+    ['loan_contract_management', routePaths.slips],
+    ['tenant_user_management', routePaths.staff],
+  ] as const
+
+  return candidates.find(([featureCode]) => {
+    const feature = tenant.tenant_features[featureCode]
+    return feature?.is_active && feature.is_enabled
+  })?.[1] ?? routePaths.profile
 }
