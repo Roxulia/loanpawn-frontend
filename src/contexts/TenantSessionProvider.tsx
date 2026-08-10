@@ -7,6 +7,7 @@ import {
   type TenantAuthStatus,
   type TenantSessionContextValue,
 } from './tenantSession'
+import { PwaInstallPrompt } from '../components/pwa/PwaInstallPrompt'
 
 const initialTenantResolution: TenantResolveState = {
   status: 'idle',
@@ -51,6 +52,7 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
   return (
     <TenantSessionContext.Provider value={value}>
       {children}
+      <PwaInstallPrompt />
     </TenantSessionContext.Provider>
   )
 }
