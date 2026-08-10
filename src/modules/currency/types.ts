@@ -1,5 +1,3 @@
-import type { PaginatedResult } from '../../dataobjects/common/api'
-
 export type Currency = {
   id: number
   code: string
@@ -35,10 +33,11 @@ export type ExchangeRateEntry = {
   code: string
   pair: ExchangeRatePair
   rate: string
-  effective_date: string
-  observed_at: string
+  effective_date: string | null
+  observed_at: string | null
   source: 'PLATFORM' | 'TENANT'
   is_void: boolean
+  voided_at: string | null
   void_reason: string | null
   can_correct: boolean
   can_void: boolean
@@ -46,16 +45,26 @@ export type ExchangeRateEntry = {
 
 export type DailyExchangeRateSummary = {
   id: number
-  rate_date: string
+  rate_date: string | null
   open_rate: string
   high_rate: string
   low_rate: string
   close_rate: string
   entry_count: number
   pair: ExchangeRatePair
+  calculated_at: string | null
+  source: 'PLATFORM' | 'TENANT'
 }
 
-export type CurrencyPage = PaginatedResult<Currency>
-export type ExchangePairPage = PaginatedResult<ExchangeRatePair>
-export type ExchangeRatePage = PaginatedResult<ExchangeRateEntry>
-export type DailyExchangeRatePage = PaginatedResult<DailyExchangeRateSummary>
+export type CurrencyListPage<TItem> = {
+  items: TItem[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export type CurrencyPage = CurrencyListPage<Currency>
+export type ExchangePairPage = CurrencyListPage<ExchangeRatePair>
+export type ExchangeRatePage = CurrencyListPage<ExchangeRateEntry>
+export type DailyExchangeRatePage = CurrencyListPage<DailyExchangeRateSummary>
