@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Input } from '../../../components/atoms'
+import { useEffect, useState } from 'react'
+import { SearchableSelect } from '../../../components/molecules'
 import { customerService, type TenantCustomer } from '../../customers/services/customerService'
 
 type CustomerSearchFieldProps = {
@@ -12,23 +12,12 @@ type CustomerSearchFieldProps = {
 export function CustomerSearchField({ hasError = false, id, onChange, value }: CustomerSearchFieldProps) {
   const [query, setQuery] = useState('')
   const [customers, setCustomers] = useState<TenantCustomer[]>([])
-  const [hasFocused, setHasFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const selectedCustomer = useMemo(
-    () => customers.find((customer) => customer.code === value) ?? null,
-    [customers, value],
-  )
-  const shouldShowMenu = hasFocused && (isLoading || Boolean(error) || customers.length > 0 || Boolean(query.trim()))
 
   useEffect(() => {
     let isCurrent = true
     const search = query.trim()
-
-    if (!hasFocused && search === '') {
-      return
-    }
 
     const timer = window.setTimeout(() => {
       setIsLoading(true)
@@ -61,52 +50,25 @@ export function CustomerSearchField({ hasError = false, id, onChange, value }: C
       isCurrent = false
       window.clearTimeout(timer)
     }
-  }, [hasFocused, query])
+  }, [query])
 
   return (
-    <div className="debt-customer-search">
-      <Input
-        aria-describedby={`${id}-options`}
-        hasError={hasError}
-        id={id}
-        onChange={(event) => {
-          setQuery(event.target.value)
-          if (value) {
-            onChange('')
-          }
-        }}
-        onFocus={() => setHasFocused(true)}
-        placeholder="Search customers"
-        type="search"
-        value={selectedCustomer ? formatCustomerOption(selectedCustomer) : query}
-      />
-      {shouldShowMenu && (
-        <div className="debt-customer-search__menu" id={`${id}-options`}>
-          {isLoading ? (
-            <span className="debt-customer-search__status">Loading customers...</span>
-          ) : error ? (
-            <span className="debt-customer-search__status debt-customer-search__status--error">{error}</span>
-          ) : customers.length > 0 ? (
-            customers.map((customer) => (
-              <button
-                className="debt-customer-search__option"
-                key={customer.code}
-                onClick={() => {
-                  onChange(customer.code)
-                  setQuery('')
-                }}
-                type="button"
-              >
-                <strong>{customer.name}</strong>
-                <span>{[customer.code, customer.phone].filter(Boolean).join(' / ')}</span>
-              </button>
-            ))
-          ) : (
-            <span className="debt-customer-search__status">No customers found.</span>
-          )}
-        </div>
-      )}
-    </div>
+    <SearchableSelect
+      emptyMessage="No customers found."
+      error={error}
+      getOptionDescription={(customer) => [customer.code, customer.phone].filter(Boolean).join(' / ')}
+      getOptionLabel={formatCustomerOption}
+      getOptionValue={(customer) => customer.code}
+      hasError={hasError}
+      id={id}
+      isLoading={isLoading}
+      loadingMessage="Loading customers..."
+      onChange={onChange}
+      onSearchChange={setQuery}
+      options={customers}
+      placeholder="Search customers"
+      value={value}
+    />
   )
 }
 

@@ -47,6 +47,7 @@ export const permissionCodes = [
   'create_exchange_rate',
   'correct_exchange_rate',
   'void_exchange_rate',
+  'manage_tenant_timezone',
   'dashboard'
 ] as const
 
