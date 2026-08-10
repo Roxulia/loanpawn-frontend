@@ -3923,6 +3923,97 @@
   }
 }
 
+.pwa-install-prompt {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-muted);
+  box-shadow: var(--shadow-elevated);
+  gap: var(--space-3);
+  z-index: 90;
+}
+
+.pwa-install-prompt--desktop {
+  align-items: center;
+  border-radius: var(--radius-lg);
+  bottom: var(--space-6);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  max-width: 30rem;
+  padding: var(--space-4);
+  position: fixed;
+  right: var(--space-6);
+}
+
+.pwa-install-prompt--mobile {
+  display: none;
+}
+
+.pwa-install-prompt__icon {
+  align-items: center;
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  display: inline-flex;
+  height: 3rem;
+  justify-content: center;
+  width: 3rem;
+}
+
+.pwa-install-prompt__icon svg {
+  fill: none;
+  height: 1.5rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 1.5rem;
+}
+
+.pwa-install-prompt__content {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.pwa-install-prompt__content h2 {
+  color: var(--color-accent);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+}
+
+.pwa-install-prompt__content p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.pwa-install-prompt__actions {
+  display: flex;
+  gap: var(--space-2);
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+@media (max-width: 39.9375rem) {
+  .pwa-install-prompt--desktop {
+    display: none;
+  }
+
+  .pwa-install-prompt--mobile {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    left: 0;
+    padding: var(--space-4);
+    position: fixed;
+    right: 0;
+  }
+
+  .pwa-install-prompt--mobile .pwa-install-prompt__actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+}
+
 @keyframes ui-spin {
   to {
     transform: rotate(360deg);
