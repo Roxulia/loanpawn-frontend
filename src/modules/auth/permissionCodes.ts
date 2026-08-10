@@ -35,6 +35,18 @@ export const permissionCodes = [
   'create_loan_contract',
   'delete_loan_contract',
   'manage_slip_document',
+  'list_currency',
+  'create_currency',
+  'update_currency',
+  'delete_currency',
+  'list_exchange_pair',
+  'create_exchange_pair',
+  'update_exchange_pair',
+  'delete_exchange_pair',
+  'list_exchange_rate',
+  'create_exchange_rate',
+  'correct_exchange_rate',
+  'void_exchange_rate',
   'dashboard'
 ] as const
 

@@ -12,6 +12,26 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.currency-exchange-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.currency-form,
+.currency-exchange-page .subform-panel {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.currency-table--desktop { display: block; }
+.currency-cards--mobile { width: 100%; }
+
+@media (max-width: 767px) {
+  .currency-table--desktop { display: none; }
+  .currency-cards--mobile { display: block; }
+}
+
 * {
   box-sizing: border-box;
 }

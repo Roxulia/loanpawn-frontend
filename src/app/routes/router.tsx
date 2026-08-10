@@ -11,6 +11,7 @@ import { ChangePasswordPage } from '../../pages/profile/ChangePasswordPage'
 import { ProfilePage } from '../../pages/profile/ProfilePage'
 import { FeatureRoute, PermissionRoute } from '../../modules/auth'
 import { AccountingPage } from '../../modules/accounting'
+import { CurrencyExchangePage } from '../../modules/currency'
 import { CapitalsPage } from '../../modules/capitals'
 import { CollateralDetailPage, CollateralListPage } from '../../modules/collateral'
 import { CustomerCreatePage, CustomerDetailPage, CustomerEditPage, CustomerListPage } from '../../modules/customers'
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
       { path: '/staff/:staffId', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute permission="list_user"><StaffDetailPage /></PermissionRoute>) },
       { path: '/staff/:staffId/edit', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute any={['update_user_admin', 'update_user_all', 'update_user_own']}><StaffEditPage /></PermissionRoute>) },
       { path: routePaths.accounting, element: featureGate('accounting_management', 'Accounting', <PermissionRoute permission="list_accounting"><AccountingPage /></PermissionRoute>) },
+      { path: routePaths.currencies, element: featureGate('currency_exchange_management', 'Currencies & Exchange Rates', <PermissionRoute any={['list_currency', 'list_exchange_pair', 'list_exchange_rate']}><CurrencyExchangePage /></PermissionRoute>) },
       { path: routePaths.capitals, element: featureGate('capital_management', 'Capital Management', <PermissionRoute any={['list_capital', 'create_capital', 'update_capital', 'delete_capital']}><CapitalsPage /></PermissionRoute>) },
       { path: routePaths.expenses, element: featureGate('expense_management', 'Expenses', <PermissionRoute any={['list_expense', 'create_expense', 'update_expense', 'delete_expense']}><ExpensesPage /></PermissionRoute>) },
       { path: routePaths.expenseCreate, element: featureGate('expense_management', 'Expenses', <PermissionRoute permission="create_expense"><ExpenseCreatePage /></PermissionRoute>) },
