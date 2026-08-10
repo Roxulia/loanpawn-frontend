@@ -253,6 +253,41 @@ p {
   position: relative;
 }
 
+.ui-searchable-select { position: relative; width: 100%; }
+.ui-searchable-select__menu { background: var(--surface, #fff); border: 1px solid var(--border-color, #dbe4e8); border-radius: 10px; box-shadow: 0 12px 30px rgb(15 23 42 / 14%); left: 0; max-height: 280px; overflow-y: auto; position: absolute; right: 0; top: calc(100% + 4px); z-index: 40; }
+.ui-searchable-select__option { align-items: flex-start; background: transparent; border: 0; border-bottom: 1px solid var(--border-color, #edf2f4); color: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; text-align: left; width: 100%; }
+.ui-searchable-select__option:hover, .ui-searchable-select__option.is-active { background: rgb(0 103 127 / 8%); }
+.ui-searchable-select__option span, .ui-searchable-select__status { color: var(--muted-color, #64748b); font-size: .82rem; }
+.ui-searchable-select__status { display: block; padding: 12px; }
+.ui-searchable-select__status--error { color: var(--danger-color, #b42318); }
+
+.exchange-rate-pair-selector { max-width: 420px; position: relative; z-index: 5; }
+.exchange-rate-tabs { margin: 20px 0 12px; }
+.exchange-rate-empty-prompt { color: var(--muted-color, #64748b); padding: 24px 0; text-align: center; }
+.exchange-rate-trends { display: grid; gap: 16px; }
+.exchange-rate-trend-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.exchange-rate-trend-panel svg { display: block; height: auto; overflow: visible; width: 100%; }
+.exchange-rate-chart-axis { stroke: #94a3b8; stroke-width: 1; }
+.exchange-rate-chart-line { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+.exchange-rate-chart-line--buying { stroke: #00677f; }
+.exchange-rate-chart-line--selling { stroke: #f59e0b; }
+.exchange-rate-chart-point--buying { fill: #00677f; }
+.exchange-rate-chart-point--selling { fill: #f59e0b; }
+.exchange-rate-chart-legend { display: flex; gap: 18px; justify-content: center; }
+.exchange-rate-chart-legend span { align-items: center; display: inline-flex; gap: 6px; }
+.exchange-rate-chart-legend i { border-radius: 50%; display: inline-block; height: 9px; width: 9px; }
+.exchange-rate-chart-legend .is-buying { background: #00677f; }
+.exchange-rate-chart-legend .is-selling { background: #f59e0b; }
+.exchange-rate-observations--desktop { display: block; }
+.exchange-rate-observations--mobile { width: 100%; }
+
+@media (max-width: 720px) {
+  .ui-searchable-select__menu { max-height: 220px; }
+  .exchange-rate-trend-grid { grid-template-columns: 1fr; }
+  .exchange-rate-observations--desktop { width: 100%; }
+  .exchange-rate-observations--mobile { display: block; }
+}
+
 .debt-customer-search__menu {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

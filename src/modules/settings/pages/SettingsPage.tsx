@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
-import { ActionBar, Card, FormField, FormGroup, SectionHeader } from '../../../components/molecules'
+import { ActionBar, Card, FormField, FormGroup, SearchableSelect, SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { useTenantSession } from '../../../contexts/useTenantSession'
+import { usePermissions } from '../../auth'
 import type { UiLocale } from '../../../locales/UiLocale'
 import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
 
@@ -116,8 +117,14 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const { currentUser, session, setCurrentUser, setLocale, setSession, tenantResolution } = useTenantSession()
+  const { hasPermission } = usePermissions()
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
   const canManageTenantBranding = hasEnabledFeature(tenantResolution, 'tenant_branding')
+  const canManageTimezone = hasEnabledFeature(tenantResolution, 'tenant_timezone_management') && hasPermission('manage_tenant_timezone')
+  const [timezoneOptions, setTimezoneOptions] = useState<string[]>([])
+  const [timezone, setTimezone] = useState('Asia/Yangon')
+  const [timezoneInitial, setTimezoneInitial] = useState('Asia/Yangon')
+  const [timezoneUpdateKey, setTimezoneUpdateKey] = useState(0)
   const currentLanguage = getUserLocale(currentUser)
 
   const brandingChanged = useMemo(() => hasChanged(branding, brandingInitial), [branding, brandingInitial])
@@ -165,6 +172,25 @@ export function SettingsPage() {
 
     return () => window.clearTimeout(loadTimer)
   }, [loadSettings])
+
+  useEffect(() => {
+    if (!canManageTimezone) return
+    Promise.all([settingsService.getTimezone(), settingsService.listTimezoneOptions()]).then(([setting, options]) => {
+      setTimezone(setting.value || 'Asia/Yangon')
+      setTimezoneInitial(setting.value || 'Asia/Yangon')
+      setTimezoneUpdateKey(setting.update_key ?? 0)
+      setTimezoneOptions(options)
+    }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load timezone settings.'))
+  }, [canManageTimezone])
+
+  async function saveTimezone() {
+    await saveSection('timezone', async () => {
+      const response = await settingsService.updateTimezone({ timezone, update_key: timezoneUpdateKey })
+      setTimezone(response.value)
+      setTimezoneInitial(response.value)
+      setTimezoneUpdateKey(response.update_key)
+    }, 'Business timezone saved successfully.')
+  }
 
   useEffect(() => {
     setSelectedLanguage(currentLanguage)
@@ -568,6 +594,15 @@ export function SettingsPage() {
           </div>
         </Card>
 
+        {canManageTimezone && <Card title="Business Timezone" description="Controls exchange-rate opening days and correction windows.">
+          <FormField id="settings-timezone" label="Timezone">
+            <SearchableSelect id="settings-timezone" options={timezoneOptions} value={timezone} onChange={setTimezone} getOptionLabel={(option) => option} getOptionValue={(option) => option} placeholder="Search timezones" />
+          </FormField>
+          <ActionBar>
+            <Button disabled={timezone === timezoneInitial} onClick={() => setTimezone(timezoneInitial)} variant="secondary">Cancel</Button>
+            <Button disabled={timezone === timezoneInitial} isLoading={savingSection === 'timezone'} onClick={() => void saveTimezone()} variant="primary">Save</Button>
+          </ActionBar>
+        </Card>}
         <Card title="Tenant Setting">
           <div className="settings-info-box" role="status">
             <span>Current default password</span>

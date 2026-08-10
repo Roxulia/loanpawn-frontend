@@ -68,6 +68,7 @@ export const permissionGroups: PermissionGroup[] = [
       { code: 'create_debt', label: 'Create debts', description: 'Add debt records.' },
       { code: 'update_debt', label: 'Edit debts', description: 'Update or mark debt records.' },
       { code: 'delete_debt', label: 'Delete debts', description: 'Remove debt records.' },
+      { code: 'manage_tenant_timezone', label: 'Manage business timezone', description: 'Choose the timezone used for tenant business-day boundaries.' },
     ],
   },
 ]

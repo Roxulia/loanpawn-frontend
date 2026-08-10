@@ -32,7 +32,8 @@ export type ExchangeRateEntry = {
   id: number
   code: string
   pair: ExchangeRatePair
-  rate: string
+  buying_rate: string
+  selling_rate: string
   effective_date: string | null
   observed_at: string | null
   source: 'PLATFORM' | 'TENANT'
@@ -46,15 +47,23 @@ export type ExchangeRateEntry = {
 export type DailyExchangeRateSummary = {
   id: number
   rate_date: string | null
-  open_rate: string
-  high_rate: string
-  low_rate: string
-  close_rate: string
+  buying_open: string
+  buying_high: string
+  buying_low: string
+  buying_close: string
+  selling_open: string
+  selling_high: string
+  selling_low: string
+  selling_close: string
   entry_count: number
   pair: ExchangeRatePair
   calculated_at: string | null
   source: 'PLATFORM' | 'TENANT'
 }
+
+export type ExchangeRateState = { business_date: string; timezone: string; opening_required: boolean; latest_entry: ExchangeRateEntry | null }
+export type ExchangeRateTrendPoint = { date: string; buying_close: string; selling_close: string }
+export type ExchangeRateTrend = { pair_code: string; from_date: string; to_date: string; tenant_points: ExchangeRateTrendPoint[]; platform_points: ExchangeRateTrendPoint[] }
 
 export type CurrencyListPage<TItem> = {
   items: TItem[]

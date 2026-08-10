@@ -70,6 +70,8 @@ export type TenantSettings = {
   default_tenant_user_password?: string | null
 }
 
+export type TimezoneSetting = { id: number; key: string; value: string; update_key: number }
+
 export type SettingsPayload = {
   branding?: BrandingSettings
   contact?: ContactSettings
@@ -128,6 +130,10 @@ export const settingsService = {
   updateDefaultUserPassword(payload: { default_tenant_user_password: string; update_key?: number }) {
     return apiClient.put<TenantSettings>('/tenant/settings/default-user-password', payload)
   },
+
+  getTimezone() { return apiClient.get<TimezoneSetting>('/tenant/settings/timezone') },
+  listTimezoneOptions() { return apiClient.get<string[]>('/tenant/settings/timezone-options') },
+  updateTimezone(payload: { timezone: string; update_key: number }) { return apiClient.put<TimezoneSetting>('/tenant/settings/timezone', payload) },
 
   changeLanguage(payload: ChangeLanguagePayload) {
     //console.log('Changing language with payload:', payload);
