@@ -126,6 +126,18 @@ export function SettingsPage() {
   const { hasPermission } = usePermissions()
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
   const canViewGeneralSettings = hasPermission('manage_slip_document')
+  const canViewMaterialTypes = hasPermission('list_material_type')
+  const canViewInterestTypes = hasPermission('list_interest_type')
+  const canViewItemCategoryTypes = hasPermission('list_item_category_type')
+  const canViewExpenseTypes = hasPermission('list_expense_type')
+  const canCreateMaterialType = canManageMasterData && hasPermission('create_material_type')
+  const canDeleteMaterialType = canManageMasterData && hasPermission('delete_material_type')
+  const canCreateInterestType = canManageMasterData && hasPermission('create_interest_type')
+  const canDeleteInterestType = canManageMasterData && hasPermission('delete_interest_type')
+  const canCreateItemCategoryType = canManageMasterData && hasPermission('create_item_category_type')
+  const canDeleteItemCategoryType = canManageMasterData && hasPermission('delete_item_category_type')
+  const canCreateExpenseType = canManageMasterData && hasPermission('create_expense_type')
+  const canDeleteExpenseType = canManageMasterData && hasPermission('delete_expense_type')
   const canViewFinancialAccountTypes = hasEnabledFeature(tenantResolution, 'accounting_management') && hasPermission('list_financial_account_type')
   const canManageFinancialAccountTypes = hasAnyEnabledFeature(tenantResolution, ['accounting_type_management', 'master_data_management'])
   const canCreateFinancialAccountType = canManageFinancialAccountTypes && hasPermission('create_financial_account_type')
@@ -149,23 +161,28 @@ export function SettingsPage() {
     setError(null)
 
     try {
-      const [generalData, financialResponse] = await Promise.all([
+      const [settingsResponse, interestResponse, expenseResponse, materialResponse, itemCategoryResponse, financialResponse] = await Promise.all([
         canViewGeneralSettings
-          ? Promise.all([
-              settingsService.getSettings(),
-              settingsService.listInterestTypes({ page: 1, perPage: typeDataPerPage }),
-              settingsService.listExpenseTypes({ page: 1, perPage: typeDataPerPage }),
-              settingsService.listMaterialTypes({ page: 1, perPage: typeDataPerPage }),
-              settingsService.listItemCategoryTypes({ page: 1, perPage: typeDataPerPage }),
-            ])
+          ? settingsService.getSettings()
+          : Promise.resolve(null),
+        canViewInterestTypes
+          ? settingsService.listInterestTypes({ page: 1, perPage: typeDataPerPage })
+          : Promise.resolve(null),
+        canViewExpenseTypes
+          ? settingsService.listExpenseTypes({ page: 1, perPage: typeDataPerPage })
+          : Promise.resolve(null),
+        canViewMaterialTypes
+          ? settingsService.listMaterialTypes({ page: 1, perPage: typeDataPerPage })
+          : Promise.resolve(null),
+        canViewItemCategoryTypes
+          ? settingsService.listItemCategoryTypes({ page: 1, perPage: typeDataPerPage })
           : Promise.resolve(null),
         canViewFinancialAccountTypes
           ? settingsService.listFinancialAccountTypes({ page: 1, perPage: typeDataPerPage })
           : Promise.resolve(null),
       ])
 
-      if (generalData) {
-        const [settingsResponse, interestResponse, expenseResponse, materialResponse, itemCategoryResponse] = generalData
+      if (settingsResponse) {
         const nextBranding = normalizeBranding(settingsResponse.branding)
         const nextContact = normalizeContact(settingsResponse.contact)
         const nextTenant = normalizeTenant(settingsResponse.tenant_setting)
@@ -176,12 +193,12 @@ export function SettingsPage() {
         setContact(nextContact)
         setTenantInitial(nextTenant)
         setTenant(nextTenant)
-        setTypePageData('interest', interestResponse, 1)
-        setTypePageData('expense', expenseResponse, 1)
-        setTypePageData('material', materialResponse, 1)
-        setTypePageData('itemCategory', itemCategoryResponse, 1)
       }
 
+      if (interestResponse) setTypePageData('interest', interestResponse, 1)
+      if (expenseResponse) setTypePageData('expense', expenseResponse, 1)
+      if (materialResponse) setTypePageData('material', materialResponse, 1)
+      if (itemCategoryResponse) setTypePageData('itemCategory', itemCategoryResponse, 1)
       if (financialResponse) {
         setTypePageData('financialAccount', financialResponse, 1)
       }
@@ -190,7 +207,7 @@ export function SettingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [canViewFinancialAccountTypes, canViewGeneralSettings])
+  }, [canViewExpenseTypes, canViewFinancialAccountTypes, canViewGeneralSettings, canViewInterestTypes, canViewItemCategoryTypes, canViewMaterialTypes])
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -571,15 +588,16 @@ export function SettingsPage() {
           </ActionBar>
         </Card>}
 
-        {(canViewGeneralSettings || canViewFinancialAccountTypes) && <Card title="Type Data Setting" description="Create tenant-specific options for operational forms.">
+        {(canViewInterestTypes || canViewExpenseTypes || canViewMaterialTypes || canViewItemCategoryTypes || canViewFinancialAccountTypes) && <Card title="Type Data Setting" description="Create tenant-specific options for operational forms.">
           <div className="workflow-stack">
-            {canViewGeneralSettings && <>
-            <TypeDataBlock
+            {canViewInterestTypes && <TypeDataBlock
+              canCreate={canCreateInterestType}
+              canDelete={canDeleteInterestType}
               form={interestForm}
               isSaving={savingSection === 'interest-types'}
               items={interestTypes}
               kind="interest"
-              canManage={canManageMasterData}
+              canManage={canCreateInterestType}
               onCancel={() => setInterestForm(emptyTypeForm)}
               onChange={setInterestForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'interest', name: item.name })}
@@ -594,13 +612,15 @@ export function SettingsPage() {
               title="Interest Types"
               totalCount={interestPage.total}
               withDuration
-            />
-            <TypeDataBlock
+            />}
+            {canViewExpenseTypes && <TypeDataBlock
+              canCreate={canCreateExpenseType}
+              canDelete={canDeleteExpenseType}
               form={expenseForm}
               isSaving={savingSection === 'expense-types'}
               items={expenseTypes}
               kind="expense"
-              canManage={canManageMasterData}
+              canManage={canCreateExpenseType}
               onCancel={() => setExpenseForm(emptyTypeForm)}
               onChange={setExpenseForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'expense', name: item.name })}
@@ -614,13 +634,15 @@ export function SettingsPage() {
               }}
               title="Expense Types"
               totalCount={expensePage.total}
-            />
-            <TypeDataBlock
+            />}
+            {canViewMaterialTypes && <TypeDataBlock
+              canCreate={canCreateMaterialType}
+              canDelete={canDeleteMaterialType}
               form={materialForm}
               isSaving={savingSection === 'material-types'}
               items={materialTypes}
               kind="material"
-              canManage={canManageMasterData}
+              canManage={canCreateMaterialType}
               onCancel={() => setMaterialForm(emptyTypeForm)}
               onChange={setMaterialForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'material', name: item.name })}
@@ -634,13 +656,15 @@ export function SettingsPage() {
               }}
               title="Material Types"
               totalCount={materialPage.total}
-            />
-            <TypeDataBlock
+            />}
+            {canViewItemCategoryTypes && <TypeDataBlock
+              canCreate={canCreateItemCategoryType}
+              canDelete={canDeleteItemCategoryType}
               form={itemCategoryForm}
               isSaving={savingSection === 'itemCategory-types'}
               items={itemCategoryTypes}
               kind="itemCategory"
-              canManage={canManageMasterData}
+              canManage={canCreateItemCategoryType}
               onCancel={() => setItemCategoryForm(emptyTypeForm)}
               onChange={setItemCategoryForm}
               onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'itemCategory', name: item.name })}
@@ -654,8 +678,7 @@ export function SettingsPage() {
               }}
               title="Item Category Types"
               totalCount={itemCategoryPage.total}
-            />
-            </>}
+            />}
             {canViewFinancialAccountTypes && <TypeDataBlock
               canCreate={canCreateFinancialAccountType}
               canDelete={canDeleteFinancialAccountType}

@@ -74,7 +74,7 @@ export const router = createBrowserRouter([
       { path: '/slips/:slipNo', element: featureGate('loan_contract_management', 'Loan Slips', <PermissionRoute permission="list_loan_contract"><SlipDetailPage /></PermissionRoute>) },
       { path: routePaths.interest, element: featureGate('interest_payment_management', 'Interest Payments', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><InterestPaymentsPage /></PermissionRoute>) },
       { path: routePaths.redemptions, element: featureGate('redemption_management', 'Redemptions', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><RedemptionsPage /></PermissionRoute>) },
-      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'list_financial_account_type']}><SettingsPage /></PermissionRoute> },
+      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><SettingsPage /></PermissionRoute> },
       { path: routePaths.templateEditor, element: featureGate('slip_document_layout_management', 'Template editor', <PermissionRoute permission="manage_slip_document"><TemplateEditorPage /></PermissionRoute>) },
       ...moduleRegistry.filter((module) => !['customers', 'collateral', 'staff', 'accounting', 'capitals', 'expenses', 'debts', 'slips', 'interest', 'redemptions', 'settings'].includes(module.id)).map((module) => ({
         path: module.routeSegment,
