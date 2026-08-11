@@ -65,7 +65,8 @@ export default defineConfig({
     host: true,
     allowedHosts: [
       '.loanpawn.1morebit.tech' ,// allow all subdomains
-      '.loanpawntest.1morebit.tech' // allow all subdomains
+      '.loanpawntest.1morebit.tech', // allow all subdomains
+      '.lonepawn.com', // allow all subdomains
     ]
   }
 })

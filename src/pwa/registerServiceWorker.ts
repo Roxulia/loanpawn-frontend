@@ -1,31 +1,38 @@
 import { registerSW } from 'virtual:pwa-register'
 
-const pwaReloadStorageKey = `lonepawn-pwa-reloaded-${__APP_BUILD_ID__}`
-
-function shouldReloadForUpdate() {
-  try {
-    if (sessionStorage.getItem(pwaReloadStorageKey) === 'true') {
-      return false
-    }
-
-    sessionStorage.setItem(pwaReloadStorageKey, 'true')
-  } catch {
-    return true
-  }
-
-  return true
-}
-
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   registerSW({
     immediate: true,
-    onNeedReload() {
-      if (!shouldReloadForUpdate()) {
+
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) {
         return
       }
 
-      window.location.reload()
+      const checkForUpdate = async () => {
+        if (!navigator.onLine) {
+          return
+        }
+
+        try {
+          await registration.update()
+        } catch (error) {
+          console.error('PWA update check failed', error)
+        }
+      }
+
+      // Check whenever the application starts.
+      void checkForUpdate()
+
+      // Important for installed PWAs:
+      // opening the app may just foreground the existing window.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          void checkForUpdate()
+        }
+      })
     },
+
     onRegisterError(error) {
       console.error('PWA service worker registration failed', error)
     },
