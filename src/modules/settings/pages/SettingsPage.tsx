@@ -15,9 +15,10 @@ type TypeForm = {
   name: string
   code: string
   duration_in_days: string
+  update_key: number
 }
 
-type TypeKind = 'interest' | 'expense' | 'material' | 'itemCategory'
+type TypeKind = 'interest' | 'expense' | 'material' | 'itemCategory' | 'financialAccount'
 
 type TypeToDelete = {
   code: string
@@ -75,6 +76,7 @@ const emptyTypeForm: TypeForm = {
   name: '',
   code: '',
   duration_in_days: '30',
+  update_key: 0,
 }
 
 const typeDataPerPage = 5
@@ -102,14 +104,18 @@ export function SettingsPage() {
   const [expenseTypes, setExpenseTypes] = useState<DefaultTypeOption[]>([])
   const [materialTypes, setMaterialTypes] = useState<DefaultTypeOption[]>([])
   const [itemCategoryTypes, setItemCategoryTypes] = useState<DefaultTypeOption[]>([])
+  const [financialAccountTypes, setFinancialAccountTypes] = useState<DefaultTypeOption[]>([])
   const [interestForm, setInterestForm] = useState(emptyTypeForm)
   const [expenseForm, setExpenseForm] = useState(emptyTypeForm)
   const [materialForm, setMaterialForm] = useState(emptyTypeForm)
   const [itemCategoryForm, setItemCategoryForm] = useState(emptyTypeForm)
+  const [financialAccountForm, setFinancialAccountForm] = useState(emptyTypeForm)
+  const [editingFinancialAccountCode, setEditingFinancialAccountCode] = useState<string | null>(null)
   const [interestPage, setInterestPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
   const [expensePage, setExpensePage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
   const [materialPage, setMaterialPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
   const [itemCategoryPage, setItemCategoryPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
+  const [financialAccountPage, setFinancialAccountPage] = useState<TypePageState>({ currentPage: 1, lastPage: 1, total: 0 })
   const [selectedLanguage, setSelectedLanguage] = useState<UiLocale>('en')
   const [isLoading, setIsLoading] = useState(true)
   const [savingSection, setSavingSection] = useState<string | null>(null)
@@ -119,6 +125,12 @@ export function SettingsPage() {
   const { currentUser, session, setCurrentUser, setLocale, setSession, tenantResolution } = useTenantSession()
   const { hasPermission } = usePermissions()
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
+  const canViewGeneralSettings = hasPermission('manage_slip_document')
+  const canViewFinancialAccountTypes = hasEnabledFeature(tenantResolution, 'accounting_management') && hasPermission('list_financial_account_type')
+  const canManageFinancialAccountTypes = hasAnyEnabledFeature(tenantResolution, ['accounting_type_management', 'master_data_management'])
+  const canCreateFinancialAccountType = canManageFinancialAccountTypes && hasPermission('create_financial_account_type')
+  const canUpdateFinancialAccountType = canManageFinancialAccountTypes && hasPermission('update_financial_account_type')
+  const canDeleteFinancialAccountType = canManageFinancialAccountTypes && hasPermission('delete_financial_account_type')
   const canManageTenantBranding = hasEnabledFeature(tenantResolution, 'tenant_branding')
   const canManageTimezone = hasEnabledFeature(tenantResolution, 'tenant_timezone_management') && hasPermission('manage_tenant_timezone')
   const [timezoneOptions, setTimezoneOptions] = useState<string[]>([])
@@ -137,33 +149,48 @@ export function SettingsPage() {
     setError(null)
 
     try {
-      const [settingsResponse, interestResponse, expenseResponse, materialResponse, itemCategoryResponse] = await Promise.all([
-        settingsService.getSettings(),
-        settingsService.listInterestTypes({ page: 1, perPage: typeDataPerPage }),
-        settingsService.listExpenseTypes({ page: 1, perPage: typeDataPerPage }),
-        settingsService.listMaterialTypes({ page: 1, perPage: typeDataPerPage }),
-        settingsService.listItemCategoryTypes({ page: 1, perPage: typeDataPerPage }),
+      const [generalData, financialResponse] = await Promise.all([
+        canViewGeneralSettings
+          ? Promise.all([
+              settingsService.getSettings(),
+              settingsService.listInterestTypes({ page: 1, perPage: typeDataPerPage }),
+              settingsService.listExpenseTypes({ page: 1, perPage: typeDataPerPage }),
+              settingsService.listMaterialTypes({ page: 1, perPage: typeDataPerPage }),
+              settingsService.listItemCategoryTypes({ page: 1, perPage: typeDataPerPage }),
+            ])
+          : Promise.resolve(null),
+        canViewFinancialAccountTypes
+          ? settingsService.listFinancialAccountTypes({ page: 1, perPage: typeDataPerPage })
+          : Promise.resolve(null),
       ])
-      const nextBranding = normalizeBranding(settingsResponse.branding)
-      const nextContact = normalizeContact(settingsResponse.contact)
-      const nextTenant = normalizeTenant(settingsResponse.tenant_setting)
 
-      setBrandingInitial(nextBranding)
-      setBranding(nextBranding)
-      setContactInitial(nextContact)
-      setContact(nextContact)
-      setTenantInitial(nextTenant)
-      setTenant(nextTenant)
-      setTypePageData('interest', interestResponse, 1)
-      setTypePageData('expense', expenseResponse, 1)
-      setTypePageData('material', materialResponse, 1)
-      setTypePageData('itemCategory', itemCategoryResponse, 1)
+      if (generalData) {
+        const [settingsResponse, interestResponse, expenseResponse, materialResponse, itemCategoryResponse] = generalData
+        const nextBranding = normalizeBranding(settingsResponse.branding)
+        const nextContact = normalizeContact(settingsResponse.contact)
+        const nextTenant = normalizeTenant(settingsResponse.tenant_setting)
+
+        setBrandingInitial(nextBranding)
+        setBranding(nextBranding)
+        setContactInitial(nextContact)
+        setContact(nextContact)
+        setTenantInitial(nextTenant)
+        setTenant(nextTenant)
+        setTypePageData('interest', interestResponse, 1)
+        setTypePageData('expense', expenseResponse, 1)
+        setTypePageData('material', materialResponse, 1)
+        setTypePageData('itemCategory', itemCategoryResponse, 1)
+      }
+
+      if (financialResponse) {
+        setTypePageData('financialAccount', financialResponse, 1)
+      }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [canViewFinancialAccountTypes, canViewGeneralSettings])
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -265,9 +292,20 @@ export function SettingsPage() {
       } else if (kind === 'material') {
         await settingsService.createMaterialType(toTypePayload(form, false))
         setMaterialForm(emptyTypeForm)
-      } else {
+      } else if (kind === 'itemCategory') {
         await settingsService.createItemCategoryType(toTypePayload(form, false))
         setItemCategoryForm(emptyTypeForm)
+      } else if (editingFinancialAccountCode) {
+        await settingsService.updateFinancialAccountType(editingFinancialAccountCode, {
+          name: form.name.trim(),
+          code: form.code.trim(),
+          update_key: form.update_key,
+        })
+        setFinancialAccountForm(emptyTypeForm)
+        setEditingFinancialAccountCode(null)
+      } else {
+        await settingsService.createFinancialAccountType(toTypePayload(form, false))
+        setFinancialAccountForm(emptyTypeForm)
       }
 
       await reloadTypeData(kind, 1)
@@ -286,8 +324,15 @@ export function SettingsPage() {
         await settingsService.deleteExpenseType(deletingType.code)
       } else if (deletingType.kind === 'material') {
         await settingsService.deleteMaterialType(deletingType.code)
-      } else {
+      } else if (deletingType.kind === 'itemCategory') {
         await settingsService.deleteItemCategoryType(deletingType.code)
+      } else {
+        await settingsService.deleteFinancialAccountType(deletingType.code)
+
+        if (editingFinancialAccountCode === deletingType.code) {
+          setFinancialAccountForm(emptyTypeForm)
+          setEditingFinancialAccountCode(null)
+        }
       }
 
       const currentPage = getTypePage(deletingType.kind)
@@ -313,9 +358,12 @@ export function SettingsPage() {
     } else if (kind === 'material') {
       setMaterialPage(pageState)
       setMaterialTypes(response.items ?? [])
-    } else {
+    } else if (kind === 'itemCategory') {
       setItemCategoryPage(pageState)
       setItemCategoryTypes(response.items ?? [])
+    } else {
+      setFinancialAccountPage(pageState)
+      setFinancialAccountTypes(response.items ?? [])
     }
   }
 
@@ -330,6 +378,10 @@ export function SettingsPage() {
 
     if (kind === 'material') {
       return materialPage
+    }
+
+    if (kind === 'financialAccount') {
+      return financialAccountPage
     }
 
     return itemCategoryPage
@@ -348,6 +400,10 @@ export function SettingsPage() {
       return materialTypes
     }
 
+    if (kind === 'financialAccount') {
+      return financialAccountTypes
+    }
+
     return itemCategoryTypes
   }
 
@@ -364,8 +420,11 @@ export function SettingsPage() {
     } else if (kind === 'material') {
       const response = await settingsService.listMaterialTypes(params)
       setTypePageData(kind, response, nextPage)
-    } else {
+    } else if (kind === 'itemCategory') {
       const response = await settingsService.listItemCategoryTypes(params)
+      setTypePageData(kind, response, nextPage)
+    } else {
+      const response = await settingsService.listFinancialAccountTypes(params)
       setTypePageData(kind, response, nextPage)
     }
   }
@@ -381,6 +440,10 @@ export function SettingsPage() {
 
     if (kind === 'material') {
       return materialForm
+    }
+
+    if (kind === 'financialAccount') {
+      return financialAccountForm
     }
 
     return itemCategoryForm
@@ -450,7 +513,7 @@ export function SettingsPage() {
           </ActionBar>
         </Card>
 
-        {canManageTenantBranding && (
+        {canViewGeneralSettings && canManageTenantBranding && (
           <Card title="Branding Setting">
             <FormGroup columns={3}>
               <FormField id="settings-primary-color" label="Primary Color">
@@ -487,7 +550,7 @@ export function SettingsPage() {
 
         )}
         
-        <Card title="Tenant Contact Setting">
+        {canViewGeneralSettings && <Card title="Tenant Contact Setting">
           <FormGroup columns={2}>
             <FormField id="settings-contact-phone" label="Phone">
               <Input id="settings-contact-phone" value={contact.phone} onChange={(event) => setContact({ ...contact, phone: event.target.value })} />
@@ -506,10 +569,11 @@ export function SettingsPage() {
             <Button disabled={!contactChanged || savingSection === 'contact'} onClick={() => setContact(contactInitial)} variant="secondary">Cancel</Button>
             <Button disabled={!contactChanged} isLoading={savingSection === 'contact'} onClick={() => void saveContact()} variant="primary">Save</Button>
           </ActionBar>
-        </Card>
+        </Card>}
 
-        <Card title="Type Data Setting" description="Create tenant-specific options for operational forms.">
+        {(canViewGeneralSettings || canViewFinancialAccountTypes) && <Card title="Type Data Setting" description="Create tenant-specific options for operational forms.">
           <div className="workflow-stack">
+            {canViewGeneralSettings && <>
             <TypeDataBlock
               form={interestForm}
               isSaving={savingSection === 'interest-types'}
@@ -591,8 +655,46 @@ export function SettingsPage() {
               title="Item Category Types"
               totalCount={itemCategoryPage.total}
             />
+            </>}
+            {canViewFinancialAccountTypes && <TypeDataBlock
+              canCreate={canCreateFinancialAccountType}
+              canDelete={canDeleteFinancialAccountType}
+              canManage={canCreateFinancialAccountType}
+              canUpdate={canUpdateFinancialAccountType}
+              form={financialAccountForm}
+              isEditing={editingFinancialAccountCode !== null}
+              isSaving={savingSection === 'financialAccount-types'}
+              items={financialAccountTypes}
+              kind="financialAccount"
+              onCancel={() => {
+                setFinancialAccountForm(emptyTypeForm)
+                setEditingFinancialAccountCode(null)
+              }}
+              onChange={setFinancialAccountForm}
+              onDelete={(item) => item.code && setDeletingType({ code: item.code, kind: 'financialAccount', name: item.name })}
+              onEdit={(item) => {
+                if (!item.code) return
+                setEditingFinancialAccountCode(item.code)
+                setFinancialAccountForm({
+                  name: item.name,
+                  code: item.code,
+                  duration_in_days: '30',
+                  update_key: item.update_key ?? item.updateKey ?? 0,
+                })
+              }}
+              onSave={() => void saveTypeData('financialAccount')}
+              pagination={{
+                currentPage: financialAccountPage.currentPage,
+                lastPage: financialAccountPage.lastPage,
+                onNext: () => void reloadTypeData('financialAccount', financialAccountPage.currentPage + 1),
+                onPrevious: () => void reloadTypeData('financialAccount', financialAccountPage.currentPage - 1),
+                total: financialAccountPage.total,
+              }}
+              title="Financial Account Types"
+              totalCount={financialAccountPage.total}
+            />}
           </div>
-        </Card>
+        </Card>}
 
         {canManageTimezone && <Card title="Business Timezone" description="Controls exchange-rate opening days and correction windows.">
           <FormField id="settings-timezone" label="Timezone">
@@ -603,7 +705,7 @@ export function SettingsPage() {
             <Button disabled={timezone === timezoneInitial} isLoading={savingSection === 'timezone'} onClick={() => void saveTimezone()} variant="primary">Save</Button>
           </ActionBar>
         </Card>}
-        <Card title="Tenant Setting">
+        {canViewGeneralSettings && <Card title="Tenant Setting">
           <div className="settings-info-box" role="status">
             <span>Current default password</span>
             <strong>{tenantInitial.default_tenant_user_password || '-'}</strong>
@@ -617,7 +719,7 @@ export function SettingsPage() {
             <Button disabled={!tenantChanged || savingSection === 'tenant'} onClick={() => setTenant(tenantInitial)} variant="secondary">Cancel</Button>
             <Button disabled={!tenantChanged} isLoading={savingSection === 'tenant'} onClick={() => void saveTenant()} variant="primary">Save</Button>
           </ActionBar>
-        </Card>
+        </Card>}
       </div>
       <ConfirmDialog
         confirmLabel="Delete Type"
@@ -670,28 +772,38 @@ function ColorPickerField({
 }
 
 function TypeDataBlock({
+  canCreate,
+  canDelete,
   canManage,
+  canUpdate,
   form,
+  isEditing = false,
   isSaving,
   items,
   kind,
   onCancel,
   onChange,
   onDelete,
+  onEdit,
   onSave,
   pagination,
   title,
   totalCount,
   withDuration = false,
 }: {
+  canCreate?: boolean
+  canDelete?: boolean
   canManage: boolean
+  canUpdate?: boolean
   form: TypeForm
+  isEditing?: boolean
   isSaving: boolean
   items: DefaultTypeOption[]
   kind: TypeKind
   onCancel: () => void
   onChange: (form: TypeForm) => void
   onDelete: (item: DefaultTypeOption) => void
+  onEdit?: (item: DefaultTypeOption) => void
   onSave: () => void
   pagination?: {
     currentPage: number
@@ -705,6 +817,10 @@ function TypeDataBlock({
   withDuration?: boolean
 }) {
   const changed = isTypeFormChanged(form)
+  const allowCreate = canCreate ?? canManage
+  const allowDelete = canDelete ?? canManage
+  const allowUpdate = canUpdate ?? false
+  const showForm = isEditing ? allowUpdate : allowCreate
   const columns: Array<DataTableColumn<DefaultTypeOption>> = [
     { header: 'Name', key: 'name', render: (item) => <strong>{item.name}</strong> },
     { header: 'Code', key: 'code', render: (item) => item.code ?? '-' },
@@ -730,8 +846,11 @@ function TypeDataBlock({
         <Badge tone="info">{totalCount ?? items.length}</Badge>
       </header>
       <DataTable
-        actions={canManage ? (item) => !isBuiltInType(item) && item.code ? (
-          <Button onClick={() => onDelete(item)} variant="danger">Delete</Button>
+        actions={(allowUpdate || allowDelete) ? (item) => !isBuiltInType(item) && item.code ? (
+          <div className="dashboard-table-actions">
+            {allowUpdate && onEdit && <Button onClick={() => onEdit(item)} variant="secondary">Edit</Button>}
+            {allowDelete && <Button onClick={() => onDelete(item)} variant="danger">Delete</Button>}
+          </div>
         ) : null : undefined}
         columns={columns}
         emptyDescription={canManage
@@ -744,7 +863,7 @@ function TypeDataBlock({
         pagination={pagination}
         showEmptyStructure
       />
-      {canManage && (
+      {showForm && (
         <>
           <FormGroup columns={withDuration ? 3 : 2}>
             <FormField id={`${title}-name`} label="Name">
@@ -761,7 +880,7 @@ function TypeDataBlock({
           </FormGroup>
           <ActionBar>
             <Button disabled={!changed || isSaving} onClick={onCancel} variant="secondary">Cancel</Button>
-            <Button disabled={!changed} isLoading={isSaving} onClick={onSave} variant="primary">Save</Button>
+            <Button disabled={!changed} isLoading={isSaving} onClick={onSave} variant="primary">{isEditing ? 'Update' : 'Save'}</Button>
           </ActionBar>
         </>
       )}
@@ -778,6 +897,13 @@ function hasEnabledFeature(
     : null
 
   return Boolean(feature?.is_active && feature.is_enabled)
+}
+
+function hasAnyEnabledFeature(
+  tenantResolution: ReturnType<typeof useTenantSession>['tenantResolution'],
+  featureCodes: string[],
+) {
+  return featureCodes.some((featureCode) => hasEnabledFeature(tenantResolution, featureCode))
 }
 
 function getUserLocale(user: TenantUser | null): UiLocale {
@@ -897,6 +1023,10 @@ function typeKindLabel(kind: TypeKind) {
 
   if (kind === 'material') {
     return 'Material type'
+  }
+
+  if (kind === 'financialAccount') {
+    return 'Financial account type'
   }
 
   return 'Item category type'

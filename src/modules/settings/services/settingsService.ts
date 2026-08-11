@@ -12,6 +12,15 @@ export type DefaultTypeOption = {
   durationInDays?: number
   is_default?: boolean
   isDefault?: boolean
+  is_active?: boolean
+  isActive?: boolean
+  update_key?: number
+  updateKey?: number
+  source?: 'PLATFORM' | 'TENANT'
+  can_update?: boolean
+  canUpdate?: boolean
+  can_delete?: boolean
+  canDelete?: boolean
 }
 
 export type DefaultTypeListPage = {
@@ -174,6 +183,10 @@ export const settingsService = {
     return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/item-category-types/paginated', params))
   },
 
+  listFinancialAccountTypes(params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/financial-account-types', params))
+  },
+
   listMaterialTypeOptions() {
     return apiClient.get<DefaultTypeOption[]>('/tenant/material-types')
   },
@@ -206,6 +219,14 @@ export const settingsService = {
     return apiClient.post<DefaultTypeOption>('/tenant/item-category-types', payload)
   },
 
+  createFinancialAccountType(payload: { name: string; code: string }) {
+    return apiClient.post<DefaultTypeOption>('/tenant/financial-account-types', payload)
+  },
+
+  updateFinancialAccountType(currentCode: string, payload: { name: string; code: string; update_key: number }) {
+    return apiClient.put<DefaultTypeOption>(`/tenant/financial-account-types/${encodeURIComponent(currentCode)}`, payload)
+  },
+
   deleteInterestType(code: string) {
     return apiClient.delete<{ message: string }>(`/tenant/interest-types/${encodeURIComponent(code)}`)
   },
@@ -220,5 +241,9 @@ export const settingsService = {
 
   deleteItemCategoryType(code: string) {
     return apiClient.delete<{ message: string }>(`/tenant/item-category-types/${encodeURIComponent(code)}`)
+  },
+
+  deleteFinancialAccountType(code: string) {
+    return apiClient.delete<{ message: string }>(`/tenant/financial-account-types/${encodeURIComponent(code)}`)
   },
 }

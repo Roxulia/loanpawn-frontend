@@ -56,6 +56,10 @@ export const permissionGroups: PermissionGroup[] = [
     label: 'Finance',
     permissions: [
       { code: 'list_accounting', label: 'View accounting', description: 'See income and expense ledger records.' },
+      { code: 'list_financial_account_type', label: 'View financial account types', description: 'See built-in and tenant financial account types.' },
+      { code: 'create_financial_account_type', label: 'Create financial account types', description: 'Add tenant-owned financial account types.' },
+      { code: 'update_financial_account_type', label: 'Edit financial account types', description: 'Update tenant-owned financial account types.' },
+      { code: 'delete_financial_account_type', label: 'Delete financial account types', description: 'Deactivate tenant-owned financial account types.' },
       { code: 'list_expense', label: 'View expenses', description: 'See shop expense records.' },
       { code: 'create_expense', label: 'Create expenses', description: 'Add shop expense records.' },
       { code: 'update_expense', label: 'Edit expenses', description: 'Update expense records.' },
