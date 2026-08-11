@@ -1,6 +1,7 @@
 import { apiClient } from '../../../services/http/apiClient'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import type { UiLocale } from '../../../locales/UiLocale'
+import type { Currency, CurrencyPage } from '../../currency/types'
 
 export type DefaultTypeOption = {
   id: number
@@ -12,6 +13,15 @@ export type DefaultTypeOption = {
   durationInDays?: number
   is_default?: boolean
   isDefault?: boolean
+  is_active?: boolean
+  isActive?: boolean
+  update_key?: number
+  updateKey?: number
+  source?: 'PLATFORM' | 'TENANT'
+  can_update?: boolean
+  canUpdate?: boolean
+  can_delete?: boolean
+  canDelete?: boolean
 }
 
 export type DefaultTypeListPage = {
@@ -71,6 +81,16 @@ export type TenantSettings = {
 }
 
 export type TimezoneSetting = { id: number; key: string; value: string; update_key: number }
+
+export type CurrencyPreferences = {
+  id: number
+  tenant_id: number
+  default_currency_id: number
+  reporting_currency_id: number
+  update_key: number
+  default_currency: Currency
+  reporting_currency: Currency
+}
 
 export type SettingsPayload = {
   branding?: BrandingSettings
@@ -134,6 +154,9 @@ export const settingsService = {
   getTimezone() { return apiClient.get<TimezoneSetting>('/tenant/settings/timezone') },
   listTimezoneOptions() { return apiClient.get<string[]>('/tenant/settings/timezone-options') },
   updateTimezone(payload: { timezone: string; update_key: number }) { return apiClient.put<TimezoneSetting>('/tenant/settings/timezone', payload) },
+  getCurrencyPreferences() { return apiClient.get<CurrencyPreferences>('/tenant/settings/currencies') },
+  updateCurrencyPreferences(payload: { default_currency_id: number; reporting_currency_id: number; update_key: number }) { return apiClient.put<CurrencyPreferences>('/tenant/settings/currencies', payload) },
+  listCurrencyOptions() { return apiClient.get<CurrencyPage>('/tenant/currencies', { params: { per_page: 100 } }) },
 
   changeLanguage(payload: ChangeLanguagePayload) {
     //console.log('Changing language with payload:', payload);
@@ -174,6 +197,10 @@ export const settingsService = {
     return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/item-category-types/paginated', params))
   },
 
+  listFinancialAccountTypes(params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<DefaultTypeListPage>(defaultTypeListPath('/tenant/financial-account-types', params))
+  },
+
   listMaterialTypeOptions() {
     return apiClient.get<DefaultTypeOption[]>('/tenant/material-types')
   },
@@ -206,6 +233,14 @@ export const settingsService = {
     return apiClient.post<DefaultTypeOption>('/tenant/item-category-types', payload)
   },
 
+  createFinancialAccountType(payload: { name: string; code: string }) {
+    return apiClient.post<DefaultTypeOption>('/tenant/financial-account-types', payload)
+  },
+
+  updateFinancialAccountType(currentCode: string, payload: { name: string; code: string; update_key: number }) {
+    return apiClient.put<DefaultTypeOption>(`/tenant/financial-account-types/${encodeURIComponent(currentCode)}`, payload)
+  },
+
   deleteInterestType(code: string) {
     return apiClient.delete<{ message: string }>(`/tenant/interest-types/${encodeURIComponent(code)}`)
   },
@@ -220,5 +255,9 @@ export const settingsService = {
 
   deleteItemCategoryType(code: string) {
     return apiClient.delete<{ message: string }>(`/tenant/item-category-types/${encodeURIComponent(code)}`)
+  },
+
+  deleteFinancialAccountType(code: string) {
+    return apiClient.delete<{ message: string }>(`/tenant/financial-account-types/${encodeURIComponent(code)}`)
   },
 }

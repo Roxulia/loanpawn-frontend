@@ -12,6 +12,7 @@ import { ProfilePage } from '../../pages/profile/ProfilePage'
 import { FeatureRoute, PermissionRoute } from '../../modules/auth'
 import { AccountingPage } from '../../modules/accounting'
 import { CurrencyExchangePage } from '../../modules/currency'
+import { FinancialAccountCreatePage, FinancialAccountEditPage, FinancialAccountListPage } from '../../modules/financialAccounts'
 import { CapitalsPage } from '../../modules/capitals'
 import { CollateralDetailPage, CollateralListPage } from '../../modules/collateral'
 import { CustomerCreatePage, CustomerDetailPage, CustomerEditPage, CustomerListPage } from '../../modules/customers'
@@ -65,6 +66,9 @@ export const router = createBrowserRouter([
       { path: '/staff/:staffId/edit', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute any={['update_user_admin', 'update_user_all', 'update_user_own']}><StaffEditPage /></PermissionRoute>) },
       { path: routePaths.accounting, element: featureGate('accounting_management', 'Accounting', <PermissionRoute permission="list_accounting"><AccountingPage /></PermissionRoute>) },
       { path: routePaths.currencies, element: featureGate('currency_exchange_management', 'Currencies & Exchange Rates', <PermissionRoute any={['list_currency', 'list_exchange_pair', 'list_exchange_rate']}><CurrencyExchangePage /></PermissionRoute>) },
+      { path: routePaths.financialAccounts, element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="list_financial_account"><FinancialAccountListPage /></PermissionRoute>) },
+      { path: routePaths.financialAccountCreate, element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="create_financial_account"><FinancialAccountCreatePage /></PermissionRoute>) },
+      { path: '/financial-accounts/:accountCode/edit', element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="update_financial_account"><FinancialAccountEditPage /></PermissionRoute>) },
       { path: routePaths.capitals, element: featureGate('capital_management', 'Capital Management', <PermissionRoute any={['list_capital', 'create_capital', 'update_capital', 'delete_capital']}><CapitalsPage /></PermissionRoute>) },
       { path: routePaths.expenses, element: featureGate('expense_management', 'Expenses', <PermissionRoute any={['list_expense', 'create_expense', 'update_expense', 'delete_expense']}><ExpensesPage /></PermissionRoute>) },
       { path: routePaths.expenseCreate, element: featureGate('expense_management', 'Expenses', <PermissionRoute permission="create_expense"><ExpenseCreatePage /></PermissionRoute>) },
@@ -74,7 +78,7 @@ export const router = createBrowserRouter([
       { path: '/slips/:slipNo', element: featureGate('loan_contract_management', 'Loan Slips', <PermissionRoute permission="list_loan_contract"><SlipDetailPage /></PermissionRoute>) },
       { path: routePaths.interest, element: featureGate('interest_payment_management', 'Interest Payments', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><InterestPaymentsPage /></PermissionRoute>) },
       { path: routePaths.redemptions, element: featureGate('redemption_management', 'Redemptions', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><RedemptionsPage /></PermissionRoute>) },
-      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone']}><SettingsPage /></PermissionRoute> },
+      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'list_currency', 'update_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><SettingsPage /></PermissionRoute> },
       { path: routePaths.templateEditor, element: featureGate('slip_document_layout_management', 'Template editor', <PermissionRoute permission="manage_slip_document"><TemplateEditorPage /></PermissionRoute>) },
       ...moduleRegistry.filter((module) => !['customers', 'collateral', 'staff', 'accounting', 'capitals', 'expenses', 'debts', 'slips', 'interest', 'redemptions', 'settings'].includes(module.id)).map((module) => ({
         path: module.routeSegment,

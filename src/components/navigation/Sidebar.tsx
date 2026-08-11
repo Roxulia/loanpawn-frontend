@@ -16,6 +16,7 @@ type IconName =
   | 'redemptions'
   | 'accounting'
   | 'currency'
+  | 'financialAccounts'
   | 'capitals'
   | 'expenses'
   | 'debts'
@@ -56,6 +57,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: 'Accounting', to: routePaths.accounting, icon: 'accounting', permissions: ['list_accounting'] },
       { label: 'Currencies & Rates', to: routePaths.currencies, icon: 'currency', permissions: ['list_currency', 'list_exchange_pair', 'list_exchange_rate'] },
+      { label: 'Financial Accounts', to: routePaths.financialAccounts, icon: 'financialAccounts', permissions: ['list_financial_account'] },
       { label: 'Capital Management', to: routePaths.capitals, icon: 'capitals', permissions: ['list_capital', 'create_capital', 'update_capital', 'delete_capital'] },
       { label: 'Expenses', to: routePaths.expenses, icon: 'expenses', permissions: ['list_expense', 'create_expense', 'update_expense', 'delete_expense'] },
       { label: 'Debts', to: routePaths.debts, icon: 'debts', permissions: ['list_debt', 'create_debt', 'update_debt', 'delete_debt'] },
@@ -65,7 +67,7 @@ const navigationGroups: NavigationGroup[] = [
     label: 'Administration',
     items: [
       { label: 'Staff', to: routePaths.staff, icon: 'staff', permissions: ['list_user', 'create_user', 'update_user_admin', 'update_user_all', 'update_user_own', 'delete_user'] },
-      { label: 'Settings', to: routePaths.settings, icon: 'settings', permissions: ['manage_slip_document'] },
+        { label: 'Settings', to: routePaths.settings, icon: 'settings', permissions: ['manage_slip_document', 'manage_tenant_timezone', 'list_currency', 'update_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
     ],
   },
 ]
@@ -124,6 +126,7 @@ function SidebarIcon({ name }: { name: IconName }) {
     redemptions: ['M21 12a9 9 0 1 1-3-6.7', 'M21 3v6h-6', 'M8 12l3 3 5-6'],
     accounting: ['M4 3h16v18H4V3Z', 'M8 7h8', 'M8 11h8', 'M8 15h3', 'M15 15h1'],
     currency: ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z', 'M2 12h20', 'M12 2c3 3 4 7 4 10s-1 7-4 10c-3-3-4-7-4-10s1-7 4-10Z'],
+    financialAccounts: ['M3 6h18v14H3V6Z', 'M3 10h18', 'M7 15h4', 'M17 3H7a2 2 0 0 0-2 2v1'],
     capitals: ['M12 2v20', 'M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6', 'M19 9l3-3-3-3', 'M22 6h-7'],
     expenses: ['M3 6h18', 'M8 6V4h8v2', 'M6 6l1 15h10l1-15', 'M10 11v5', 'M14 11v5'],
     debts: ['M4 4h16v16H4V4Z', 'M8 8h8', 'M8 12h8', 'M8 16h4'],
