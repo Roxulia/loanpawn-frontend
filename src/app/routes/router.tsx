@@ -12,6 +12,7 @@ import { ProfilePage } from '../../pages/profile/ProfilePage'
 import { FeatureRoute, PermissionRoute } from '../../modules/auth'
 import { AccountingPage } from '../../modules/accounting'
 import { CurrencyExchangePage } from '../../modules/currency'
+import { FinancialAccountCreatePage, FinancialAccountEditPage, FinancialAccountListPage } from '../../modules/financialAccounts'
 import { CapitalsPage } from '../../modules/capitals'
 import { CollateralDetailPage, CollateralListPage } from '../../modules/collateral'
 import { CustomerCreatePage, CustomerDetailPage, CustomerEditPage, CustomerListPage } from '../../modules/customers'
@@ -65,6 +66,9 @@ export const router = createBrowserRouter([
       { path: '/staff/:staffId/edit', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute any={['update_user_admin', 'update_user_all', 'update_user_own']}><StaffEditPage /></PermissionRoute>) },
       { path: routePaths.accounting, element: featureGate('accounting_management', 'Accounting', <PermissionRoute permission="list_accounting"><AccountingPage /></PermissionRoute>) },
       { path: routePaths.currencies, element: featureGate('currency_exchange_management', 'Currencies & Exchange Rates', <PermissionRoute any={['list_currency', 'list_exchange_pair', 'list_exchange_rate']}><CurrencyExchangePage /></PermissionRoute>) },
+      { path: routePaths.financialAccounts, element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="list_financial_account"><FinancialAccountListPage /></PermissionRoute>) },
+      { path: routePaths.financialAccountCreate, element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="create_financial_account"><FinancialAccountCreatePage /></PermissionRoute>) },
+      { path: '/financial-accounts/:accountCode/edit', element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="update_financial_account"><FinancialAccountEditPage /></PermissionRoute>) },
       { path: routePaths.capitals, element: featureGate('capital_management', 'Capital Management', <PermissionRoute any={['list_capital', 'create_capital', 'update_capital', 'delete_capital']}><CapitalsPage /></PermissionRoute>) },
       { path: routePaths.expenses, element: featureGate('expense_management', 'Expenses', <PermissionRoute any={['list_expense', 'create_expense', 'update_expense', 'delete_expense']}><ExpensesPage /></PermissionRoute>) },
       { path: routePaths.expenseCreate, element: featureGate('expense_management', 'Expenses', <PermissionRoute permission="create_expense"><ExpenseCreatePage /></PermissionRoute>) },
