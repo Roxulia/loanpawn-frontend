@@ -41,7 +41,7 @@ export function ExpenseImageInput({
         ref={inputRef}
         id={`${id}-image`}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*"
         hidden
         onChange={handleChange}
       />
