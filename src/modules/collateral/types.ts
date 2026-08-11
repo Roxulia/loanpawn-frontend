@@ -7,6 +7,8 @@ export type CollateralItem = {
   itemType?: CollateralType
   itemStatus?: string
   imageUrl?: string | null
+  imageUrlExpiresAt?: string | null
+  hasImageReference?: boolean
   createdAt?: string | null
   loanContractId?: number | null
   brandName?: string | null
@@ -28,6 +30,8 @@ export type CollateralItem = {
   description?: string | null
   brand_name?: string | null
   image_url?: string | null
+  image_url_expires_at?: string | null
+  has_image_reference?: boolean
   estimated_value?: string
   material_type_id?: number | null
   material_type_name?: string | null

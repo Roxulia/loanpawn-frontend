@@ -8,7 +8,7 @@ import { ConfirmDialog, DataTable, ModalForm, type DataTableColumn } from '../..
 import type { PaginatedResult } from '../../dataobjects/common/api'
 import { usePermissions, type PermissionCode } from '../auth'
 
-type FinanceFormValue = string | boolean
+type FinanceFormValue = string | boolean | File | null
 export type FinanceFormState = Record<string, FinanceFormValue>
 export type FinanceFormErrors<TForm extends FinanceFormState> = Partial<Record<keyof TForm, string>>
 
@@ -47,6 +47,7 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
   onDelete?: (item: TItem) => Promise<unknown>
   renderItemActions?: (item: TItem, helpers: { removeItem: (item: TItem) => void; reload: () => Promise<void>; updateItem: (item: TItem) => void }) => ReactNode
   renderItemActionsPermission?: PermissionCode
+  renderMobileCard?: (item: TItem, actions: ReactNode) => ReactNode
 }
 
 const perPage = 10
@@ -323,6 +324,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
               onPrevious: () => setCurrentPage((page) => page - 1),
               total,
             } : undefined}
+            renderMobileCard={config.renderMobileCard}
             showEmptyStructure={!canList}
           />
         </div>

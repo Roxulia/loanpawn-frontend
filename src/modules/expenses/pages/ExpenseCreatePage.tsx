@@ -52,7 +52,7 @@ export function ExpenseCreatePage() {
     }
   }, [])
 
-  function updateField(field: keyof ExpenseFormState, value: string) {
+  function updateField<TField extends keyof ExpenseFormState>(field: TField, value: ExpenseFormState[TField]) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
   }

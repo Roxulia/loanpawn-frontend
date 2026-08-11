@@ -87,6 +87,17 @@ export type TenantExpense = {
   expense_type_id?: number | null
   expense_type_code?: string | null
   expense_type_name?: string | null
+  expenseTypeId?: number | null
+  expenseTypeCode?: string | null
+  expenseTypeName?: string | null
+  creator_name?: string | null
+  creatorName?: string | null
+  has_image_reference?: boolean
+  hasImageReference?: boolean
+  image_reference_url?: string | null
+  imageReferenceUrl?: string | null
+  image_reference_url_expires_at?: string | null
+  imageReferenceUrlExpiresAt?: string | null
   created_by?: number | null
   created_at?: string | null
   updated_at?: string | null

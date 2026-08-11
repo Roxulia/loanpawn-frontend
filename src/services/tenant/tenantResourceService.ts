@@ -133,7 +133,16 @@ export const tenantResourceService = {
     return apiClient.post<TenantExpense>('/tenant/expenses', payload, authOptions(auth))
   },
 
+  getExpense(expenseCode: string, auth?: TenantAuth) {
+    return apiClient.get<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
+  },
+
   updateExpense(expenseCode: string, payload: unknown, auth?: TenantAuth) {
+    if (payload instanceof FormData) {
+      payload.set('_method', 'PUT')
+      return apiClient.post<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, payload, authOptions(auth))
+    }
+
     return apiClient.put<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, payload, authOptions(auth))
   },
 

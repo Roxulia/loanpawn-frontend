@@ -1,9 +1,12 @@
-import { nullableNumber, optionalInteger, positiveAmount, required } from '../../finance/financeFormat'
+import { optionalInteger, positiveAmount, required } from '../../finance/financeFormat'
 
 export type ExpenseFormState = {
   amount: string
   description: string
   expense_type_id: string
+  has_existing_image: boolean
+  image_reference: File | null
+  remove_image_reference: boolean
 }
 
 export type ExpenseFormErrors = Partial<Record<keyof ExpenseFormState, string>>
@@ -12,14 +15,26 @@ export const emptyExpenseForm: ExpenseFormState = {
   amount: '',
   description: '',
   expense_type_id: '',
+  has_existing_image: false,
+  image_reference: null,
+  remove_image_reference: false,
 }
 
 export function expenseFormToPayload(form: ExpenseFormState) {
-  return {
-    amount: Number(form.amount),
-    description: form.description.trim(),
-    expense_type_id: nullableNumber(form.expense_type_id),
+  const payload = expenseMetadataToFormData(form)
+  payload.set('amount', String(Number(form.amount)))
+
+  return payload
+}
+
+export function expenseUpdateToPayload(form: ExpenseFormState) {
+  const payload = expenseMetadataToFormData(form)
+
+  if (form.remove_image_reference) {
+    payload.set('remove_image_reference', '1')
   }
+
+  return payload
 }
 
 export function validateExpenseForm(form: ExpenseFormState) {
@@ -37,5 +52,25 @@ export function validateExpenseForm(form: ExpenseFormState) {
     errors.expense_type_id = 'Expense type ID must be a whole number.'
   }
 
+  if (form.image_reference && form.image_reference.size > 5 * 1024 * 1024) {
+    errors.image_reference = 'Reference image must not exceed 5 MB.'
+  }
+
+  if (form.image_reference && !['image/jpeg', 'image/png', 'image/webp'].includes(form.image_reference.type)) {
+    errors.image_reference = 'Reference image must be JPG, PNG, or WebP.'
+  }
+
   return errors
+}
+
+function expenseMetadataToFormData(form: ExpenseFormState) {
+  const payload = new FormData()
+  payload.set('description', form.description.trim())
+  payload.set('expense_type_id', form.expense_type_id)
+
+  if (form.image_reference) {
+    payload.set('image_reference', form.image_reference)
+  }
+
+  return payload
 }

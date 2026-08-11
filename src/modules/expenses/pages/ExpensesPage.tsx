@@ -1,23 +1,26 @@
 import { useEffect, useState } from 'react'
-import { Badge, Input, Select, Textarea } from '../../../components/atoms'
+import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
 import { FormField, FormGroup } from '../../../components/molecules'
 import type { DataTableColumn } from '../../../components/organisms'
 import type { ExpenseTypeOption, TenantExpense } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { routePaths } from '../../../app/routes/paths'
 import { LocalizedText } from '../../../locales/UiLocale'
+import { ExpenseDetailModal } from '../components/ExpenseDetailModal'
+import { ExpenseImageInput } from '../components/ExpenseImageInput'
+import { expenseUpdateToPayload } from '../components/expenseFormModel'
 import {
   FinanceResourcePage,
   type FinanceFormErrors,
   type FinanceFormState,
   type FinanceResourcePageConfig,
 } from '../../finance/FinanceResourcePage'
+import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 import {
   formatDate,
   formatMoney,
   getNumberField,
   getStringField,
-  nullableNumber,
   optionalInteger,
   positiveAmount,
   required,
@@ -27,12 +30,18 @@ type ExpenseForm = FinanceFormState & {
   amount: string
   description: string
   expense_type_id: string
+  has_existing_image: boolean
+  image_reference: File | null
+  remove_image_reference: boolean
 }
 
 const initialForm: ExpenseForm = {
   amount: '',
   description: '',
   expense_type_id: '',
+  has_existing_image: false,
+  image_reference: null,
+  remove_image_reference: false,
 }
 
 const columns: Array<DataTableColumn<TenantExpense>> = [
@@ -89,25 +98,35 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
     amount: item.amount,
     description: item.description,
     expense_type_id: String(getNumberField(item, 'expense_type_id', 'expenseTypeId') ?? ''),
+    has_existing_image: Boolean(item.has_image_reference ?? item.hasImageReference),
+    image_reference: null,
+    remove_image_reference: false,
   }),
   list: (params) => tenantResourceService.listExpenses(params),
   listPermission: 'list_expense',
   modalTitle: (mode) => mode === 'create' ? 'Add expense' : 'Edit expense',
   onDelete: (item) => tenantResourceService.deleteExpense(item.code),
   renderForm,
+  renderMobileCard: (item, actions) => (
+    <FinanceHistoryMobileCard
+      actions={actions}
+      amount={formatMoney(item.amount)}
+      eyebrow={formatExpenseType(item)}
+      meta={formatDate(getStringField(item, 'created_at', 'createdAt'))}
+      status="Outgoing"
+      statusTone="due"
+      title={item.description}
+    />
+  ),
   save: (mode, form, item) => {
-    const payload = {
-      amount: Number(form.amount),
-      description: form.description.trim(),
-      expense_type_id: nullableNumber(form.expense_type_id),
+    if (mode === 'create') {
+      throw new Error('Expenses must be created from the Add Expense page.')
     }
 
-    return mode === 'create'
-      ? tenantResourceService.createExpense(payload)
-      : tenantResourceService.updateExpense(item?.code ?? '', {
-        ...payload,
-        update_key: getNumberField(item ?? {}, 'update_key', 'updateKey') ?? 0,
-      })
+    const payload = expenseUpdateToPayload(form)
+    payload.set('update_key', String(getNumberField(item ?? {}, 'update_key', 'updateKey') ?? 0))
+
+    return tenantResourceService.updateExpense(item?.code ?? '', payload)
   },
   searchPlaceholder: 'Description, expense type, or amount',
   subtitle: 'Record shop expenses and keep their accounting impact traceable.',
@@ -118,13 +137,36 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
 }
 
 export function ExpensesPage() {
-  return <FinanceResourcePage config={config} />
+  const [detailExpense, setDetailExpense] = useState<TenantExpense | null>(null)
+
+  return (
+    <>
+      <FinanceResourcePage
+        config={{
+          ...config,
+          renderItemActions: (item) => (
+            <Button onClick={() => setDetailExpense(item)} variant="secondary">View</Button>
+          ),
+          renderItemActionsPermission: 'list_expense',
+        }}
+      />
+      <ExpenseDetailModal expense={detailExpense} onClose={() => setDetailExpense(null)} />
+    </>
+  )
+}
+
+function formatExpenseType(item: TenantExpense) {
+  const typeName = getStringField(item, 'expense_type_name', 'expenseTypeName')
+  const typeCode = getStringField(item, 'expense_type_code', 'expenseTypeCode')
+  const typeId = getNumberField(item, 'expense_type_id', 'expenseTypeId')
+
+  return typeName || typeCode || (typeId ? `Type #${typeId}` : 'Expense')
 }
 
 function renderForm(
   form: ExpenseForm,
   errors: FinanceFormErrors<ExpenseForm>,
-  updateField: (field: keyof ExpenseForm, value: string | boolean) => void,
+  updateField: (field: keyof ExpenseForm, value: string | boolean | File | null) => void,
 ) {
   return <ExpenseFormFields errors={errors} form={form} updateField={updateField} />
 }
@@ -136,7 +178,7 @@ function ExpenseFormFields({
 }: {
   errors: FinanceFormErrors<ExpenseForm>
   form: ExpenseForm
-  updateField: (field: keyof ExpenseForm, value: string | boolean) => void
+  updateField: (field: keyof ExpenseForm, value: string | boolean | File | null) => void
 }) {
   const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeOption[]>([])
   const [isLoadingExpenseTypes, setIsLoadingExpenseTypes] = useState(false)
@@ -171,6 +213,7 @@ function ExpenseFormFields({
     <FormGroup columns={2}>
       <FormField error={errors.amount} id="expense-amount" label="Amount">
         <Input
+          disabled
           hasError={Boolean(errors.amount)}
           id="expense-amount"
           min="0.01"
@@ -204,6 +247,16 @@ function ExpenseFormFields({
           value={form.description}
         />
       </FormField>
+      <FormField error={errors.image_reference} id="expense-image-reference" label="Reference image">
+        <ExpenseImageInput
+          existingImage={form.has_existing_image}
+          file={form.image_reference}
+          id="expense-image-reference"
+          isRemoved={form.remove_image_reference}
+          onChange={(file) => updateField('image_reference', file)}
+          onRemoveChange={(removed) => updateField('remove_image_reference', removed)}
+        />
+      </FormField>
       <div className="ui-form-field">
         <span className="ui-label"><LocalizedText text="Accounting effect" /></span>
         <Badge tone="warning">Outgoing</Badge>
@@ -230,6 +283,14 @@ function validate(form: ExpenseForm) {
 
   if (!optionalInteger(form.expense_type_id)) {
     errors.expense_type_id = 'Expense type ID must be a whole number.'
+  }
+
+  if (form.image_reference && form.image_reference.size > 5 * 1024 * 1024) {
+    errors.image_reference = 'Reference image must not exceed 5 MB.'
+  }
+
+  if (form.image_reference && !['image/jpeg', 'image/png', 'image/webp'].includes(form.image_reference.type)) {
+    errors.image_reference = 'Reference image must be JPG, PNG, or WebP.'
   }
 
   return errors

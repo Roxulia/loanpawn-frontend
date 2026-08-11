@@ -112,6 +112,7 @@ export type SlipCollateralPayload = {
   quantity?: number
   minimum_retail_price?: number
   item_status?: string
+  image_reference?: File
 }
 
 export type GemstoneDetailsPayload = {
@@ -170,7 +171,11 @@ export const slipService = {
   },
 
   createSlip(payload: SlipCreatePayload, auth?: TenantAuth, options: IdempotentRequestOptions = {}) {
-    return apiClient.post<LoanContractSlip>('/tenant/loan-contract-slips', payload, {
+    const requestBody = payload.collateral_items.some((item) => item.image_reference instanceof File)
+      ? slipPayloadToFormData(payload)
+      : payload
+
+    return apiClient.post<LoanContractSlip>('/tenant/loan-contract-slips', requestBody, {
       ...authOptions(auth),
       idempotencyKey: options.idempotencyKey,
     })
@@ -206,4 +211,35 @@ export const slipService = {
   listItemCategoryTypes(auth?: TenantAuth) {
     return apiClient.get<ItemCategoryType[]>('/tenant/item-category-types', authOptions(auth))
   },
+}
+
+function slipPayloadToFormData(payload: SlipCreatePayload) {
+  const formData = new FormData()
+
+  Object.entries(payload).forEach(([key, value]) => appendFormDataValue(formData, key, value))
+
+  return formData
+}
+
+function appendFormDataValue(formData: FormData, key: string, value: unknown): void {
+  if (value === undefined || value === null) return
+
+  if (value instanceof File) {
+    formData.append(key, value)
+    return
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => appendFormDataValue(formData, `${key}[${index}]`, item))
+    return
+  }
+
+  if (typeof value === 'object') {
+    Object.entries(value).forEach(([childKey, childValue]) => {
+      appendFormDataValue(formData, `${key}[${childKey}]`, childValue)
+    })
+    return
+  }
+
+  formData.append(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value))
 }

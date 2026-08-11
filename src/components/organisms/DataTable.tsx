@@ -31,6 +31,7 @@ type DataTableProps<TItem> = {
   items: TItem[]
   onRowClick?: (item: TItem) => void
   pagination?: DataTablePagination
+  renderMobileCard?: (item: TItem, actions: ReactNode) => ReactNode
   showEmptyStructure?: boolean
 }
 
@@ -46,6 +47,7 @@ export function DataTable<TItem>({
   items,
   onRowClick,
   pagination,
+  renderMobileCard,
   showEmptyStructure = false,
 }: DataTableProps<TItem>) {
   const { t } = useUiLocale()
@@ -96,6 +98,12 @@ export function DataTable<TItem>({
         {items.length === 0 ? (
           <EmptyState action={emptyAction} description={emptyDescription} title={emptyTitle} />
         ) : items.map((item) => {
+          const itemActions = actions?.(item)
+
+          if (renderMobileCard) {
+            return <div key={getItemId(item)}>{renderMobileCard(item, itemActions)}</div>
+          }
+
           const cardItems: KeyValueItem[] = columns.map((column) => ({
             key: column.mobileLabel ?? column.header,
             value: column.render(item),
@@ -103,7 +111,7 @@ export function DataTable<TItem>({
 
           return (
             <DataCard
-              actions={actions?.(item)}
+              actions={itemActions}
               items={cardItems}
               key={getItemId(item)}
               title={getItemTitle(item)}

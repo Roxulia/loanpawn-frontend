@@ -47,7 +47,7 @@ export function CollateralDetailPage() {
   }
 
   return (
-    <section className="page">
+    <section className="page collateral-detail-page">
       <SectionHeader
         title="Collateral Detail"
         subtitle="Read-only collateral information for audit and lookup."
@@ -64,6 +64,7 @@ export function CollateralDetailPage() {
         <LoadingState rows={5} />
       ) : item ? (
         <>
+          <CollateralReferenceImage item={item} />
           <Card
             title={item.name}
             description={item.description || 'No description recorded.'}
@@ -102,6 +103,50 @@ export function CollateralDetailPage() {
         <Alert message="Collateral item was not found." title="No item" tone="warning" />
       )}
     </section>
+  )
+}
+
+function CollateralReferenceImage({ item }: { item: CollateralItem }) {
+  const imageUrl = item.image_url ?? item.imageUrl ?? null
+
+  return (
+    <>
+      <CollateralReferenceImageDesktop imageUrl={imageUrl} itemName={item.name} />
+      <CollateralReferenceImageMobile imageUrl={imageUrl} itemName={item.name} />
+    </>
+  )
+}
+
+function CollateralReferenceImageDesktop({ imageUrl, itemName }: CollateralReferenceImageProps) {
+  return (
+    <div className="collateral-reference-image-desktop">
+      <ReferenceImageCard imageUrl={imageUrl} itemName={itemName} />
+    </div>
+  )
+}
+
+function CollateralReferenceImageMobile({ imageUrl, itemName }: CollateralReferenceImageProps) {
+  return (
+    <div className="collateral-reference-image-mobile">
+      <ReferenceImageCard imageUrl={imageUrl} itemName={itemName} />
+    </div>
+  )
+}
+
+type CollateralReferenceImageProps = {
+  imageUrl: string | null
+  itemName: string
+}
+
+function ReferenceImageCard({ imageUrl, itemName }: CollateralReferenceImageProps) {
+  return (
+    <Card title="Reference Image">
+      {imageUrl ? (
+        <img className="collateral-reference-image__image" src={imageUrl} alt={`Reference for ${itemName}`} />
+      ) : (
+        <div className="collateral-reference-image__empty">No reference image recorded.</div>
+      )}
+    </Card>
   )
 }
 

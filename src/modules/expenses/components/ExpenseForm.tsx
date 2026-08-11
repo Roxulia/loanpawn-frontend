@@ -3,6 +3,7 @@ import { Button, Input, Select, Textarea } from '../../../components/atoms'
 import { ActionBar, Card, FormField, FormGroup } from '../../../components/molecules'
 import type { ExpenseTypeOption } from '../../../dataobjects/tenant/finance'
 import type { ExpenseFormErrors, ExpenseFormState } from './expenseFormModel'
+import { ExpenseImageInput } from './ExpenseImageInput'
 
 type ExpenseFormProps = {
   errors: ExpenseFormErrors
@@ -10,7 +11,7 @@ type ExpenseFormProps = {
   isLoadingExpenseTypes: boolean
   isSaving: boolean
   onCancel: () => void
-  onChange: (field: keyof ExpenseFormState, value: string) => void
+  onChange: <TField extends keyof ExpenseFormState>(field: TField, value: ExpenseFormState[TField]) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   operationAlert?: ReactNode
   value: ExpenseFormState
@@ -45,6 +46,16 @@ export function ExpenseForm({
           </FormField>
           <FormField error={errors.description} id="expense-create-description" label="Description">
             <Textarea hasError={Boolean(errors.description)} id="expense-create-description" onChange={(event) => onChange('description', event.target.value)} value={value.description} />
+          </FormField>
+          <FormField error={errors.image_reference} id="expense-create-image-reference" label="Reference image">
+            <ExpenseImageInput
+              existingImage={value.has_existing_image}
+              file={value.image_reference}
+              id="expense-create-image-reference"
+              isRemoved={value.remove_image_reference}
+              onChange={(file) => onChange('image_reference', file)}
+              onRemoveChange={(removed) => onChange('remove_image_reference', removed)}
+            />
           </FormField>
         </FormGroup>
         <ActionBar>

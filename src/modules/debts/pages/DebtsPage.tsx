@@ -10,6 +10,7 @@ import {
   FinanceResourcePage,
   type FinanceResourcePageConfig,
 } from '../../finance/FinanceResourcePage'
+import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 import {
   formatDate,
   formatMoney,
@@ -88,6 +89,17 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
     <PayDebtAction debt={item} onPaid={helpers.updateItem} />
   ),
   renderItemActionsPermission: 'update_debt',
+  renderMobileCard: (item, actions) => (
+    <FinanceHistoryMobileCard
+      actions={actions}
+      amount={formatMoney(item.amount)}
+      eyebrow={formatDebtLink(item)}
+      meta={formatDate(getStringField(item, 'created_at', 'createdAt'))}
+      status={item.is_paid ? 'Paid' : 'Unpaid'}
+      statusTone={item.is_paid ? 'active' : 'due'}
+      title={item.description}
+    />
+  ),
   save: (mode, form, item) => {
     const payload = debtFormToPayload(form)
 

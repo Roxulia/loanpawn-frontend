@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
-import { PrinterIcon, TrashIcon } from '../../../components/icons/icon'
+import { ChevronRightIcon, PrinterIcon, TrashIcon } from '../../../components/icons/icon'
 import {
   ActionBar,
   Card,
@@ -26,6 +26,7 @@ import { usePermissions } from '../../auth'
 import { customerService } from '../../customers/services/customerService'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
 import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
+import { ExpenseImageInput } from '../../expenses/components/ExpenseImageInput'
 
 const perPage = 10
 const paperTypeOptions = [
@@ -454,6 +455,16 @@ export function SlipsPage() {
                     <FormField className="slip-form-field--full" id={`${item.key}-description`} label="Description">
                       <Textarea id={`${item.key}-description`} value={item.description ?? ''} onChange={(event) => updateItem(item.key, { description: event.target.value })} />
                     </FormField>
+                    <FormField className="slip-form-field--full" id={`${item.key}-image-reference`} label="Reference image" error={formErrors[`${item.key}.image_reference`]}>
+                      <ExpenseImageInput
+                        existingImage={false}
+                        file={item.image_reference ?? null}
+                        id={`${item.key}-image-reference`}
+                        isRemoved={false}
+                        onChange={(file) => updateItem(item.key, { image_reference: file ?? undefined })}
+                        onRemoveChange={() => undefined}
+                      />
+                    </FormField>
                   </FormGroup>
                   {item.type === 'Normal' && (
                     <FormGroup className="slip-form-collateral-summary-grid" columns={3}>
@@ -633,6 +644,39 @@ export function SlipsPage() {
                 onPrevious: () => setCurrentPage((page) => page - 1),
                 total,
               }}
+              renderMobileCard={(slip) => (
+                <SlipHistoryMobileCard
+                  actions={(
+                    <>
+                      {canList ? (
+                        <Button
+                          aria-label={`Print ${slip.slip_no}`}
+                          className="ui-button--icon"
+                          isLoading={printingSlipId === slip.id}
+                          onClick={() => openPrintDialog(slip)}
+                          title="Print slip"
+                          variant="secondary"
+                        >
+                          <PrinterIcon />
+                        </Button>
+                      ) : null}
+                      {canDelete ? (
+                        <Button
+                          aria-label={`Delete ${slip.slip_no}`}
+                          className="ui-button--icon"
+                          onClick={() => setSlipToDelete(slip)}
+                          title="Delete slip"
+                          variant="danger"
+                        >
+                          <TrashIcon />
+                        </Button>
+                      ) : null}
+                    </>
+                  )}
+                  onView={() => navigate(routePaths.slipDetail(slip.slip_no))}
+                  slip={slip}
+                />
+              )}
             />
           </Card>
         </div>
@@ -718,6 +762,14 @@ function validateSlipForm(
   items.forEach((item) => {
     if (!item.name.trim()) {
       errors[`${item.key}.name`] = 'Item name is required.'
+    }
+
+    if (item.image_reference && item.image_reference.size > 5 * 1024 * 1024) {
+      errors[`${item.key}.image_reference`] = 'Reference image must not exceed 5 MB.'
+    }
+
+    if (item.image_reference && !['image/jpeg', 'image/png', 'image/webp'].includes(item.image_reference.type)) {
+      errors[`${item.key}.image_reference`] = 'Reference image must be JPG, PNG, or WebP.'
     }
   })
 
@@ -817,7 +869,46 @@ function toPayloadItem(item: ItemForm): SlipCollateralPayload {
     quantity: Number(item.quantity ?? 1),
     minimum_retail_price: calculateMinimumRetailPrice(item),
     item_status: item.item_status ?? 'active',
+    image_reference: item.image_reference,
   }
+}
+
+function SlipHistoryMobileCard({
+  actions,
+  onView,
+  slip,
+}: {
+  actions: ReactNode
+  onView: () => void
+  slip: LoanContractSlip
+}) {
+  const statusTone = getStatusTone(slip.status)
+
+  return (
+    <article className="slip-history-mobile-card">
+      <header className="slip-history-mobile-card__header">
+        <div>
+          <small>{getSlipCustomerName(slip)}</small>
+          <strong>{slip.slip_no}</strong>
+        </div>
+        <Badge tone={statusTone}>{slip.status}</Badge>
+      </header>
+      <div className="slip-history-mobile-card__summary">
+        <div>
+          <span>Loan amount</span>
+          <strong>{formatMoney(slip.loan_amount)}</strong>
+        </div>
+        <span>{formatDate(slip.created_at)}</span>
+      </div>
+      <footer className="slip-history-mobile-card__footer">
+        <div className="slip-history-mobile-card__actions row-actions">{actions}</div>
+        <button className="slip-history-mobile-card__details" onClick={onView} type="button">
+          View Details
+          <ChevronRightIcon />
+        </button>
+      </footer>
+    </article>
+  )
 }
 
 function makeGemstoneDetails(item: ItemForm) {
