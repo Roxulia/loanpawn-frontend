@@ -1,6 +1,7 @@
 import { apiClient } from '../../../services/http/apiClient'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import type { UiLocale } from '../../../locales/UiLocale'
+import type { Currency, CurrencyPage } from '../../currency/types'
 
 export type DefaultTypeOption = {
   id: number
@@ -81,6 +82,16 @@ export type TenantSettings = {
 
 export type TimezoneSetting = { id: number; key: string; value: string; update_key: number }
 
+export type CurrencyPreferences = {
+  id: number
+  tenant_id: number
+  default_currency_id: number
+  reporting_currency_id: number
+  update_key: number
+  default_currency: Currency
+  reporting_currency: Currency
+}
+
 export type SettingsPayload = {
   branding?: BrandingSettings
   contact?: ContactSettings
@@ -143,6 +154,9 @@ export const settingsService = {
   getTimezone() { return apiClient.get<TimezoneSetting>('/tenant/settings/timezone') },
   listTimezoneOptions() { return apiClient.get<string[]>('/tenant/settings/timezone-options') },
   updateTimezone(payload: { timezone: string; update_key: number }) { return apiClient.put<TimezoneSetting>('/tenant/settings/timezone', payload) },
+  getCurrencyPreferences() { return apiClient.get<CurrencyPreferences>('/tenant/settings/currencies') },
+  updateCurrencyPreferences(payload: { default_currency_id: number; reporting_currency_id: number; update_key: number }) { return apiClient.put<CurrencyPreferences>('/tenant/settings/currencies', payload) },
+  listCurrencyOptions() { return apiClient.get<CurrencyPage>('/tenant/currencies', { params: { per_page: 100 } }) },
 
   changeLanguage(payload: ChangeLanguagePayload) {
     //console.log('Changing language with payload:', payload);

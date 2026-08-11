@@ -9,7 +9,8 @@ import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { useTenantSession } from '../../../contexts/useTenantSession'
 import { usePermissions } from '../../auth'
 import type { UiLocale } from '../../../locales/UiLocale'
-import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
+import type { Currency } from '../../currency/types'
+import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
 
 type TypeForm = {
   name: string
@@ -72,6 +73,12 @@ const emptyTenant: TenantForm = {
   update_key: 0,
 }
 
+const emptyCurrencyPreferences: Pick<CurrencyPreferences, 'default_currency_id' | 'reporting_currency_id' | 'update_key'> = {
+  default_currency_id: 0,
+  reporting_currency_id: 0,
+  update_key: 0,
+}
+
 const emptyTypeForm: TypeForm = {
   name: '',
   code: '',
@@ -100,6 +107,9 @@ export function SettingsPage() {
   const [contact, setContact] = useState(emptyContact)
   const [tenantInitial, setTenantInitial] = useState(emptyTenant)
   const [tenant, setTenant] = useState(emptyTenant)
+  const [currencyOptions, setCurrencyOptions] = useState<Currency[]>([])
+  const [currencyPreferencesInitial, setCurrencyPreferencesInitial] = useState(emptyCurrencyPreferences)
+  const [currencyPreferences, setCurrencyPreferences] = useState(emptyCurrencyPreferences)
   const [interestTypes, setInterestTypes] = useState<DefaultTypeOption[]>([])
   const [expenseTypes, setExpenseTypes] = useState<DefaultTypeOption[]>([])
   const [materialTypes, setMaterialTypes] = useState<DefaultTypeOption[]>([])
@@ -145,6 +155,8 @@ export function SettingsPage() {
   const canDeleteFinancialAccountType = canManageFinancialAccountTypes && hasPermission('delete_financial_account_type')
   const canManageTenantBranding = hasEnabledFeature(tenantResolution, 'tenant_branding')
   const canManageTimezone = hasEnabledFeature(tenantResolution, 'tenant_timezone_management') && hasPermission('manage_tenant_timezone')
+  const canViewCurrencyPreferences = hasEnabledFeature(tenantResolution, 'currency_exchange_management') && hasPermission('list_currency')
+  const canUpdateCurrencyPreferences = canViewCurrencyPreferences && hasPermission('update_currency')
   const [timezoneOptions, setTimezoneOptions] = useState<string[]>([])
   const [timezone, setTimezone] = useState('Asia/Yangon')
   const [timezoneInitial, setTimezoneInitial] = useState('Asia/Yangon')
@@ -154,6 +166,7 @@ export function SettingsPage() {
   const brandingChanged = useMemo(() => hasChanged(branding, brandingInitial), [branding, brandingInitial])
   const contactChanged = useMemo(() => hasChanged(contact, contactInitial), [contact, contactInitial])
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
+  const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
 
   const loadSettings = useCallback(async () => {
@@ -227,6 +240,17 @@ export function SettingsPage() {
     }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load timezone settings.'))
   }, [canManageTimezone])
 
+  useEffect(() => {
+    if (!canViewCurrencyPreferences) return
+
+    Promise.all([settingsService.getCurrencyPreferences(), settingsService.listCurrencyOptions()]).then(([preferences, currencyPage]) => {
+      const nextPreferences = normalizeCurrencyPreferences(preferences)
+      setCurrencyPreferencesInitial(nextPreferences)
+      setCurrencyPreferences(nextPreferences)
+      setCurrencyOptions(currencyPage.items.filter((currency) => currency.is_active))
+    }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load currency settings.'))
+  }, [canViewCurrencyPreferences])
+
   async function saveTimezone() {
     await saveSection('timezone', async () => {
       const response = await settingsService.updateTimezone({ timezone, update_key: timezoneUpdateKey })
@@ -234,6 +258,15 @@ export function SettingsPage() {
       setTimezoneInitial(response.value)
       setTimezoneUpdateKey(response.update_key)
     }, 'Business timezone saved successfully.')
+  }
+
+  async function saveCurrencyPreferences() {
+    await saveSection('currency-preferences', async () => {
+      const response = await settingsService.updateCurrencyPreferences(currencyPreferences)
+      const nextPreferences = normalizeCurrencyPreferences(response)
+      setCurrencyPreferencesInitial(nextPreferences)
+      setCurrencyPreferences(nextPreferences)
+    }, 'Currency settings saved successfully.')
   }
 
   useEffect(() => {
@@ -719,6 +752,27 @@ export function SettingsPage() {
           </div>
         </Card>}
 
+        {canViewCurrencyPreferences && <Card title="Currency Settings" description="Choose the currencies used for account defaults and financial reporting.">
+          <FormGroup columns={2}>
+            <FormField id="settings-default-currency" label="Default Currency">
+              <Select id="settings-default-currency" disabled={!canUpdateCurrencyPreferences} value={String(currencyPreferences.default_currency_id || '')} onChange={(event) => setCurrencyPreferences({ ...currencyPreferences, default_currency_id: Number(event.target.value) })}>
+                <option value="">Select currency</option>
+                {currencyOptions.map((currency) => <option key={currency.id} value={currency.id}>{currency.code} — {currency.name}</option>)}
+              </Select>
+            </FormField>
+            <FormField id="settings-reporting-currency" label="Reporting Currency">
+              <Select id="settings-reporting-currency" disabled={!canUpdateCurrencyPreferences} value={String(currencyPreferences.reporting_currency_id || '')} onChange={(event) => setCurrencyPreferences({ ...currencyPreferences, reporting_currency_id: Number(event.target.value) })}>
+                <option value="">Select currency</option>
+                {currencyOptions.map((currency) => <option key={currency.id} value={currency.id}>{currency.code} — {currency.name}</option>)}
+              </Select>
+            </FormField>
+          </FormGroup>
+          {canUpdateCurrencyPreferences && <ActionBar>
+            <Button disabled={!currencyPreferencesChanged || savingSection === 'currency-preferences'} onClick={() => setCurrencyPreferences(currencyPreferencesInitial)} variant="secondary">Cancel</Button>
+            <Button disabled={!currencyPreferencesChanged || !currencyPreferences.default_currency_id || !currencyPreferences.reporting_currency_id} isLoading={savingSection === 'currency-preferences'} onClick={() => void saveCurrencyPreferences()} variant="primary">Save</Button>
+          </ActionBar>}
+        </Card>}
+
         {canManageTimezone && <Card title="Business Timezone" description="Controls exchange-rate opening days and correction windows.">
           <FormField id="settings-timezone" label="Timezone">
             <SearchableSelect id="settings-timezone" options={timezoneOptions} value={timezone} onChange={setTimezone} getOptionLabel={(option) => option} getOptionValue={(option) => option} placeholder="Search timezones" />
@@ -988,6 +1042,14 @@ function normalizeTenant(value?: TenantSettings | null) {
   return {
     default_tenant_user_password: value?.default_tenant_user_password ?? value?.value ?? '',
     update_key: value?.update_key ?? 0,
+  }
+}
+
+function normalizeCurrencyPreferences(value: CurrencyPreferences) {
+  return {
+    default_currency_id: value.default_currency_id,
+    reporting_currency_id: value.reporting_currency_id,
+    update_key: value.update_key,
   }
 }
 

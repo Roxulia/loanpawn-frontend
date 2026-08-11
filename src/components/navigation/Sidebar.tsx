@@ -67,7 +67,7 @@ const navigationGroups: NavigationGroup[] = [
     label: 'Administration',
     items: [
       { label: 'Staff', to: routePaths.staff, icon: 'staff', permissions: ['list_user', 'create_user', 'update_user_admin', 'update_user_all', 'update_user_own', 'delete_user'] },
-        { label: 'Settings', to: routePaths.settings, icon: 'settings', permissions: ['manage_slip_document', 'manage_tenant_timezone', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
+        { label: 'Settings', to: routePaths.settings, icon: 'settings', permissions: ['manage_slip_document', 'manage_tenant_timezone', 'list_currency', 'update_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
     ],
   },
 ]
