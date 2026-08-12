@@ -57,6 +57,8 @@ export type RedemptionDebt = {
   description?: string
   tag?: string | null
   is_paid?: boolean
+  created_account_id?: number | null
+  createdAccountId?: number | null
 }
 
 export type RedemptionCalculationResult = {
@@ -65,13 +67,18 @@ export type RedemptionCalculationResult = {
   loan_amount: number
   calculated_interest: number
   total_debt: number
+  excluded_debt_total?: number
+  excludedDebtTotal?: number
   total_amount_to_pay: number
   interest_payments?: RedemptionInterestPayment[]
   debts?: RedemptionDebt[]
+  excluded_debts?: RedemptionDebt[]
+  excludedDebts?: RedemptionDebt[]
   collateral_items?: SlipCollateralItem[]
 }
 
 export type RedemptionCreatePayload = {
+  account_id: number
   slip_no: string
   calculated_total: number
   payment_amount: number

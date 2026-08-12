@@ -27,6 +27,7 @@ import { customerService } from '../../customers/services/customerService'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
 import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
 import { ExpenseImageInput } from '../../expenses/components/ExpenseImageInput'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 const perPage = 10
 const paperTypeOptions = [
@@ -55,6 +56,7 @@ const emptyCustomer = {
 }
 
 const emptyLoan = {
+  account_id: '',
   loan_amount: '',
   interest_rate: '',
   interest_type_id: '',
@@ -241,6 +243,7 @@ export function SlipsPage() {
 
     try {
       const response = await slipService.createSlip({
+        account_id: Number(loan.account_id),
         customer: {
           name: customer.name.trim(),
           email: customer.email.trim() || undefined,
@@ -554,6 +557,9 @@ export function SlipsPage() {
 
           <Card title="Loan Details" description={`Suggested minimum retail total: ${formatMoney(suggestedMinimumRetail)}`}>
             <FormGroup className="slip-form-loan-grid" columns={3}>
+              <FormField id="loan-account" label="Loan Account" error={formErrors.accountId} helperText="The loan and its interest use this account's currency.">
+                <FinancialAccountSelect hasError={Boolean(formErrors.accountId)} id="loan-account" onChange={(accountId) => setLoan({ ...loan, account_id: accountId })} value={loan.account_id} />
+              </FormField>
               <FormField id="loan-amount" label="Loan Amount" error={formErrors.loanAmount}>
                 <Input id="loan-amount" min="0.01" step="0.01" type="number" value={loan.loan_amount} onChange={(event) => setLoan({ ...loan, loan_amount: event.target.value })} hasError={Boolean(formErrors.loanAmount)} />
               </FormField>
@@ -775,6 +781,10 @@ function validateSlipForm(
 
   if (Number(loan.loan_amount) <= 0) {
     errors.loanAmount = 'Loan amount must be greater than zero.'
+  }
+
+  if (!loan.account_id) {
+    errors.accountId = 'Financial account is required.'
   }
 
   if (Number(loan.interest_rate) <= 0) {

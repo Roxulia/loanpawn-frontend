@@ -8,6 +8,7 @@ import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney, getSlipCustomerName } from '../../slips/slipFormat'
 import { redemptionService, type RedemptionCalculationResult, type RedemptionDebt, type RedemptionDetail, type RedemptionInterestPayment } from '../services/redemptionService'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 const perPage = 10
 
@@ -37,6 +38,7 @@ export function RedemptionsPage() {
   const [activeTab, setActiveTab] = useState<RedemptionTab>('workflow')
   const [slipNo, setSlipNo] = useState('')
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [accountId, setAccountId] = useState('')
   const [redemptionDate, setRedemptionDate] = useState(initialRedemptionDate)
   const [notes, setNotes] = useState('')
   const [calculation, setCalculation] = useState<RedemptionCalculationResult | null>(null)
@@ -111,6 +113,7 @@ export function RedemptionsPage() {
     setError(null)
     setNotice(null)
     setRedemptionResult(null)
+    setAccountId('')
 
     try {
       const response = await redemptionService.calculate(slipNo.trim())
@@ -142,6 +145,11 @@ export function RedemptionsPage() {
       return
     }
 
+    if (!accountId) {
+      setError('Receiving account is required.')
+      return
+    }
+
     setIsRedeeming(true)
     setError(null)
     redemptionIdempotencyKeyRef.current = createIdempotencyKey()
@@ -150,6 +158,7 @@ export function RedemptionsPage() {
       const interests = getInterestPayments(calculation).map(toRedemptionInterestPayload)
       const debts = getUnpaidDebts(calculation).map(toRedemptionDebtPayload)
       const response = await redemptionService.create({
+        account_id: Number(accountId),
         slip_no: calculation.slip.slip_no,
         calculated_total: totalToPay,
         payment_amount: Number(paymentAmount),
@@ -178,6 +187,7 @@ export function RedemptionsPage() {
   function resetRedemptionForm() {
     setSlipNo('')
     setPaymentAmount('')
+    setAccountId('')
     setRedemptionDate(initialRedemptionDate())
     setNotes('')
     setCalculation(null)
@@ -272,6 +282,14 @@ export function RedemptionsPage() {
                     </FormField>
                     <FormField id="redemption-date" label="Redemption Date">
                       <Input id="redemption-date" type="date" value={redemptionDate} onChange={(event) => setRedemptionDate(event.target.value)} />
+                    </FormField>
+                    <FormField id="redemption-account" label="Receiving Account" helperText="Only accounts using the loan currency are shown.">
+                      <FinancialAccountSelect
+                        id="redemption-account"
+                        matchAccountId={calculation.slip.account_id ?? calculation.slip.accountId}
+                        onChange={setAccountId}
+                        value={accountId}
+                      />
                     </FormField>
                   </div>
                   <FormField id="redemption-notes" label="Notes">
@@ -534,6 +552,7 @@ function RedemptionManagementMobileList({
 function RedemptionSummary({ calculation }: { calculation: RedemptionCalculationResult }) {
   const interestPayments = getInterestPayments(calculation)
   const unpaidDebts = getUnpaidDebts(calculation)
+  const excludedDebts = calculation.excluded_debts ?? calculation.excludedDebts ?? []
   const collateralItems = calculation.collateral_items ?? calculation.slip.items ?? []
 
   return (
@@ -632,6 +651,30 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
           />
         )}
       </section>
+
+      {excludedDebts.length > 0 && (
+        <section className="redemption-snapshot-section">
+          <header>
+            <strong><LocalizedText text="Debts excluded from redemption" /></strong>
+            <span>{excludedDebts.length} · {formatMoney(calculation.excluded_debt_total ?? calculation.excludedDebtTotal ?? 0)}</span>
+          </header>
+          <Alert
+            message="These debts use a different currency (or have no originating account). Pay them separately from the Debts page."
+            title="External payment required"
+            tone="warning"
+          />
+          <DataTable
+            columns={[
+              { header: 'Code', key: 'code', render: (debt) => <strong>{debt.code ?? '-'}</strong> },
+              { header: 'Description', key: 'description', render: (debt) => debt.description ?? '-' },
+              { header: 'Amount', key: 'amount', render: (debt) => formatMoney(debt.amount) },
+            ]}
+            getItemId={(debt) => debt.code ?? debt.id}
+            getItemTitle={(debt) => debt.code ?? `Debt ${debt.id}`}
+            items={excludedDebts}
+          />
+        </section>
+      )}
 
       <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>

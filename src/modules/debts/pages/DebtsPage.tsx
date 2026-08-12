@@ -19,6 +19,7 @@ import {
 } from '../../finance/financeFormat'
 import { DebtFormFields } from '../components/DebtForm'
 import { debtFormToPayload, emptyDebtForm, validateDebtForm, type DebtFormErrors, type DebtFormState } from '../components/debtFormModel'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
   {
@@ -73,6 +74,7 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
   initialForm: emptyDebtForm,
   itemToForm: (item) => ({
     amount: item.amount,
+    created_account_id: String(item.created_account_id ?? item.createdAccountId ?? ''),
     customer_code: getStringField(item, 'customer_code', 'customerCode'),
     description: item.description,
     link_mode: getStringField(item, 'customer_code', 'customerCode') ? 'customer' : 'slip',
@@ -151,6 +153,7 @@ function formatDebtLink(item: TenantDebt) {
 function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: TenantDebt) => void }) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [acceptAccountId, setAcceptAccountId] = useState('')
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [isPaying, setIsPaying] = useState(false)
   const [paidDebt, setPaidDebt] = useState<TenantDebt | null>(null)
@@ -168,18 +171,25 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
       return
     }
 
+    if (!acceptAccountId) {
+      setPaymentError('Accepting account is required.')
+      return
+    }
+
     setIsPaying(true)
     setPaymentError(null)
 
     try {
       const response = await tenantResourceService.payDebt(debt.code, {
         amount_paid: Number(paymentAmount),
+        accept_account_id: Number(acceptAccountId),
       })
 
       setPaidDebt(response)
       setPaidAmount(paymentAmount)
       setIsPayModalOpen(false)
       setPaymentAmount('')
+      setAcceptAccountId('')
     } catch (payError) {
       setPaymentError(payError instanceof Error ? payError.message : 'Unable to pay debt.')
     } finally {
@@ -198,6 +208,7 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
           setIsPayModalOpen(false)
           setPaymentError(null)
           setPaymentAmount('')
+          setAcceptAccountId('')
         }}
         onSubmit={(event) => void handleSubmit(event)}
         title={`Pay ${debt.code}`}
@@ -212,6 +223,14 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
               step="0.01"
               type="number"
               value={paymentAmount}
+            />
+          </FormField>
+          <FormField id={`debt-pay-account-${debt.id}`} label="Accepting Account" helperText="Only accounts using the debt currency are shown.">
+            <FinancialAccountSelect
+              id={`debt-pay-account-${debt.id}`}
+              matchAccountId={debt.created_account_id ?? debt.createdAccountId}
+              onChange={setAcceptAccountId}
+              value={acceptAccountId}
             />
           </FormField>
         </FormGroup>

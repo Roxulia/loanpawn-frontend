@@ -18,6 +18,7 @@ export type InterestBreakdownRow = {
 }
 
 export type InterestPaymentPayload = {
+  accept_account_id: number
   slip_update_key: number
   payment_amount: number
   record_debt: boolean
@@ -31,6 +32,8 @@ export type InterestPaymentPayload = {
 }
 
 export type InterestCalculationResult = {
+  account_id?: number
+  accountId?: number
   slip_no?: string
   slip_update_key?: number
   current_date?: string
@@ -56,6 +59,8 @@ export type InterestPaymentHistoryItem = {
   payment_at?: string | null
   is_paid: boolean
   notes?: string | null
+  created_account_id?: number | null
+  accept_account_id?: number | null
 }
 
 export type InterestPaymentHistoryPage = {

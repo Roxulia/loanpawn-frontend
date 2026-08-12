@@ -4,6 +4,7 @@ export type DebtLinkMode = 'slip' | 'customer'
 
 export type DebtFormState = Record<string, string> & {
   amount: string
+  created_account_id: string
   customer_code: string
   description: string
   link_mode: DebtLinkMode
@@ -15,6 +16,7 @@ export type DebtFormErrors = Partial<Record<keyof DebtFormState, string>>
 
 export const emptyDebtForm: DebtFormState = {
   amount: '',
+  created_account_id: '',
   customer_code: '',
   description: '',
   link_mode: 'slip',
@@ -28,6 +30,7 @@ export function debtFormToPayload(form: DebtFormState) {
 
   return {
     amount: Number(form.amount),
+    created_account_id: Number(form.created_account_id),
     description: form.description.trim(),
     slip_code: slipCode || null,
     customer_code: customerCode || null,
@@ -44,6 +47,10 @@ export function validateDebtForm(form: DebtFormState) {
 
   if (!positiveAmount(form.amount)) {
     errors.amount = 'Amount must be greater than zero.'
+  }
+
+  if (!form.created_account_id) {
+    errors.created_account_id = 'Financial account is required.'
   }
 
   return errors

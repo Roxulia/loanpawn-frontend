@@ -46,6 +46,8 @@ export type SlipCollateralItem = {
 export type LoanContractSlip = {
   id: number
   update_key?: number
+  account_id?: number | null
+  accountId?: number | null
   slip_no: string
   customer?: SlipCustomer | null
   customer_id?: number
@@ -123,6 +125,7 @@ export type GemstoneDetailsPayload = {
 }
 
 export type SlipCreatePayload = {
+  account_id: number
   customer: {
     name: string
     nrc_citizen?: string

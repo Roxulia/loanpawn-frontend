@@ -8,6 +8,7 @@ import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney } from '../../slips/slipFormat'
 import { interestService, type InterestBreakdownRow, type InterestCalculationResult, type InterestPaymentHistoryItem, type InterestPaymentResult } from '../services/interestService'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 const perPage = 10
 
@@ -18,6 +19,7 @@ export function InterestPaymentsPage() {
   const [activeTab, setActiveTab] = useState<InterestTab>('workflow')
   const [slipNo, setSlipNo] = useState('')
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [acceptAccountId, setAcceptAccountId] = useState('')
   const [recordDebt, setRecordDebt] = useState(false)
   const [calculation, setCalculation] = useState<InterestCalculationResult | null>(null)
   const [paymentResult, setPaymentResult] = useState<InterestPaymentResult | null>(null)
@@ -82,6 +84,7 @@ export function InterestPaymentsPage() {
     setError(null)
     setNotice(null)
     setPaymentResult(null)
+    setAcceptAccountId('')
 
     try {
       const response = await interestService.calculate(slipNo.trim())
@@ -115,6 +118,11 @@ export function InterestPaymentsPage() {
       return
     }
 
+    if (!acceptAccountId) {
+      setError('Accepting account is required.')
+      return
+    }
+
     const slipUpdateKey = getSlipUpdateKey(calculation)
     if (slipUpdateKey === null) {
       setError('Slip calculation data is stale or incomplete. Refresh the calculation and try again.')
@@ -127,6 +135,7 @@ export function InterestPaymentsPage() {
 
     try {
       const response = await interestService.pay(normalizedSlipNo, {
+        accept_account_id: Number(acceptAccountId),
         slip_update_key: slipUpdateKey,
         payment_amount: Number(paymentAmount),
         record_debt: forceDebt,
@@ -137,6 +146,7 @@ export function InterestPaymentsPage() {
       setConfirmDebt(false)
       setSlipNo('')
       setPaymentAmount('')
+      setAcceptAccountId('')
       setRecordDebt(false)
       setCalculation(null)
       setPaymentResult(response)
@@ -251,6 +261,14 @@ export function InterestPaymentsPage() {
                   <FormField id="interest-payment-amount" label="Payment Amount">
                     <Input id="interest-payment-amount" min="0.01" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
                   </FormField>
+                  <FormField id="interest-accept-account" label="Accepting Account" helperText="Only accounts using the loan currency are shown.">
+                    <FinancialAccountSelect
+                      id="interest-accept-account"
+                      matchAccountId={calculation.account_id ?? calculation.accountId}
+                      onChange={setAcceptAccountId}
+                      value={acceptAccountId}
+                    />
+                  </FormField>
                   <label className="checkbox-line">
                     <input checked={recordDebt} onChange={(event) => setRecordDebt(event.target.checked)} type="checkbox" />
                     <span><LocalizedText text="Create debt if payment is insufficient" /></span>
@@ -259,7 +277,7 @@ export function InterestPaymentsPage() {
                     <Alert message="Payment is less than calculated interest. Confirm debt recording before submitting." title="Insufficient payment" tone="warning" />
                   )}
                   <ActionBar>
-                    <Button onClick={() => { setPaymentAmount(''); setRecordDebt(false); setPaymentResult(null) }} variant="secondary">Reset</Button>
+                    <Button onClick={() => { setPaymentAmount(''); setAcceptAccountId(''); setRecordDebt(false); setPaymentResult(null) }} variant="secondary">Reset</Button>
                     <Button disabled={!calculation} isLoading={isPaying} type="submit" variant="primary">Record Payment</Button>
                   </ActionBar>
                 </form>

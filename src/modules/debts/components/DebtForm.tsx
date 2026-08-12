@@ -3,6 +3,7 @@ import { Button, Input, Textarea } from '../../../components/atoms'
 import { ActionBar, Card, FormField, FormGroup } from '../../../components/molecules'
 import type { DebtFormErrors, DebtFormState } from './debtFormModel'
 import { CustomerSearchField } from './CustomerSearchField'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 type DebtFormFieldsProps = {
   errors: DebtFormErrors
@@ -22,6 +23,9 @@ export function DebtFormFields({ errors, onChange, value }: DebtFormFieldsProps)
     <FormGroup columns={2}>
       <FormField error={errors.amount} id="debt-amount" label="Amount">
         <Input hasError={Boolean(errors.amount)} id="debt-amount" min="0.01" onChange={(event) => onChange('amount', event.target.value)} step="0.01" type="number" value={value.amount} />
+      </FormField>
+      <FormField error={errors.created_account_id} helperText="The debt is recorded in this account's currency." id="debt-created-account" label="Created Account">
+        <FinancialAccountSelect hasError={Boolean(errors.created_account_id)} id="debt-created-account" onChange={(accountId) => onChange('created_account_id', accountId)} value={value.created_account_id} />
       </FormField>
       <FormField error={errors.slip_code ?? errors.customer_code} helperText="Optional link for this debt." id="debt-link" label="Debt link">
         <div className="debt-link-field">

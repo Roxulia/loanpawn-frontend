@@ -196,6 +196,10 @@ export type TenantDebt = {
   description: string
   tag?: string | null
   is_paid: boolean
+  created_account_id?: number | null
+  createdAccountId?: number | null
+  accept_account_id?: number | null
+  acceptAccountId?: number | null
   accepted_by?: number | null
   created_by?: number | null
   created_at?: string | null
