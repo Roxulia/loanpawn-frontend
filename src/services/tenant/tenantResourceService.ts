@@ -1,6 +1,8 @@
 import type { PaginatedResult } from '../../dataobjects/common/api'
 import type {
   AccountingLedger,
+  AccountingDay,
+  AccountingDaySchedule,
   AccountingOverview,
   AccountingTransaction,
   DashboardTimeFilter,
@@ -93,6 +95,22 @@ export const tenantResourceService = {
 
   getAccountingOverview(auth?: TenantAuth) {
     return apiClient.get<AccountingOverview>('/tenant/accounting/overview', authOptions(auth))
+  },
+
+  getCurrentAccountingDay(auth?: TenantAuth) {
+    return apiClient.get<AccountingDay | null>('/tenant/accounting-days/current', authOptions(auth))
+  },
+
+  closeCurrentAccountingDay(auth?: TenantAuth) {
+    return apiClient.post<AccountingDay>('/tenant/accounting-days/close', {}, authOptions(auth))
+  },
+
+  getAccountingDaySchedule(auth?: TenantAuth) {
+    return apiClient.get<AccountingDaySchedule>('/tenant/accounting-days/schedule', authOptions(auth))
+  },
+
+  updateAccountingDaySchedule(days: AccountingDaySchedule['days'], auth?: TenantAuth) {
+    return apiClient.put<AccountingDaySchedule>('/tenant/accounting-days/schedule', { days }, authOptions(auth))
   },
 
   listIncomingAccounting(params?: ListParams, auth?: TenantAuth) {

@@ -10,6 +10,7 @@ import { useTenantSession } from '../../../contexts/useTenantSession'
 import { usePermissions } from '../../auth'
 import type { UiLocale } from '../../../locales/UiLocale'
 import type { Currency } from '../../currency/types'
+import type { AccountingDayScheduleDay } from '../../../dataobjects/tenant/finance'
 import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
 
 type TypeForm = {
@@ -87,6 +88,14 @@ const emptyTypeForm: TypeForm = {
 }
 
 const typeDataPerPage = 5
+const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const emptyAccountingSchedule = weekdayNames.map((_, weekday): AccountingDayScheduleDay => ({
+  weekday,
+  is_enabled: false,
+  open_time: '09:00',
+  close_time: '17:00',
+  update_key: 0,
+}))
 
 const brandColorOptions = [
   '#03003D',
@@ -157,10 +166,17 @@ export function SettingsPage() {
   const canManageTimezone = hasEnabledFeature(tenantResolution, 'tenant_timezone_management') && hasPermission('manage_tenant_timezone')
   const canViewCurrencyPreferences = hasEnabledFeature(tenantResolution, 'currency_exchange_management') && hasPermission('list_currency')
   const canUpdateCurrencyPreferences = canViewCurrencyPreferences && hasPermission('update_currency')
+  const canManageAccountingSchedule = hasEnabledFeature(tenantResolution, 'automatic_open_close')
+    && hasPermission('open_accounting_day')
+    && hasPermission('close_accounting_day')
   const [timezoneOptions, setTimezoneOptions] = useState<string[]>([])
   const [timezone, setTimezone] = useState('Asia/Yangon')
   const [timezoneInitial, setTimezoneInitial] = useState('Asia/Yangon')
   const [timezoneUpdateKey, setTimezoneUpdateKey] = useState(0)
+  const [accountingScheduleTimezone, setAccountingScheduleTimezone] = useState('Asia/Yangon')
+  const [accountingScheduleInitial, setAccountingScheduleInitial] = useState(emptyAccountingSchedule)
+  const [accountingSchedule, setAccountingSchedule] = useState(emptyAccountingSchedule)
+  const [accountingScheduleErrors, setAccountingScheduleErrors] = useState<Record<number, string>>({})
   const currentLanguage = getUserLocale(currentUser)
 
   const brandingChanged = useMemo(() => hasChanged(branding, brandingInitial), [branding, brandingInitial])
@@ -168,6 +184,7 @@ export function SettingsPage() {
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
   const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
+  const accountingScheduleChanged = useMemo(() => hasChanged(accountingSchedule, accountingScheduleInitial), [accountingSchedule, accountingScheduleInitial])
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true)
@@ -251,6 +268,17 @@ export function SettingsPage() {
     }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load currency settings.'))
   }, [canViewCurrencyPreferences])
 
+  useEffect(() => {
+    if (!canManageAccountingSchedule) return
+
+    settingsService.getAccountingDaySchedule().then((response) => {
+      const days = normalizeAccountingSchedule(response.days)
+      setAccountingScheduleTimezone(response.timezone)
+      setAccountingScheduleInitial(days)
+      setAccountingSchedule(days)
+    }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load accounting schedule.'))
+  }, [canManageAccountingSchedule])
+
   async function saveTimezone() {
     await saveSection('timezone', async () => {
       const response = await settingsService.updateTimezone({ timezone, update_key: timezoneUpdateKey })
@@ -267,6 +295,33 @@ export function SettingsPage() {
       setCurrencyPreferencesInitial(nextPreferences)
       setCurrencyPreferences(nextPreferences)
     }, 'Currency settings saved successfully.')
+  }
+
+  async function saveAccountingSchedule() {
+    const errors = Object.fromEntries(accountingSchedule
+      .filter((day) => day.is_enabled && day.close_time <= day.open_time)
+      .map((day) => [day.weekday, 'Close time must be after open time.']))
+
+    setAccountingScheduleErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    await saveSection('accounting-schedule', async () => {
+      const response = await settingsService.updateAccountingDaySchedule(accountingSchedule)
+      const days = normalizeAccountingSchedule(response.days)
+      setAccountingScheduleTimezone(response.timezone)
+      setAccountingScheduleInitial(days)
+      setAccountingSchedule(days)
+      setAccountingScheduleErrors({})
+    }, 'Accounting day schedule saved successfully.')
+  }
+
+  function updateAccountingScheduleDay(weekday: number, changes: Partial<AccountingDayScheduleDay>) {
+    setAccountingSchedule((current) => current.map((day) => day.weekday === weekday ? { ...day, ...changes } : day))
+    setAccountingScheduleErrors((current) => {
+      const next = { ...current }
+      delete next[weekday]
+      return next
+    })
   }
 
   useEffect(() => {
@@ -797,6 +852,33 @@ export function SettingsPage() {
             <Button disabled={!tenantChanged} isLoading={savingSection === 'tenant'} onClick={() => void saveTenant()} variant="primary">Save</Button>
           </ActionBar>
         </Card>}
+        {canManageAccountingSchedule && <Card title="Automatic Accounting Day Schedule" description={`Times use ${accountingScheduleTimezone}. The scheduler processes due actions every 15 minutes.`}>
+          <div className="accounting-schedule accounting-schedule--desktop" role="group" aria-label="Weekly accounting schedule">
+            <div className="accounting-schedule__header" aria-hidden="true">
+              <span>Day</span><span>Enabled</span><span>Open</span><span>Close</span>
+            </div>
+            {accountingSchedule.map((day) => <div className="accounting-schedule__row" key={day.weekday}>
+              <strong>{weekdayNames[day.weekday]}</strong>
+              <label className="accounting-schedule__toggle"><input checked={day.is_enabled} onChange={(event) => updateAccountingScheduleDay(day.weekday, { is_enabled: event.target.checked })} type="checkbox" /><span>{day.is_enabled ? 'Enabled' : 'Disabled'}</span></label>
+              <Input aria-label={`${weekdayNames[day.weekday]} open time`} disabled={!day.is_enabled} onChange={(event) => updateAccountingScheduleDay(day.weekday, { open_time: event.target.value })} type="time" value={day.open_time.slice(0, 5)} />
+              <div><Input aria-label={`${weekdayNames[day.weekday]} close time`} disabled={!day.is_enabled} onChange={(event) => updateAccountingScheduleDay(day.weekday, { close_time: event.target.value })} type="time" value={day.close_time.slice(0, 5)} />{accountingScheduleErrors[day.weekday] && <small className="accounting-schedule__error">{accountingScheduleErrors[day.weekday]}</small>}</div>
+            </div>)}
+          </div>
+          <div className="accounting-schedule accounting-schedule--mobile" role="group" aria-label="Weekly accounting schedule mobile">
+            {accountingSchedule.map((day) => <section className="accounting-schedule__card" key={day.weekday}>
+              <header><strong>{weekdayNames[day.weekday]}</strong><label className="accounting-schedule__toggle"><input checked={day.is_enabled} onChange={(event) => updateAccountingScheduleDay(day.weekday, { is_enabled: event.target.checked })} type="checkbox" /><span>{day.is_enabled ? 'Enabled' : 'Disabled'}</span></label></header>
+              <FormGroup columns={2}>
+                <FormField id={`schedule-mobile-open-${day.weekday}`} label="Open time"><Input id={`schedule-mobile-open-${day.weekday}`} disabled={!day.is_enabled} onChange={(event) => updateAccountingScheduleDay(day.weekday, { open_time: event.target.value })} type="time" value={day.open_time.slice(0, 5)} /></FormField>
+                <FormField id={`schedule-mobile-close-${day.weekday}`} label="Close time"><Input id={`schedule-mobile-close-${day.weekday}`} disabled={!day.is_enabled} onChange={(event) => updateAccountingScheduleDay(day.weekday, { close_time: event.target.value })} type="time" value={day.close_time.slice(0, 5)} /></FormField>
+              </FormGroup>
+              {accountingScheduleErrors[day.weekday] && <small className="accounting-schedule__error">{accountingScheduleErrors[day.weekday]}</small>}
+            </section>)}
+          </div>
+          <ActionBar>
+            <Button disabled={!accountingScheduleChanged || savingSection === 'accounting-schedule'} onClick={() => { setAccountingSchedule(accountingScheduleInitial); setAccountingScheduleErrors({}) }} variant="secondary">Cancel</Button>
+            <Button disabled={!accountingScheduleChanged} isLoading={savingSection === 'accounting-schedule'} onClick={() => void saveAccountingSchedule()} variant="primary">Save Schedule</Button>
+          </ActionBar>
+        </Card>}
       </div>
       <ConfirmDialog
         confirmLabel="Delete Type"
@@ -1051,6 +1133,15 @@ function normalizeCurrencyPreferences(value: CurrencyPreferences) {
     reporting_currency_id: value.reporting_currency_id,
     update_key: value.update_key,
   }
+}
+
+function normalizeAccountingSchedule(days: AccountingDayScheduleDay[]) {
+  const byWeekday = new Map(days.map((day) => [day.weekday, day]))
+
+  return emptyAccountingSchedule.map((fallback) => {
+    const day = byWeekday.get(fallback.weekday)
+    return day ? { ...fallback, ...day, open_time: day.open_time.slice(0, 5), close_time: day.close_time.slice(0, 5) } : { ...fallback }
+  })
 }
 
 function toTypePageState(response: DefaultTypeListPage, fallbackPage: number) {

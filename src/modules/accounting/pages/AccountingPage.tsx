@@ -4,8 +4,8 @@ import { Badge, Button, Input } from '../../../components/atoms'
 import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
 import { CheckIcon, DownloadIcon, FilterIcon, VaultIcon } from '../../../components/icons/icon'
 import { FormField, SearchField } from '../../../components/molecules'
-import { Modal } from '../../../components/organisms'
-import type { AccountingOverview, AccountingTransaction } from '../../../dataobjects/tenant/finance'
+import { ConfirmDialog, Modal } from '../../../components/organisms'
+import type { AccountingDay, AccountingOverview, AccountingTransaction } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { usePermissions } from '../../auth'
 import {
@@ -21,7 +21,9 @@ const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).
 export function AccountingPage() {
   const { hasPermission } = usePermissions()
   const canList = hasPermission('list_accounting')
+  const canCloseAccountingDay = hasPermission('close_accounting_day')
   const [overview, setOverview] = useState<AccountingOverview | null>(null)
+  const [accountingDay, setAccountingDay] = useState<AccountingDay | null>(null)
   const [transactions, setTransactions] = useState<AccountingTransaction[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
@@ -33,7 +35,10 @@ export function AccountingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
+  const [isClosingDay, setIsClosingDay] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const loadAccounting = useCallback(async (page: number, search = debouncedSearchTerm) => {
     if (!canList) {
@@ -49,9 +54,10 @@ export function AccountingPage() {
     setError(null)
 
     try {
-      const [overviewResponse, transactionResponse] = await Promise.all([
+      const [overviewResponse, transactionResponse, accountingDayResponse] = await Promise.all([
         tenantResourceService.getAccountingOverview(),
         tenantResourceService.listAccounting({ page, perPage, search }),
+        tenantResourceService.getCurrentAccountingDay(),
       ])
 
       setOverview(overviewResponse)
@@ -59,6 +65,7 @@ export function AccountingPage() {
       setCurrentPage(transactionResponse.current_page ?? page)
       setLastPage(transactionResponse.last_page ?? 1)
       setTotal(transactionResponse.total)
+      setAccountingDay(accountingDayResponse)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load accounting ledger.')
     } finally {
@@ -113,6 +120,26 @@ export function AccountingPage() {
     }
   }
 
+  async function closeAccountingDay() {
+    if (isClosingDay) return
+
+    setIsClosingDay(true)
+    setError(null)
+    setNotice(null)
+
+    try {
+      const closedDay = await tenantResourceService.closeCurrentAccountingDay()
+      setAccountingDay(closedDay)
+      setIsCloseDialogOpen(false)
+      setNotice(`Accounting day ${closedDay.business_date} was closed successfully.`)
+      await loadAccounting(currentPage, debouncedSearchTerm)
+    } catch (closeError) {
+      setError(closeError instanceof Error ? closeError.message : 'Unable to close the accounting day.')
+    } finally {
+      setIsClosingDay(false)
+    }
+  }
+
   return (
     <section className="page accounting-page accounting-serene-page">
       <header className="accounting-serene-header">
@@ -124,6 +151,10 @@ export function AccountingPage() {
       </header>
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Accounting action failed" tone="danger" />}
+      {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Accounting day updated" tone="success" />}
+
+      <AccountingDayStatusCard accountingDay={accountingDay} canClose={canCloseAccountingDay} className="accounting-day-status-card--desktop" onClose={() => setIsCloseDialogOpen(true)} />
+      <AccountingDayStatusCard accountingDay={accountingDay} canClose={canCloseAccountingDay} className="accounting-day-status-card--mobile" onClose={() => setIsCloseDialogOpen(true)} />
 
       <section className="accounting-serene-metrics" aria-label="Accounting overview">
         <AccountingMetricCard
@@ -255,8 +286,35 @@ export function AccountingPage() {
           </FormField>
         </div>
       </Modal>
+      <ConfirmDialog
+        confirmLabel="Close Accounting Day"
+        isLoading={isClosingDay}
+        isOpen={isCloseDialogOpen}
+        message={`Close accounting day ${accountingDay?.business_date ?? ''}? Financial amounts for this day will become immutable.`}
+        onCancel={() => setIsCloseDialogOpen(false)}
+        onConfirm={() => void closeAccountingDay()}
+        title="Close accounting day"
+      />
     </section>
   )
+}
+
+function AccountingDayStatusCard({ accountingDay, canClose, className, onClose }: { accountingDay: AccountingDay | null; canClose: boolean; className: string; onClose: () => void }) {
+  const status = accountingDay?.status ?? 'NOT_OPENED'
+  const tone = status === 'OPEN' ? 'success' : status === 'CLOSING' ? 'warning' : status === 'CLOSED' ? 'danger' : 'info'
+
+  return <section className={`accounting-day-status-card ${className}`} aria-label="Current accounting day">
+    <div className="accounting-day-status-card__details">
+      <strong>{accountingDay?.business_date ?? 'Today'}</strong>
+      <Badge tone={tone}>{status.replace('_', ' ')}</Badge>
+      <p>{accountingDay ? `${accountingDay.timezone}${accountingDay.opened_at ? ` · Opened ${formatAccountingDayTime(accountingDay.opened_at)}` : ''}` : 'The first financial transaction will open today’s accounting day.'}</p>
+    </div>
+    {canClose && status === 'OPEN' && <Button onClick={onClose} variant="danger">Close Accounting Day</Button>}
+  </section>
+}
+
+function formatAccountingDayTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
 function AccountingMetricCard({

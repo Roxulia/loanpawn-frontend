@@ -2,6 +2,7 @@ import { apiClient } from '../../../services/http/apiClient'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import type { UiLocale } from '../../../locales/UiLocale'
 import type { Currency, CurrencyPage } from '../../currency/types'
+import type { AccountingDaySchedule } from '../../../dataobjects/tenant/finance'
 
 export type DefaultTypeOption = {
   id: number
@@ -156,6 +157,8 @@ export const settingsService = {
   updateTimezone(payload: { timezone: string; update_key: number }) { return apiClient.put<TimezoneSetting>('/tenant/settings/timezone', payload) },
   getCurrencyPreferences() { return apiClient.get<CurrencyPreferences>('/tenant/settings/currencies') },
   updateCurrencyPreferences(payload: { default_currency_id: number; reporting_currency_id: number; update_key: number }) { return apiClient.put<CurrencyPreferences>('/tenant/settings/currencies', payload) },
+  getAccountingDaySchedule() { return apiClient.get<AccountingDaySchedule>('/tenant/accounting-days/schedule') },
+  updateAccountingDaySchedule(days: AccountingDaySchedule['days']) { return apiClient.put<AccountingDaySchedule>('/tenant/accounting-days/schedule', { days }) },
   listCurrencyOptions() { return apiClient.get<CurrencyPage>('/tenant/currencies', { params: { per_page: 100 } }) },
 
   changeLanguage(payload: ChangeLanguagePayload) {

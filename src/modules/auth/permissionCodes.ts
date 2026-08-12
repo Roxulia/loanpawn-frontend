@@ -19,6 +19,8 @@ export const permissionCodes = [
   'list_collateral',
   'delete_collateral',
   'list_accounting',
+  'open_accounting_day',
+  'close_accounting_day',
   'list_financial_account_type',
   'create_financial_account_type',
   'update_financial_account_type',

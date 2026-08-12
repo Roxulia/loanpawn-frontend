@@ -8,7 +8,27 @@ export type AccountingTransaction = {
   description: string
   transaction_type: AccountingType | string
   transactionType?: AccountingType | string
+  transaction_direction?: AccountingType | 'internal' | string
+  transactionDirection?: AccountingType | 'internal' | string
+  accounting_category?: string | null
+  accountingCategory?: string | null
   amount: string
+  accounting_day_id?: number | null
+  accountingDayId?: number | null
+  business_date?: string | null
+  businessDate?: string | null
+  currency_id?: number | null
+  currencyId?: number | null
+  reporting_amount?: string | null
+  reportingAmount?: string | null
+  exchange_rate?: string | null
+  exchangeRate?: string | null
+  occurred_at?: string | null
+  occurredAt?: string | null
+  legacy_accounting_id?: number | null
+  legacyAccountingId?: number | null
+  is_deleted?: boolean
+  isDeleted?: boolean
   created_by?: number | null
   createdBy?: number | null
   reference_type?: string | null
@@ -21,6 +41,34 @@ export type AccountingTransaction = {
   createdAt?: string | null
   updated_at?: string | null
   updatedAt?: string | null
+}
+
+export type AccountingDayStatus = 'NOT_OPENED' | 'OPEN' | 'CLOSING' | 'CLOSED'
+
+export type AccountingDay = {
+  id: number
+  tenant_id: number
+  business_date: string
+  timezone: string
+  status: AccountingDayStatus
+  opened_at?: string | null
+  opened_by?: number | null
+  opening_source?: string | null
+  closed_at?: string | null
+  closing_source?: string | null
+}
+
+export type AccountingDayScheduleDay = {
+  weekday: number
+  is_enabled: boolean
+  open_time: string
+  close_time: string
+  update_key?: number
+}
+
+export type AccountingDaySchedule = {
+  timezone: string
+  days: AccountingDayScheduleDay[]
 }
 
 export type AccountingOverview = {
