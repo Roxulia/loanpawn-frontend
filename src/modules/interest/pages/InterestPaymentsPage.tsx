@@ -118,11 +118,6 @@ export function InterestPaymentsPage() {
       return
     }
 
-    if (!acceptAccountId) {
-      setError('Accepting account is required.')
-      return
-    }
-
     const slipUpdateKey = getSlipUpdateKey(calculation)
     if (slipUpdateKey === null) {
       setError('Slip calculation data is stale or incomplete. Refresh the calculation and try again.')
@@ -135,7 +130,7 @@ export function InterestPaymentsPage() {
 
     try {
       const response = await interestService.pay(normalizedSlipNo, {
-        accept_account_id: Number(acceptAccountId),
+        ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
         slip_update_key: slipUpdateKey,
         payment_amount: Number(paymentAmount),
         record_debt: forceDebt,

@@ -29,6 +29,7 @@ export const permissionCodes = [
   'create_financial_account',
   'update_financial_account',
   'delete_financial_account',
+  'transfer_financial_account',
   'list_material_type',
   'create_material_type',
   'update_material_type',

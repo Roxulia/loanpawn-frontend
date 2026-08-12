@@ -243,7 +243,7 @@ export function SlipsPage() {
 
     try {
       const response = await slipService.createSlip({
-        account_id: Number(loan.account_id),
+        ...(loan.account_id ? { account_id: Number(loan.account_id) } : {}),
         customer: {
           name: customer.name.trim(),
           email: customer.email.trim() || undefined,
@@ -781,10 +781,6 @@ function validateSlipForm(
 
   if (Number(loan.loan_amount) <= 0) {
     errors.loanAmount = 'Loan amount must be greater than zero.'
-  }
-
-  if (!loan.account_id) {
-    errors.accountId = 'Financial account is required.'
   }
 
   if (Number(loan.interest_rate) <= 0) {

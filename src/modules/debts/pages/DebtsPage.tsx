@@ -171,18 +171,13 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
       return
     }
 
-    if (!acceptAccountId) {
-      setPaymentError('Accepting account is required.')
-      return
-    }
-
     setIsPaying(true)
     setPaymentError(null)
 
     try {
       const response = await tenantResourceService.payDebt(debt.code, {
         amount_paid: Number(paymentAmount),
-        accept_account_id: Number(acceptAccountId),
+        ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
       })
 
       setPaidDebt(response)

@@ -125,7 +125,7 @@ export type GemstoneDetailsPayload = {
 }
 
 export type SlipCreatePayload = {
-  account_id: number
+  account_id?: number
   customer: {
     name: string
     nrc_citizen?: string

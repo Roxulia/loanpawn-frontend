@@ -145,11 +145,6 @@ export function RedemptionsPage() {
       return
     }
 
-    if (!accountId) {
-      setError('Receiving account is required.')
-      return
-    }
-
     setIsRedeeming(true)
     setError(null)
     redemptionIdempotencyKeyRef.current = createIdempotencyKey()
@@ -158,7 +153,7 @@ export function RedemptionsPage() {
       const interests = getInterestPayments(calculation).map(toRedemptionInterestPayload)
       const debts = getUnpaidDebts(calculation).map(toRedemptionDebtPayload)
       const response = await redemptionService.create({
-        account_id: Number(accountId),
+        ...(accountId ? { account_id: Number(accountId) } : {}),
         slip_no: calculation.slip.slip_no,
         calculated_total: totalToPay,
         payment_amount: Number(paymentAmount),

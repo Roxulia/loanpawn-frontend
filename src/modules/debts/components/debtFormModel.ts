@@ -30,7 +30,7 @@ export function debtFormToPayload(form: DebtFormState) {
 
   return {
     amount: Number(form.amount),
-    created_account_id: Number(form.created_account_id),
+    ...(form.created_account_id ? { created_account_id: Number(form.created_account_id) } : {}),
     description: form.description.trim(),
     slip_code: slipCode || null,
     customer_code: customerCode || null,
@@ -47,10 +47,6 @@ export function validateDebtForm(form: DebtFormState) {
 
   if (!positiveAmount(form.amount)) {
     errors.amount = 'Amount must be greater than zero.'
-  }
-
-  if (!form.created_account_id) {
-    errors.created_account_id = 'Financial account is required.'
   }
 
   return errors

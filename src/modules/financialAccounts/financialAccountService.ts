@@ -1,7 +1,7 @@
 import { apiClient } from '../../services/http/apiClient'
 import type { CurrencyPage } from '../currency/types'
 import type { DefaultTypeListPage } from '../settings/services/settingsService'
-import type { FinancialAccount, FinancialAccountCreatePayload, FinancialAccountPage, FinancialAccountUpdatePayload } from './types'
+import type { FinancialAccount, FinancialAccountCreatePayload, FinancialAccountPage, FinancialAccountTransfer, FinancialAccountTransferPage, FinancialAccountTransferPayload, FinancialAccountUpdatePayload } from './types'
 
 export const financialAccountService = {
   list: (params: { page?: number; perPage?: number; search?: string } = {}) => apiClient.get<FinancialAccountPage>('/tenant/financial-accounts', { params: { page: params.page, per_page: params.perPage ?? 15, search: params.search } }),
@@ -11,4 +11,6 @@ export const financialAccountService = {
   delete: (code: string) => apiClient.deleteMessage(`/tenant/financial-accounts/${encodeURIComponent(code)}`),
   accountTypes: () => apiClient.get<DefaultTypeListPage>('/tenant/financial-account-types', { params: { per_page: 100 } }),
   currencies: () => apiClient.get<CurrencyPage>('/tenant/currencies', { params: { per_page: 100 } }),
+  listTransfers: (params: { page?: number; perPage?: number } = {}) => apiClient.get<FinancialAccountTransferPage>('/tenant/financial-accounts/transfers', { params: { page: params.page, per_page: params.perPage ?? 15 } }),
+  transfer: (payload: FinancialAccountTransferPayload, idempotencyKey: string) => apiClient.post<FinancialAccountTransfer>('/tenant/financial-accounts/transfers', payload, { idempotencyKey }),
 }

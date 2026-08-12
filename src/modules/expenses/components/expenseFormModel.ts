@@ -1,6 +1,7 @@
 import { optionalInteger, positiveAmount, required } from '../../finance/financeFormat'
 
 export type ExpenseFormState = {
+  account_id: string
   amount: string
   description: string
   expense_type_id: string
@@ -12,6 +13,7 @@ export type ExpenseFormState = {
 export type ExpenseFormErrors = Partial<Record<keyof ExpenseFormState, string>>
 
 export const emptyExpenseForm: ExpenseFormState = {
+  account_id: '',
   amount: '',
   description: '',
   expense_type_id: '',
@@ -67,6 +69,7 @@ function expenseMetadataToFormData(form: ExpenseFormState) {
   const payload = new FormData()
   payload.set('description', form.description.trim())
   payload.set('expense_type_id', form.expense_type_id)
+  if (form.account_id) payload.set('account_id', form.account_id)
 
   if (form.image_reference) {
     payload.set('image_reference', form.image_reference)

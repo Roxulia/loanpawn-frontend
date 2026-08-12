@@ -78,7 +78,7 @@ export type RedemptionCalculationResult = {
 }
 
 export type RedemptionCreatePayload = {
-  account_id: number
+  account_id?: number
   slip_no: string
   calculated_total: number
   payment_amount: number

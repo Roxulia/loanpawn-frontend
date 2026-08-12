@@ -131,6 +131,8 @@ export type TenantExpense = {
   updateKey?: number
   tenant_id: number
   amount: string
+  account_id?: number | null
+  accountId?: number | null
   description: string
   expense_type_id?: number | null
   expense_type_code?: string | null
@@ -158,6 +160,8 @@ export type TenantCapital = {
   updateKey?: number
   tenant_id: number
   amount: string
+  account_id?: number | null
+  accountId?: number | null
   description: string
   created_by?: number | null
   created_at?: string | null

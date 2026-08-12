@@ -18,13 +18,16 @@ import {
   positiveAmount,
   required,
 } from '../../finance/financeFormat'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 type CapitalForm = FinanceFormState & {
+  account_id: string
   amount: string
   description: string
 }
 
 const initialForm: CapitalForm = {
+  account_id: '',
   amount: '',
   description: '',
 }
@@ -70,6 +73,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
   ].join(' '),
   initialForm,
   itemToForm: (item) => ({
+    account_id: String(item.account_id ?? item.accountId ?? ''),
     amount: item.amount,
     description: item.description,
   }),
@@ -80,6 +84,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
   renderForm,
   save: (mode, form, item) => {
     const payload = {
+      ...(form.account_id ? { account_id: Number(form.account_id) } : {}),
       amount: Number(form.amount),
       description: form.description.trim(),
     }
@@ -122,6 +127,9 @@ function CapitalFormFields({
 }) {
   return (
     <FormGroup columns={2}>
+      <FormField id="capital-account" label="Financial Account">
+        <FinancialAccountSelect id="capital-account" onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
+      </FormField>
       <FormField error={errors.amount} id="capital-amount" label="Amount">
         <Input
           hasError={Boolean(errors.amount)}

@@ -9,6 +9,7 @@ import { LocalizedText } from '../../../locales/UiLocale'
 import { ExpenseDetailModal } from '../components/ExpenseDetailModal'
 import { ExpenseImageInput } from '../components/ExpenseImageInput'
 import { expenseUpdateToPayload } from '../components/expenseFormModel'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 import {
   FinanceResourcePage,
   type FinanceFormErrors,
@@ -27,6 +28,7 @@ import {
 } from '../../finance/financeFormat'
 
 type ExpenseForm = FinanceFormState & {
+  account_id: string
   amount: string
   description: string
   expense_type_id: string
@@ -36,6 +38,7 @@ type ExpenseForm = FinanceFormState & {
 }
 
 const initialForm: ExpenseForm = {
+  account_id: '',
   amount: '',
   description: '',
   expense_type_id: '',
@@ -95,6 +98,7 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
   ].join(' '),
   initialForm,
   itemToForm: (item) => ({
+    account_id: String(item.account_id ?? item.accountId ?? ''),
     amount: item.amount,
     description: item.description,
     expense_type_id: String(getNumberField(item, 'expense_type_id', 'expenseTypeId') ?? ''),
@@ -211,6 +215,9 @@ function ExpenseFormFields({
 
   return (
     <FormGroup columns={2}>
+      <FormField id="expense-account" label="Payment Account">
+        <FinancialAccountSelect id="expense-account" onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
+      </FormField>
       <FormField error={errors.amount} id="expense-amount" label="Amount">
         <Input
           disabled

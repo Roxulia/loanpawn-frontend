@@ -18,7 +18,7 @@ export type InterestBreakdownRow = {
 }
 
 export type InterestPaymentPayload = {
-  accept_account_id: number
+  accept_account_id?: number
   slip_update_key: number
   payment_amount: number
   record_debt: boolean

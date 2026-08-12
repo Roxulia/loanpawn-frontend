@@ -20,6 +20,7 @@ export const routePaths = {
   currencies: '/currencies-exchange',
   financialAccounts: '/financial-accounts',
   financialAccountCreate: '/financial-accounts/create',
+  financialAccountTransfer: '/financial-accounts/transfer',
   financialAccountEdit: (accountCode: string) => `/financial-accounts/${accountCode}/edit`,
   capitals: '/capitals',
   expenses: '/expenses',

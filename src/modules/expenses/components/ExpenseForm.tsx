@@ -4,6 +4,7 @@ import { ActionBar, Card, FormField, FormGroup } from '../../../components/molec
 import type { ExpenseTypeOption } from '../../../dataobjects/tenant/finance'
 import type { ExpenseFormErrors, ExpenseFormState } from './expenseFormModel'
 import { ExpenseImageInput } from './ExpenseImageInput'
+import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 type ExpenseFormProps = {
   errors: ExpenseFormErrors
@@ -33,6 +34,9 @@ export function ExpenseForm({
       {operationAlert}
       <form className="ui-form" onSubmit={onSubmit}>
         <FormGroup columns={2}>
+          <FormField id="expense-create-account" label="Payment Account">
+            <FinancialAccountSelect id="expense-create-account" onChange={(accountId) => onChange('account_id', accountId)} value={value.account_id} />
+          </FormField>
           <FormField error={errors.amount} id="expense-create-amount" label="Amount">
             <Input hasError={Boolean(errors.amount)} id="expense-create-amount" min="0.01" onChange={(event) => onChange('amount', event.target.value)} step="0.01" type="number" value={value.amount} />
           </FormField>

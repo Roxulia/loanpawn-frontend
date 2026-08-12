@@ -39,3 +39,40 @@ export type FinancialAccountUpdatePayload = {
   account_number: string | null
   update_key: number
 }
+
+export type FinancialAccountTransfer = {
+  id: number
+  from_account: TransferAccountSnapshot
+  to_account: TransferAccountSnapshot
+  from_amount: string
+  to_amount: string
+  exchange_rate: string | null
+  fee_amount: string
+  note: string | null
+  transferred_at: string | null
+}
+
+export type TransferAccountSnapshot = {
+  id: number
+  code: string
+  name: string
+  balance: string
+  currency: { id: number; code: string; symbol?: string | null }
+}
+
+export type FinancialAccountTransferPage = {
+  items: FinancialAccountTransfer[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export type FinancialAccountTransferPayload = {
+  from_account_id: number
+  to_account_id: number
+  from_amount: number
+  exchange_rate?: number
+  fee_amount?: number
+  note?: string
+}
