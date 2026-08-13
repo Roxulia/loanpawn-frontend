@@ -10,12 +10,14 @@ type FormPanelProps = FormHTMLAttributes<HTMLFormElement> & {
 
 export function FormPanel({ actions, children, description, title, ...formProps }: FormPanelProps) {
   return (
-    <Card
-      description={description}
-      footer={actions}
-      title={title}
-    >
-      <form className="ui-form" {...formProps}>{children}</form>
-    </Card>
+    <form className="ui-form" {...formProps}>
+      <Card
+        description={description}
+        footer={actions}
+        title={title}
+      >
+        {children}
+      </Card>
+    </form>
   )
 }
