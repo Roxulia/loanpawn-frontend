@@ -52,7 +52,7 @@ export function FinancialAccountTransferPage() {
     } finally { idempotency.current = null; setSaving(false) }
   }
 
-  return <section className="page">
+  return <section className="page financial-account-transfer-page">
     <SectionHeader title="Transfer Between Accounts" subtitle="Move funds safely between active financial accounts." />
     {message && <Alert message={message.text} onDismiss={() => setMessage(null)} title={message.tone === 'success' ? 'Transfer complete' : 'Transfer failed'} tone={message.tone} />}
     {loading ? <LoadingState rows={5} /> : <div className="workflow-stack">

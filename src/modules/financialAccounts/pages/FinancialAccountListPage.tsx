@@ -6,14 +6,14 @@ import { Alert } from '../../../components/feedback'
 import { CirclePlusIcon, EditIcon, TrashIcon } from '../../../components/icons/icon'
 import { Card, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
-import { usePermissions } from '../../auth'
+import { useFeatures, usePermissions } from '../../auth'
 import { financialAccountService } from '../financialAccountService'
 import type { FinancialAccount, FinancialAccountPage } from '../types'
 
 const emptyPage: FinancialAccountPage = { items: [], current_page: 1, last_page: 1, per_page: 15, total: 0 }
 
 export function FinancialAccountListPage() {
-  const navigate = useNavigate(); const location = useLocation(); const { hasPermission } = usePermissions()
+  const navigate = useNavigate(); const location = useLocation(); const { hasPermission } = usePermissions(); const { hasEnabledFeature } = useFeatures()
   const [page, setPage] = useState(emptyPage); const [pageNumber, setPageNumber] = useState(1); const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false); const [deleting, setDeleting] = useState(false); const [target, setTarget] = useState<FinancialAccount | null>(null)
   const [error, setError] = useState<string | null>(null); const [notice, setNotice] = useState<string | null>(() => routeNotice(location.state))
@@ -30,7 +30,7 @@ export function FinancialAccountListPage() {
   ]
 
   return <section className="page">
-    <SectionHeader title="Financial Accounts" subtitle="Manage cash, bank, and online payment balances." action={<div className="row-actions">{hasPermission('transfer_financial_account') && <Button onClick={() => navigate(routePaths.financialAccountTransfer)} variant="secondary">Transfer</Button>}{hasPermission('create_financial_account') && <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.financialAccountCreate)} variant="primary">Add Account</Button>}</div>} />
+    <SectionHeader title="Financial Accounts" subtitle="Manage cash, bank, and online payment balances." action={<div className="row-actions">{hasEnabledFeature('account_transferable') && hasPermission('transfer_financial_account') && <Button onClick={() => navigate(routePaths.financialAccountTransfer)} variant="secondary">Transfer</Button>}{hasPermission('create_financial_account') && <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.financialAccountCreate)} variant="primary">Add Account</Button>}</div>} />
     <Card title="Accounts" description={`${page.total} financial account${page.total === 1 ? '' : 's'}`}>
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Account action failed" tone="danger" />}{notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Accounts updated" tone="success" />}
       <TableToolbar actions={<Button onClick={() => void load()}>Refresh</Button>} search={<SearchField id="financial-account-search" label="Search accounts" placeholder="Code, name, or account number" value={search} onChange={(event) => { setSearch(event.target.value); setPageNumber(1) }} />} />

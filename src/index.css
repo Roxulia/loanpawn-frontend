@@ -12,13 +12,26 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.currency-exchange-page {
+.currency-management-page,
+.exchange-pair-management-page,
+.daily-rate-assignment-page,
+.financial-account-transfer-page {
   display: grid;
   gap: 1.25rem;
+  width: 100%;
+}
+
+.exchange-pair-table--desktop { display: block; }
+.exchange-pair-cards--mobile { width: 100%; }
+
+@media (max-width: 767px) {
+  .exchange-pair-table--desktop { display: none; }
+  .exchange-pair-cards--mobile { display: block; }
 }
 
 .currency-form,
-.currency-exchange-page .subform-panel {
+.exchange-pair-form,
+.daily-rate-assignment-page .subform-panel {
   display: grid;
   gap: 1rem;
   margin-bottom: 1.25rem;

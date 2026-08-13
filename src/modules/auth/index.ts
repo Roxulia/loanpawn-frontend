@@ -10,3 +10,4 @@ export {
   type PermissionCode,
 } from './permissionCodes'
 export { usePermissions } from './usePermissions'
+export { useFeatures } from './useFeatures'

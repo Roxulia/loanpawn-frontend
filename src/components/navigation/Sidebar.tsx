@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router'
 import { routePaths } from '../../app/routes/paths'
-import { usePermissions, type PermissionCode } from '../../modules/auth'
+import { useFeatures, usePermissions, type PermissionCode } from '../../modules/auth'
 import { useUiLocale } from '../../locales/UiLocale'
 
 type SidebarProps = {
@@ -28,6 +28,7 @@ type NavigationItem = {
   to: string
   icon: IconName
   permissions?: PermissionCode[]
+  features?: string[]
 }
 
 type NavigationGroup = {
@@ -56,7 +57,9 @@ const navigationGroups: NavigationGroup[] = [
     label: 'Finance',
     items: [
       { label: 'Accounting', to: routePaths.accounting, icon: 'accounting', permissions: ['list_accounting'] },
-      { label: 'Currencies & Rates', to: routePaths.currencies, icon: 'currency', permissions: ['list_currency', 'list_exchange_pair', 'list_exchange_rate'] },
+      { label: 'Currencies', to: routePaths.currencies, icon: 'currency', permissions: ['list_currency'], features: ['currency_management'] },
+      { label: 'Exchange Pairs', to: routePaths.exchangePairs, icon: 'currency', permissions: ['list_exchange_pair'], features: ['currency_management', 'exchange_pair_management'] },
+      { label: 'Daily Rates', to: routePaths.dailyRates, icon: 'currency', permissions: ['list_exchange_rate'], features: ['currency_management', 'exchange_pair_management', 'daily_rate_assignment'] },
       { label: 'Financial Accounts', to: routePaths.financialAccounts, icon: 'financialAccounts', permissions: ['list_financial_account'] },
       { label: 'Capital Management', to: routePaths.capitals, icon: 'capitals', permissions: ['list_capital', 'create_capital', 'update_capital', 'delete_capital'] },
       { label: 'Expenses', to: routePaths.expenses, icon: 'expenses', permissions: ['list_expense', 'create_expense', 'update_expense', 'delete_expense'] },
@@ -74,11 +77,12 @@ const navigationGroups: NavigationGroup[] = [
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { hasAnyPermission } = usePermissions()
+  const { hasAllEnabledFeatures } = useFeatures()
   const { t } = useUiLocale()
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.permissions || hasAnyPermission(item.permissions)),
+      items: group.items.filter((item) => (!item.permissions || hasAnyPermission(item.permissions)) && (!item.features || hasAllEnabledFeatures(item.features))),
     }))
     .filter((group) => group.items.length > 0)
 

@@ -164,7 +164,7 @@ export function SettingsPage() {
   const canDeleteFinancialAccountType = canManageFinancialAccountTypes && hasPermission('delete_financial_account_type')
   const canManageTenantBranding = hasEnabledFeature(tenantResolution, 'tenant_branding')
   const canManageTimezone = hasEnabledFeature(tenantResolution, 'tenant_timezone_management') && hasPermission('manage_tenant_timezone')
-  const canViewCurrencyPreferences = hasEnabledFeature(tenantResolution, 'currency_exchange_management') && hasPermission('list_currency')
+  const canViewCurrencyPreferences = hasEnabledFeature(tenantResolution, 'currency_management') && hasPermission('list_currency')
   const canUpdateCurrencyPreferences = canViewCurrencyPreferences && hasPermission('update_currency')
   const canManageAccountingSchedule = hasEnabledFeature(tenantResolution, 'automatic_open_close')
     && hasPermission('open_accounting_day')
