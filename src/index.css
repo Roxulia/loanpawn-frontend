@@ -1,5 +1,6 @@
 @import './styles/foundations.css';
 @import './styles/components.css';
+@import './modules/financialAccounts/financialAccountDetail.css';
 
 :root {
   color: var(--color-text-primary);

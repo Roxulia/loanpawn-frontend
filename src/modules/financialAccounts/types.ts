@@ -23,6 +23,44 @@ export type FinancialAccountPage = {
   total: number
 }
 
+export type FinancialAccountTransactionType =
+  | 'OPENING_BALANCE' | 'PAWN_LOAN_CREATION' | 'PAWN_INTEREST_PAYMENT' | 'PAWN_REDEMPTION'
+  | 'DEBT_CREATION' | 'DEBT_PAYMENT' | 'BUSINESS_LOAN_RECEIPT' | 'BUSINESS_LOAN_PAYMENT'
+  | 'EXPENSE_PAYMENT' | 'CAPITAL_CONTRIBUTION' | 'CAPITAL_WITHDRAWAL' | 'ACCOUNT_TRANSFER'
+  | 'TRANSFER_FEE' | 'ADJUSTMENT' | 'REVERSAL'
+
+export type FinancialAccountTransaction = {
+  id: number
+  transaction_type: FinancialAccountTransactionType
+  amount: string
+  direction: 'debit' | 'credit'
+  reference_number: string | null
+  reference_type: string | null
+  note: string | null
+  creator: { id: number; name: string } | null
+  related_transaction_id: number | null
+  reversed_transaction_id: number | null
+  created_at: string | null
+}
+
+export type FinancialAccountTransactionPage = {
+  items: FinancialAccountTransaction[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export type FinancialAccountTransactionFilters = {
+  page?: number
+  perPage?: number
+  search?: string
+  direction?: 'debit' | 'credit'
+  transactionType?: FinancialAccountTransactionType
+  startAt?: string
+  endAt?: string
+}
+
 export type FinancialAccountCreatePayload = {
   account_type: string
   currency_type: string

@@ -1,4 +1,5 @@
 export { FinancialAccountCreatePage } from './pages/FinancialAccountCreatePage'
+export { FinancialAccountDetailPage } from './pages/FinancialAccountDetailPage'
 export { FinancialAccountEditPage } from './pages/FinancialAccountEditPage'
 export { FinancialAccountListPage } from './pages/FinancialAccountListPage'
 export { FinancialAccountTransferPage } from './pages/FinancialAccountTransferPage'
