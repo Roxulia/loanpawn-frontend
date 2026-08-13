@@ -16,6 +16,9 @@
 .amount-out { color: var(--color-danger-text, #b42318); font-weight: 700; white-space: nowrap; }
 .financial-account-history-pagination { align-items: center; display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem; }
 .financial-account-history-pagination > div { display: flex; gap: .75rem; }
+.financial-account-mobile-card .slip-history-mobile-card__summary { align-items: flex-end; }
+.financial-account-mobile-card .slip-history-mobile-card__summary > span { max-width: 45%; overflow-wrap: anywhere; text-align: right; }
+.financial-account-mobile-card .slip-history-mobile-card__summary strong { overflow-wrap: anywhere; white-space: normal; }
 @media (max-width: 767px) {
   .financial-account-detail-page { gap: 1rem; }
   .financial-account-detail-actions, .financial-account-detail-actions .ui-button { width: 100%; }
@@ -29,15 +32,12 @@
   .financial-account-history-filters--mobile[open] summary { margin-bottom: .75rem; }
   .financial-account-history-filters--mobile > :not(summary) { margin-bottom: .75rem; }
   .financial-account-history--mobile { display: grid; gap: .85rem; }
-  .financial-account-transaction-card { border: 1px solid var(--color-border); border-radius: var(--radius-lg); display: grid; gap: 1rem; padding: 1rem; }
-  .financial-account-transaction-card header { align-items: flex-start; display: flex; gap: .75rem; justify-content: space-between; }
-  .financial-account-transaction-card header div { min-width: 0; }
-  .financial-account-transaction-card header small { color: var(--color-text-secondary); display: block; margin-top: .25rem; }
-  .financial-account-transaction-card > .amount-in, .financial-account-transaction-card > .amount-out { font-size: 1.4rem; overflow-wrap: anywhere; white-space: normal; }
-  .financial-account-transaction-card dl { display: grid; gap: .65rem; margin: 0; }
-  .financial-account-transaction-card dl div { display: grid; gap: .25rem; grid-template-columns: 5.5rem minmax(0, 1fr); }
-  .financial-account-transaction-card dt { color: var(--color-text-secondary); }
-  .financial-account-transaction-card dd { margin: 0; overflow-wrap: anywhere; }
+  .financial-account-transaction-card .slip-history-mobile-card__summary strong { overflow-wrap: anywhere; white-space: normal; }
+  .financial-account-transaction-card__footer { align-items: flex-start; }
+  .financial-account-transaction-card__footer > div { display: grid; gap: var(--space-1); min-width: 0; width: calc(50% - var(--space-2)); }
+  .financial-account-transaction-card__footer small { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+  .financial-account-transaction-card__footer strong, .financial-account-transaction-card__footer span { overflow-wrap: anywhere; }
+  .financial-account-transaction-card__footer > div:last-child { text-align: right; }
   .financial-account-history-pagination { align-items: stretch; flex-direction: column; }
   .financial-account-history-pagination > div, .financial-account-history-pagination .ui-button { flex: 1; min-height: 2.75rem; }
 }
