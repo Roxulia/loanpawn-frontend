@@ -15,6 +15,26 @@ export type FinancialAccount = {
   currency: FinancialAccountOption & { symbol?: string | null }
 }
 
+export type FinancialAccountSummary = {
+  id: number
+  account_code: string
+  account_name: string
+  is_active: boolean
+  currency: { id: number; code: string; symbol?: string | null }
+}
+
+export type AssignedFinancialAccountUser = {
+  id: number
+  code: string
+  name: string
+  role_name: string | null
+  status: string
+}
+
+export type FinancialAccountDetail = FinancialAccount & {
+  assigned_users: AssignedFinancialAccountUser[]
+}
+
 export type FinancialAccountPage = {
   items: FinancialAccount[]
   current_page: number
@@ -66,6 +86,7 @@ export type FinancialAccountCreatePayload = {
   currency_type: string
   account_name: string
   balance?: number
+  balance_unit?: import('../finance/financialUnits').FinancialUnitCode
   allow_negative_balance?: boolean
   account_number?: string | null
 }
@@ -110,7 +131,9 @@ export type FinancialAccountTransferPayload = {
   from_account_id: number
   to_account_id: number
   from_amount: number
+  from_amount_unit?: import('../finance/financialUnits').FinancialUnitCode
   exchange_rate?: number
   fee_amount?: number
+  fee_amount_unit?: import('../finance/financialUnits').FinancialUnitCode
   note?: string
 }

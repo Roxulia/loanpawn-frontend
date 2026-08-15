@@ -103,8 +103,10 @@ export type SlipCollateralPayload = {
   description?: string
   brand_name?: string
   estimated_value?: number
+  estimated_value_unit?: import('../../finance/financialUnits').FinancialUnitCode
   material_type_id?: number
   material_price_per_kyat?: number
+  material_price_per_kyat_unit?: import('../../finance/financialUnits').FinancialUnitCode
   item_category_type_id?: number
   kyat?: number
   pal?: number
@@ -113,6 +115,7 @@ export type SlipCollateralPayload = {
   gemstone_details?: GemstoneDetailsPayload
   quantity?: number
   minimum_retail_price?: number
+  minimum_retail_price_unit?: import('../../finance/financialUnits').FinancialUnitCode
   item_status?: string
   image_reference?: File
 }
@@ -139,6 +142,7 @@ export type SlipCreatePayload = {
   }
   collateral_items: SlipCollateralPayload[]
   loan_amount: number
+  loan_amount_unit?: import('../../finance/financialUnits').FinancialUnitCode
   interest_rate: number
   interest_type_id: number
   expiry_quota: number

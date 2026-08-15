@@ -1,4 +1,5 @@
 import type { UiLocale } from '../../locales/UiLocale'
+import type { FinancialAccountSummary } from '../../modules/financialAccounts/types'
 
 export type TenantUser = {
   id: number
@@ -27,6 +28,7 @@ export type TenantUser = {
   preferLang?: UiLocale | null
   prefer_lang?: UiLocale | null
   permissions?: string[]
+  financial_accounts?: FinancialAccountSummary[]
 }
 
 export type TenantUserAuthSession = {

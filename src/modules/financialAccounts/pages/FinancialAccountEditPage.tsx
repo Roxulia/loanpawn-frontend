@@ -6,7 +6,7 @@ import { SectionHeader } from '../../../components/molecules'
 import { FinancialAccountForm, type FinancialAccountFormState } from '../components/FinancialAccountForm'
 import { financialAccountService } from '../financialAccountService'
 
-const emptyForm: FinancialAccountFormState = { account_type: '', currency_type: '', account_name: '', balance: '', allow_negative_balance: false, account_number: '', is_active: true, is_default: false }
+const emptyForm: FinancialAccountFormState = { account_type: '', currency_type: '', account_name: '', balance: '', balance_unit: 'UNIT', allow_negative_balance: false, account_number: '', is_active: true, is_default: false }
 
 export function FinancialAccountEditPage() {
   const navigate = useNavigate(); const { accountCode = '' } = useParams()

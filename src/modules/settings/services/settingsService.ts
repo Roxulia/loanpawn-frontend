@@ -91,6 +91,19 @@ export type CurrencyPreferences = {
   update_key: number
   default_currency: Currency
   reporting_currency: Currency
+  effective_reporting_currency_id: number
+  effective_reporting_currency: Currency
+  reporting_currency_recalculation: {
+    id: number
+    status: 'queued' | 'processing' | 'waiting_for_rates' | 'failed'
+    window_start: string
+    window_end: string
+    missing_rates: Array<{
+      date: string
+      from_currency_id: number
+      to_currency_id: number
+    }>
+  } | null
 }
 
 export type SettingsPayload = {

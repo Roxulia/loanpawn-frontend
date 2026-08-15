@@ -7,6 +7,7 @@ import { Card, KeyValueList, SectionHeader } from '../../../components/molecules
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { usePermissions, type PermissionCode } from '../../auth'
 import { PermissionToggleForm } from '../components/PermissionToggleForm'
+import { FinancialAccountAssignmentForm } from '../components/FinancialAccountAssignmentForm'
 import { formatValue, getUserRoleName } from '../staffFormat'
 import { staffService } from '../services/staffService'
 
@@ -94,6 +95,12 @@ export function StaffDetailPage() {
           <PermissionToggleForm
             readOnly
             value={selectedPermissions}
+          />
+
+          <FinancialAccountAssignmentForm
+            accounts={staffUser.financial_accounts ?? []}
+            readOnly
+            selectedAccountIds={(staffUser.financial_accounts ?? []).map((account) => account.id)}
           />
         </>
       ) : (

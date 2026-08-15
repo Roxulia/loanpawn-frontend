@@ -3,6 +3,7 @@ import type { TenantRoleOption, TenantUserCreateResponse } from '../../../dataob
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { apiClient } from '../../../services/http/apiClient'
 import type { PermissionCode } from '../../auth'
+import type { FinancialAccountSummary } from '../../financialAccounts/types'
 
 export type StaffPayload = {
   address?: string | null
@@ -19,6 +20,7 @@ export type StaffPayload = {
 }
 
 export type StaffPermissionPayload = Partial<Record<PermissionCode, boolean>>
+export type StaffFinancialAccountAssignmentResponse = { financial_accounts: FinancialAccountSummary[] }
 
 export const staffService = {
   listUsers() {
@@ -51,6 +53,12 @@ export const staffService = {
 
   updatePermissions(userCode: string, payload: StaffPermissionPayload) {
     return apiClient.put<TenantUser>(`/tenant/users/${encodeURIComponent(userCode)}/permissions`, payload)
+  },
+
+  updateFinancialAccountAssignments(userCode: string, financialAccountIds: number[]) {
+    return apiClient.put<StaffFinancialAccountAssignmentResponse>(`/tenant/users/${encodeURIComponent(userCode)}/financial-account-assignments`, {
+      financial_account_ids: financialAccountIds,
+    })
   },
 
   resetPasswordToDefault(userCode: string, payload: { logoutFromAll?: boolean } = {}) {

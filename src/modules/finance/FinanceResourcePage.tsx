@@ -43,6 +43,7 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
   validate: (form: TForm) => FinanceFormErrors<TForm>
   createPermission?: PermissionCode
   createPath?: string
+  editPath?: (item: TItem) => string
   hideUpdateAction?: boolean
   onDelete?: (item: TItem) => Promise<unknown>
   renderItemActions?: (item: TItem, helpers: { removeItem: (item: TItem) => void; reload: () => Promise<void>; updateItem: (item: TItem) => void }) => ReactNode
@@ -140,6 +141,11 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   }
 
   function openEditForm(item: TItem) {
+    if (config.editPath) {
+      navigate(config.editPath(item))
+      return
+    }
+
     setEditingItem(item)
     setForm(config.itemToForm(item))
     setFormErrors({})

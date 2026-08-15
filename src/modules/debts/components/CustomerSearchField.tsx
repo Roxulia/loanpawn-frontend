@@ -56,8 +56,8 @@ export function CustomerSearchField({ hasError = false, id, onChange, value }: C
     <SearchableSelect
       emptyMessage="No customers found."
       error={error}
-      getOptionDescription={(customer) => [customer.code, customer.phone].filter(Boolean).join(' / ')}
-      getOptionLabel={formatCustomerOption}
+      getOptionDescription={(customer) => customer.phone ?? ''}
+      getOptionLabel={(customer) => customer.name}
       getOptionValue={(customer) => customer.code}
       hasError={hasError}
       id={id}
@@ -70,8 +70,4 @@ export function CustomerSearchField({ hasError = false, id, onChange, value }: C
       value={value}
     />
   )
-}
-
-function formatCustomerOption(customer: TenantCustomer) {
-  return [customer.name, customer.code, customer.phone].filter(Boolean).join(' / ')
 }

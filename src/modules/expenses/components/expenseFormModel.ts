@@ -3,6 +3,7 @@ import { optionalInteger, positiveAmount, required } from '../../finance/finance
 export type ExpenseFormState = {
   account_id: string
   amount: string
+  amount_unit: import('../../finance/financialUnits').FinancialUnitCode
   description: string
   expense_type_id: string
   has_existing_image: boolean
@@ -15,6 +16,7 @@ export type ExpenseFormErrors = Partial<Record<keyof ExpenseFormState, string>>
 export const emptyExpenseForm: ExpenseFormState = {
   account_id: '',
   amount: '',
+  amount_unit: 'UNIT',
   description: '',
   expense_type_id: '',
   has_existing_image: false,
@@ -25,6 +27,7 @@ export const emptyExpenseForm: ExpenseFormState = {
 export function expenseFormToPayload(form: ExpenseFormState) {
   const payload = expenseMetadataToFormData(form)
   payload.set('amount', String(Number(form.amount)))
+  payload.set('amount_unit', form.amount_unit)
 
   return payload
 }

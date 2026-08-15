@@ -6,7 +6,7 @@ import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
 import { Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { usePermissions } from '../../auth'
 import { financialAccountService } from '../financialAccountService'
-import type { FinancialAccount, FinancialAccountTransaction, FinancialAccountTransactionPage, FinancialAccountTransactionType } from '../types'
+import type { AssignedFinancialAccountUser, FinancialAccount, FinancialAccountDetail, FinancialAccountTransaction, FinancialAccountTransactionPage, FinancialAccountTransactionType } from '../types'
 
 const transactionTypes: FinancialAccountTransactionType[] = ['OPENING_BALANCE', 'PAWN_LOAN_CREATION', 'PAWN_INTEREST_PAYMENT', 'PAWN_REDEMPTION', 'DEBT_CREATION', 'DEBT_PAYMENT', 'BUSINESS_LOAN_RECEIPT', 'BUSINESS_LOAN_PAYMENT', 'EXPENSE_PAYMENT', 'CAPITAL_CONTRIBUTION', 'CAPITAL_WITHDRAWAL', 'ACCOUNT_TRANSFER', 'TRANSFER_FEE', 'ADJUSTMENT', 'REVERSAL']
 const emptyPage: FinancialAccountTransactionPage = { items: [], current_page: 1, last_page: 1, per_page: 15, total: 0 }
@@ -15,7 +15,7 @@ const emptyFilters: Filters = { search: '', direction: '', transactionType: '', 
 
 export function FinancialAccountDetailPage() {
   const navigate = useNavigate(); const { accountCode: rawCode } = useParams(); const accountCode = rawCode?.trim() ?? ''; const { hasPermission } = usePermissions()
-  const [account, setAccount] = useState<FinancialAccount | null>(null); const [page, setPage] = useState(emptyPage); const [pageNumber, setPageNumber] = useState(1)
+  const [account, setAccount] = useState<FinancialAccountDetail | null>(null); const [page, setPage] = useState(emptyPage); const [pageNumber, setPageNumber] = useState(1)
   const [filters, setFilters] = useState(emptyFilters); const [debouncedSearch, setDebouncedSearch] = useState(''); const [loadingAccount, setLoadingAccount] = useState(true); const [loadingHistory, setLoadingHistory] = useState(true); const [error, setError] = useState<string | null>(null)
 
   useEffect(() => { const timer = window.setTimeout(() => { setDebouncedSearch(filters.search.trim()); setPageNumber(1) }, 300); return () => window.clearTimeout(timer) }, [filters.search])
@@ -30,12 +30,19 @@ export function FinancialAccountDetailPage() {
     <SectionHeader title="Account Detail" subtitle="Review account information and immutable transaction history." action={<div className="financial-account-detail-actions"><Button onClick={() => navigate(routePaths.financialAccounts)} variant="ghost">Back</Button>{account && hasPermission('update_financial_account') && <Button onClick={() => navigate(routePaths.financialAccountEdit(account.account_code))} variant="primary">Edit Account</Button>}</div>} />
     {error && <Alert message={error} onDismiss={() => setError(null)} title="Account history failed" tone="danger" />}
     {loadingAccount ? <LoadingState rows={3} /> : account ? <AccountSummary account={account} /> : !error && <EmptyState title="Account not found" description="This financial account is unavailable." />}
+    {account && hasPermission('manage_financial_account_assignments') && <AssignedUsers users={account.assigned_users} />}
     {account && <Card title="Transaction History" description={`${page.total} ledger ${page.total === 1 ? 'entry' : 'entries'}`}>
       <HistoryFilters filters={filters} onChange={updateFilter} onClear={() => { setFilters(emptyFilters); setDebouncedSearch(''); setPageNumber(1) }} />
       {loadingHistory ? <LoadingState rows={5} /> : page.items.length === 0 ? <EmptyState title={hasFilters(filters) ? 'No matching transactions' : 'No transactions'} description={hasFilters(filters) ? 'Clear or change the filters to see more results.' : 'Transactions posted to this account will appear here.'} /> : <><TransactionDesktopTable account={account} items={page.items} /><TransactionMobileCards account={account} items={page.items} /></>}
       {!loadingHistory && page.total > 0 && <div className="financial-account-history-pagination"><span>Page {page.current_page} of {page.last_page} · {page.total} records</span><div><Button disabled={page.current_page <= 1} onClick={() => setPageNumber((value) => Math.max(1, value - 1))}>Previous</Button><Button disabled={page.current_page >= page.last_page} onClick={() => setPageNumber((value) => Math.min(page.last_page, value + 1))}>Next</Button></div></div>}
     </Card>}
   </section>
+}
+
+function AssignedUsers({ users }: { users: AssignedFinancialAccountUser[] }) {
+  return <Card title="Assigned Staff" description={`${users.length} staff member${users.length === 1 ? '' : 's'} can use this account.`}>
+    {users.length === 0 ? <EmptyState title="No assigned staff" description="Assign this account from a staff edit page." /> : <><div className="financial-account-users--desktop"><table><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead><tbody>{users.map((user) => <tr key={user.id}><td><strong>{user.name}</strong><small>{user.code}</small></td><td>{user.role_name ?? '—'}</td><td><Badge tone={user.status === 'active' ? 'success' : 'warning'}>{user.status}</Badge></td></tr>)}</tbody></table></div><div className="financial-account-users--mobile">{users.map((user) => <article className="financial-account-user-card" key={user.id}><div><strong>{user.name}</strong><span>{user.code} · {user.role_name ?? 'No role'}</span></div><Badge tone={user.status === 'active' ? 'success' : 'warning'}>{user.status}</Badge></article>)}</div></>}
+  </Card>
 }
 
 function AccountSummary({ account }: { account: FinancialAccount }) { return <Card title={account.account_name} description={account.account_code} action={<div className="row-actions">{account.is_default && <Badge tone="info">Default</Badge>}<Badge tone={account.is_active ? 'success' : 'warning'}>{account.is_active ? 'Active' : 'Inactive'}</Badge></div>}><div className="financial-account-detail-summary"><div className="financial-account-detail-balance"><span>Current balance</span><strong>{money(account.balance, account)}</strong></div><KeyValueList items={[{ key: 'Account number', value: account.account_number ?? '—' }, { key: 'Account type', value: account.account_type.name }, { key: 'Currency', value: `${account.currency.code} · ${account.currency.name}` }, { key: 'Negative balance', value: account.allow_negative_balance ? 'Allowed' : 'Not allowed' }]} /></div></Card> }

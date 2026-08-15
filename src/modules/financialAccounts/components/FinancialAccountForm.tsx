@@ -1,12 +1,13 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Button, Input, Select } from '../../../components/atoms'
-import { FormField, FormGroup } from '../../../components/molecules'
+import { FinancialAmountInput, FormField, FormGroup } from '../../../components/molecules'
 import { FormPanel } from '../../../components/organisms'
 import type { Currency } from '../../currency/types'
 import type { DefaultTypeOption } from '../../settings/services/settingsService'
+import type { FinancialUnitCode } from '../../finance/financialUnits'
 
 export type FinancialAccountFormState = {
-  account_type: string; currency_type: string; account_name: string; balance: string
+  account_type: string; currency_type: string; account_name: string; balance: string; balance_unit: FinancialUnitCode
   allow_negative_balance: boolean; account_number: string; is_active: boolean; is_default: boolean
 }
 
@@ -30,7 +31,7 @@ export function FinancialAccountForm({ value, accountTypes, currencies, editing 
       <FormField id="account-number" label="Account number" helperText="Optional"><Input id="account-number" maxLength={50} value={value.account_number} onChange={(event) => onChange('account_number', event.target.value)} /></FormField>
       {!editing && <FormField id="account-type" label="Account type"><Select id="account-type" required value={value.account_type} onChange={(event) => onChange('account_type', event.target.value)}><option value="">Select account type</option>{accountTypes.map((item) => <option key={item.id} value={item.code ?? ''}>{item.name}</option>)}</Select></FormField>}
       {!editing && <FormField id="currency-type" label="Currency"><Select id="currency-type" required value={value.currency_type} onChange={(event) => onChange('currency_type', event.target.value)}><option value="">Select currency</option>{currencies.filter((item) => item.is_active).map((item) => <option key={item.id} value={item.code}>{item.code} — {item.name}</option>)}</Select></FormField>}
-      {!editing && <FormField id="opening-balance" label="Opening balance" helperText="Optional; defaults to zero"><Input id="opening-balance" min="0" step="0.01" type="number" value={value.balance} onChange={(event) => onChange('balance', event.target.value)} /></FormField>}
+      {!editing && <FormField id="opening-balance" label="Opening balance" helperText="Optional; defaults to zero"><FinancialAmountInput id="opening-balance" min="0" step="0.01" value={{ amount: value.balance, unit: value.balance_unit }} onChange={(next) => { onChange('balance', next.amount); onChange('balance_unit', next.unit) }} /></FormField>}
     </FormGroup>
     <FormGroup columns={1}>
       {!editing && <label><input checked={value.allow_negative_balance} type="checkbox" onChange={(event) => onChange('allow_negative_balance', event.target.checked)} /> Allow negative balance</label>}

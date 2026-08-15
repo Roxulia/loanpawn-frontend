@@ -9,16 +9,23 @@ import type { AccountingDay, AccountingOverview, AccountingTransaction } from '.
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { usePermissions } from '../../auth'
 import {
-  formatMoney,
+  formatCurrencyAmount,
   getStringField,
   transactionTypeLabel,
 } from '../../finance/financeFormat'
+import { useTenantCurrencies } from '../../finance/useTenantCurrencies'
 
 const perPage = 10
 const today = new Date().toISOString().slice(0, 10)
 const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
+const ledgerHistoryStartDate = (() => {
+  const date = new Date()
+  date.setMonth(date.getMonth() - 3)
+  return date.toISOString().slice(0, 10)
+})()
 
 export function AccountingPage() {
+  const { defaultCurrencySymbol, effectiveReportingCurrencySymbol, reportingCurrencyRecalculation } = useTenantCurrencies()
   const { hasPermission } = usePermissions()
   const canList = hasPermission('list_accounting')
   const canCloseAccountingDay = hasPermission('close_accounting_day')
@@ -152,6 +159,13 @@ export function AccountingPage() {
 
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Accounting action failed" tone="danger" />}
       {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Accounting day updated" tone="success" />}
+      {reportingCurrencyRecalculation && (
+        <Alert
+          message={`Ledger totals remain in ${effectiveReportingCurrencySymbol || 'the previous reporting currency'} while recalculation is ${reportingCurrencyRecalculation.status.replaceAll('_', ' ')}.`}
+          title="Reporting currency update pending"
+          tone="warning"
+        />
+      )}
 
       <AccountingDayStatusCard accountingDay={accountingDay} canClose={canCloseAccountingDay} className="accounting-day-status-card--desktop" onClose={() => setIsCloseDialogOpen(true)} />
       <AccountingDayStatusCard accountingDay={accountingDay} canClose={canCloseAccountingDay} className="accounting-day-status-card--mobile" onClose={() => setIsCloseDialogOpen(true)} />
@@ -162,21 +176,21 @@ export function AccountingPage() {
           label="System Vault"
           meta="Total Liquid Capital"
           trend="Live ledger balance"
-          value={formatMoney(getOverviewNumber(overview, 'liquidCapital', 'liquid_capital'))}
+          value={formatCurrencyAmount(getOverviewNumber(overview, 'liquidCapital', 'liquid_capital'), effectiveReportingCurrencySymbol)}
           variant="primary"
         />
         <AccountingMetricCard
           label="Incoming Flows"
           meta={`${formatPercent(getOverviewNumber(overview, 'incomingProgress', 'incoming_progress'))} of monthly flow`}
           progress={getOverviewNumber(overview, 'incomingProgress', 'incoming_progress')}
-          value={formatMoney(getOverviewNumber(overview, 'monthIncoming', 'month_incoming'))}
+          value={formatCurrencyAmount(getOverviewNumber(overview, 'monthIncoming', 'month_incoming'), effectiveReportingCurrencySymbol)}
           variant="incoming"
         />
         <AccountingMetricCard
           label="Operational Outgo"
           meta={`${formatPercent(getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress'))} of monthly movement`}
           progress={getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress')}
-          value={formatMoney(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'))}
+          value={formatCurrencyAmount(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'), effectiveReportingCurrencySymbol)}
           variant="outgoing"
         />
       </section>
@@ -242,7 +256,7 @@ export function AccountingPage() {
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <TransactionRow item={transaction} key={transaction.id} />
+                    <TransactionRow currencySymbol={defaultCurrencySymbol} item={transaction} key={transaction.id} />
                   ))}
                 </tbody>
               </table>
@@ -279,7 +293,7 @@ export function AccountingPage() {
       >
         <div className="accounting-serene-filter-modal">
           <FormField id="ledger-start-date" label="From date">
-            <Input id="ledger-start-date" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
+            <Input id="ledger-start-date" min={ledgerHistoryStartDate} onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
           </FormField>
           <FormField id="ledger-end-date" label="To date">
             <Input id="ledger-end-date" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
@@ -352,7 +366,7 @@ function AccountingMetricCard({
   )
 }
 
-function TransactionRow({ item }: { item: AccountingTransaction }) {
+function TransactionRow({ currencySymbol, item }: { currencySymbol: string; item: AccountingTransaction }) {
   const transactionType = getStringField(item, 'transaction_type', 'transactionType') || 'incoming'
   const isIncoming = transactionType === 'incoming'
   const referenceLabel = getStringField(item, 'reference_label', 'referenceLabel')
@@ -379,7 +393,7 @@ function TransactionRow({ item }: { item: AccountingTransaction }) {
       </td>
       <td data-label="Amount">
         <strong className={`accounting-serene-amount accounting-serene-amount--${isIncoming ? 'incoming' : 'outgoing'}`}>
-          {isIncoming ? '' : '-'}{formatMoney(item.amount)}
+          {isIncoming ? '' : '-'}{formatCurrencyAmount(item.amount, currencySymbol)}
         </strong>
       </td>
       <td data-label="Status">

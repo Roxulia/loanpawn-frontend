@@ -39,7 +39,31 @@ export type TenantDetail = {
     slip_header_layout?: unknown[] | null
     slip_footer_layout?: unknown[] | null
   } | null
-  tenant_setting?: unknown
+  tenant_setting?: {
+    items?: Array<{
+      updateKey: number
+      key: string
+      value: string | null
+      category: string | null
+    }>
+    default_currency_id?: number | null
+    reporting_currency_id?: number | null
+    effective_reporting_currency_id?: number | null
+    default_currency_symbol?: string | null
+    reporting_currency_symbol?: string | null
+    effective_reporting_currency_symbol?: string | null
+    reporting_currency_recalculation?: {
+      id: number
+      status: 'queued' | 'processing' | 'waiting_for_rates' | 'failed'
+      window_start: string
+      window_end: string
+      missing_rates: Array<{
+        date: string
+        from_currency_id: number
+        to_currency_id: number
+      }>
+    } | null
+  } | null
   tenant_category?: {
     id: number
     code: string

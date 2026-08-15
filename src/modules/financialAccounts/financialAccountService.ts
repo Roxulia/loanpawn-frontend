@@ -1,11 +1,11 @@
 import { apiClient } from '../../services/http/apiClient'
 import type { CurrencyPage } from '../currency/types'
 import type { DefaultTypeListPage } from '../settings/services/settingsService'
-import type { FinancialAccount, FinancialAccountCreatePayload, FinancialAccountPage, FinancialAccountTransactionFilters, FinancialAccountTransactionPage, FinancialAccountTransfer, FinancialAccountTransferPage, FinancialAccountTransferPayload, FinancialAccountUpdatePayload } from './types'
+import type { FinancialAccount, FinancialAccountCreatePayload, FinancialAccountDetail, FinancialAccountPage, FinancialAccountTransactionFilters, FinancialAccountTransactionPage, FinancialAccountTransfer, FinancialAccountTransferPage, FinancialAccountTransferPayload, FinancialAccountUpdatePayload } from './types'
 
 export const financialAccountService = {
-  list: (params: { page?: number; perPage?: number; search?: string } = {}) => apiClient.get<FinancialAccountPage>('/tenant/financial-accounts', { params: { page: params.page, per_page: params.perPage ?? 15, search: params.search } }),
-  get: (code: string) => apiClient.get<FinancialAccount>(`/tenant/financial-accounts/${encodeURIComponent(code)}`),
+  list: (params: { page?: number; perPage?: number; search?: string; assignedOnly?: boolean } = {}) => apiClient.get<FinancialAccountPage>('/tenant/financial-accounts', { params: { page: params.page, per_page: params.perPage ?? 15, search: params.search, assigned_only: params.assignedOnly ? 1 : undefined } }),
+  get: (code: string) => apiClient.get<FinancialAccountDetail>(`/tenant/financial-accounts/${encodeURIComponent(code)}`),
   transactions: (code: string, filters: FinancialAccountTransactionFilters = {}) => apiClient.get<FinancialAccountTransactionPage>(`/tenant/financial-accounts/${encodeURIComponent(code)}/transactions`, { params: {
     page: filters.page,
     per_page: filters.perPage ?? 15,

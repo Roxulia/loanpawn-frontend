@@ -61,6 +61,7 @@ export const permissionGroups: PermissionGroup[] = [
       { code: 'update_financial_account_type', label: 'Edit financial account types', description: 'Update tenant-owned financial account types.' },
       { code: 'delete_financial_account_type', label: 'Delete financial account types', description: 'Deactivate tenant-owned financial account types.' },
       { code: 'transfer_financial_account', label: 'Transfer account balances', description: 'Move funds between financial accounts.' },
+      { code: 'manage_financial_account_assignments', label: 'Assign financial accounts', description: 'Choose which accounts other staff members may use.' },
       { code: 'list_material_type', label: 'View material types', description: 'See built-in and tenant material types.' },
       { code: 'create_material_type', label: 'Create material types', description: 'Add tenant-owned material types.' },
       { code: 'update_material_type', label: 'Edit material types', description: 'Update tenant-owned material types.' },

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Select } from '../../../components/atoms'
+import { SearchableSelect } from '../../../components/molecules'
 import { financialAccountService } from '../financialAccountService'
 import type { FinancialAccount } from '../types'
 import { useTenantSession } from '../../../contexts/useTenantSession'
 import { usePermissions } from '../../auth'
+import { useTenantCurrencies } from '../../finance/useTenantCurrencies'
 
 type FinancialAccountSelectProps = {
   hasError?: boolean
@@ -15,6 +16,7 @@ type FinancialAccountSelectProps = {
 
 export function FinancialAccountSelect({ hasError = false, id, matchAccountId, onChange, value }: FinancialAccountSelectProps) {
   const { tenantResolution } = useTenantSession()
+  const { defaultCurrencyId } = useTenantCurrencies()
   const { hasPermission } = usePermissions()
   const feature = tenantResolution.status === 'resolved' ? tenantResolution.tenant.tenant_features?.multi_account_management : null
   const featureEnabled = Boolean(feature?.is_active && feature.is_enabled)
@@ -31,7 +33,7 @@ export function FinancialAccountSelect({ hasError = false, id, matchAccountId, o
     }
     let isCurrent = true
 
-    void financialAccountService.list({ perPage: 100 }).then((page) => {
+    void financialAccountService.list({ perPage: 100, assignedOnly: true }).then((page) => {
       if (!isCurrent) return
       setAccounts(page.items.filter((account) => account.is_active && !account.is_deleted))
       setLoadError(false)
@@ -49,11 +51,11 @@ export function FinancialAccountSelect({ hasError = false, id, matchAccountId, o
     : undefined
   const options = useMemo(
     () => matchAccountId == null
-      ? accounts
+      ? accounts.filter((account) => defaultCurrencyId === null || account.currency.id === defaultCurrencyId)
       : matchingCurrencyId === undefined
         ? []
         : accounts.filter((account) => account.currency.id === matchingCurrencyId),
-    [accounts, matchAccountId, matchingCurrencyId],
+    [accounts, defaultCurrencyId, matchAccountId, matchingCurrencyId],
   )
 
   useEffect(() => {
@@ -73,13 +75,20 @@ export function FinancialAccountSelect({ hasError = false, id, matchAccountId, o
   }
 
   return (
-    <Select disabled={isLoading || loadError || options.length === 0} hasError={hasError || loadError} id={id} onChange={(event) => onChange(event.target.value)} value={value}>
-      <option value="">{isLoading ? 'Loading accounts...' : loadError ? 'Unable to load accounts' : 'Select account'}</option>
-      {options.map((account) => (
-        <option key={account.id} value={account.id}>
-          {account.account_name} · {account.account_code} · {account.currency.code} {Number(account.balance).toLocaleString()}
-        </option>
-      ))}
-    </Select>
+    <SearchableSelect
+      emptyMessage="No financial accounts found."
+      error={loadError ? 'Unable to load accounts.' : null}
+      getOptionDescription={(account) => `${account.currency.code} · ${Number(account.balance).toLocaleString()}`}
+      getOptionLabel={(account) => account.account_name}
+      getOptionValue={(account) => String(account.id)}
+      hasError={hasError || loadError}
+      id={id}
+      isLoading={isLoading}
+      loadingMessage="Loading accounts..."
+      onChange={onChange}
+      options={options}
+      placeholder="Search financial accounts"
+      value={value}
+    />
   )
 }

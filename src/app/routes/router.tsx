@@ -17,7 +17,7 @@ import { CapitalsPage } from '../../modules/capitals'
 import { CollateralDetailPage, CollateralListPage } from '../../modules/collateral'
 import { CustomerCreatePage, CustomerDetailPage, CustomerEditPage, CustomerListPage } from '../../modules/customers'
 import { DebtCreatePage, DebtsPage } from '../../modules/debts'
-import { ExpenseCreatePage, ExpensesPage } from '../../modules/expenses'
+import { ExpenseCreatePage, ExpenseEditPage, ExpensesPage } from '../../modules/expenses'
 import { InterestPaymentsPage } from '../../modules/interest'
 import { moduleRegistry } from '../../modules/moduleRegistry'
 import { RedemptionsPage } from '../../modules/redemptions'
@@ -80,6 +80,7 @@ export const router = createBrowserRouter([
       { path: routePaths.capitals, element: featureGate('capital_management', 'Capital Management', <PermissionRoute any={['list_capital', 'create_capital', 'update_capital', 'delete_capital']}><CapitalsPage /></PermissionRoute>) },
       { path: routePaths.expenses, element: featureGate('expense_management', 'Expenses', <PermissionRoute any={['list_expense', 'create_expense', 'update_expense', 'delete_expense']}><ExpensesPage /></PermissionRoute>) },
       { path: routePaths.expenseCreate, element: featureGate('expense_management', 'Expenses', <PermissionRoute permission="create_expense"><ExpenseCreatePage /></PermissionRoute>) },
+      { path: '/expenses/:expenseCode/edit', element: featureGate('expense_management', 'Expenses', <PermissionRoute permission="update_expense"><ExpenseEditPage /></PermissionRoute>) },
       { path: routePaths.debts, element: featureGate('debt_management', 'Debts', <PermissionRoute any={['list_debt', 'create_debt', 'update_debt', 'delete_debt']}><DebtsPage /></PermissionRoute>) },
       { path: routePaths.debtCreate, element: featureGate('debt_management', 'Debts', <PermissionRoute permission="create_debt"><DebtCreatePage /></PermissionRoute>) },
       { path: routePaths.slips, element: featureGate('loan_contract_management', 'Loan Slips', <PermissionRoute any={['list_loan_contract', 'create_loan_contract', 'delete_loan_contract']}><SlipsPage /></PermissionRoute>) },

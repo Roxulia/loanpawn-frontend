@@ -11,6 +11,10 @@ export function formatMoney(value: string | number | null | undefined) {
   })
 }
 
+export function formatCurrencyAmount(value: string | number | null | undefined, symbol: string) {
+  return formatFinancialAmount(value, symbol)
+}
+
 export function formatDate(value: string | null | undefined) {
   return formatLocalDate(value)
 }
@@ -77,3 +81,4 @@ export function nullableNumber(value: string) {
   return value.trim() ? Number(value) : null
 }
 import { formatLocalDate } from '../../utils/localDateTime'
+import { formatFinancialAmount } from './financialUnits'

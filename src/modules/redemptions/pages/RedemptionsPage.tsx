@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Badge, Button, Input, Textarea } from '../../../components/atoms'
 import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
 import { CloseIcon, FilterIcon, SearchIcon } from '../../../components/icons/icon'
-import { ActionBar, Card, FilterBar, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
+import { ActionBar, Card, FilterBar, FinancialAmountInput, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney, getSlipCustomerName } from '../../slips/slipFormat'
 import { redemptionService, type RedemptionCalculationResult, type RedemptionDebt, type RedemptionDetail, type RedemptionInterestPayment } from '../services/redemptionService'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
+import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
 
 const perPage = 10
 
@@ -38,6 +39,7 @@ export function RedemptionsPage() {
   const [activeTab, setActiveTab] = useState<RedemptionTab>('workflow')
   const [slipNo, setSlipNo] = useState('')
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
   const [accountId, setAccountId] = useState('')
   const [redemptionDate, setRedemptionDate] = useState(initialRedemptionDate)
   const [notes, setNotes] = useState('')
@@ -62,7 +64,8 @@ export function RedemptionsPage() {
   const redemptionIdempotencyKeyRef = useRef<string | null>(null)
 
   const totalToPay = calculation?.total_amount_to_pay ?? 0
-  const changeAmount = Math.max(Number(paymentAmount || 0) - totalToPay, 0)
+  const receivedAmount = financialAmountToBase({ amount: paymentAmount, unit: paymentAmountUnit })
+  const changeAmount = Math.max(receivedAmount - totalToPay, 0)
 
   const loadRecords = useCallback(async (page: number) => {
     setIsLoadingRecords(true)
@@ -140,7 +143,7 @@ export function RedemptionsPage() {
       return
     }
 
-    if (Number(paymentAmount) < totalToPay) {
+    if (receivedAmount < totalToPay) {
       setError('Payment amount must be at least the total amount to pay.')
       return
     }
@@ -157,6 +160,7 @@ export function RedemptionsPage() {
         slip_no: calculation.slip.slip_no,
         calculated_total: totalToPay,
         payment_amount: Number(paymentAmount),
+        payment_amount_unit: paymentAmountUnit,
         interests,
         debts,
         redemption_at: redemptionDate || undefined,
@@ -273,7 +277,7 @@ export function RedemptionsPage() {
                 <form className="workflow-stack redemption-payment-form" onSubmit={(event) => void handleRedeem(event)}>
                   <div className="form-grid-compact redemption-payment-form__fields">
                     <FormField id="redemption-payment" label="Payment Amount">
-                      <Input id="redemption-payment" min="0" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
+                      <FinancialAmountInput id="redemption-payment" min="0" step="0.01" value={{ amount: paymentAmount, unit: paymentAmountUnit }} onChange={(next) => { setPaymentAmount(next.amount); setPaymentAmountUnit(next.unit) }} />
                     </FormField>
                     <FormField id="redemption-date" label="Redemption Date">
                       <Input id="redemption-date" type="date" value={redemptionDate} onChange={(event) => setRedemptionDate(event.target.value)} />
@@ -293,7 +297,7 @@ export function RedemptionsPage() {
                   <div className="ops-amount-panel redemption-payment-info">
                     <KeyValueList items={[
                       { key: 'Total Amount To Pay', value: formatMoney(totalToPay) },
-                      { key: 'Received', value: formatMoney(paymentAmount) },
+                      { key: 'Received', value: formatMoney(receivedAmount) },
                       { key: 'Change', value: formatMoney(changeAmount) },
                     ]} />
                   </div>

@@ -4764,6 +4764,33 @@
   gap: 0.75rem;
 }
 
+.financial-amount-input {
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(7.5rem, auto);
+}
+
+.financial-amount-input > .ui-input {
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.financial-amount-input > .ui-select-combobox .ui-select {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  margin-left: -1px;
+}
+
+.financial-amount-input__error {
+  color: var(--color-danger, #b42318);
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.financial-amount-input--mobile {
+  grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 38%);
+}
+
 .financial-transfer-list article {
   align-items: center;
   border: 1px solid var(--color-border);

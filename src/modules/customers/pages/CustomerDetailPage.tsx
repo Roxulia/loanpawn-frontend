@@ -7,8 +7,10 @@ import { ActiveSlipIcon, ChevronRightIcon, CirclePlusIcon, ContactPageIcon, Edit
 import { formatDate, formatMoney } from '../../slips/slipFormat'
 import { formatCustomerDeletedState, formatValue, getTrustScore, getTrustTone } from '../customerFormat'
 import { customerService, type TenantCustomer, type TenantCustomerActiveSlip, type TenantCustomerLoanMetrics, type TenantCustomerUnpaidDebt } from '../services/customerService'
+import { useTenantCurrencies } from '../../finance/useTenantCurrencies'
 
 export function CustomerDetailPage() {
+  const { defaultCurrencySymbol } = useTenantCurrencies()
   const navigate = useNavigate()
   const { customerId } = useParams()
   const customerCode = customerId?.trim() ?? ''
@@ -82,7 +84,7 @@ export function CustomerDetailPage() {
               <div className="customer-detail-summary__metrics">
                 <SummaryMetric label="Trust Score" meta={getTrustLabel(displayTrustScore)} value={`${displayTrustScore}`} />
                 <SummaryMetric label="Total Loans" meta={`${getMetric(metrics, 'activeSlips', 'active_slips')} active slips`} value={formatNumber(getMetric(metrics, 'totalSlips', 'total_slips'))} />
-                <SummaryMetric label="Active Loan Amount" meta="MMK outstanding" value={formatMoney(getMetric(metrics, 'activeLoanAmount', 'active_loan_amount'))} />
+                <SummaryMetric label="Active Loan Amount" meta={`${defaultCurrencySymbol || 'Default currency'} outstanding`} value={formatMoney(getMetric(metrics, 'activeLoanAmount', 'active_loan_amount'))} />
               </div>
             </div>
             <div className="customer-detail-summary__actions">

@@ -7,6 +7,7 @@ import { ChevronRightIcon, PrinterIcon, TrashIcon } from '../../../components/ic
 import {
   ActionBar,
   Card,
+  FinancialAmountInput,
   emptyNrcValue,
   FormField,
   FormGroup,
@@ -28,6 +29,7 @@ import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../
 import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
 import { ExpenseImageInput } from '../../expenses/components/ExpenseImageInput'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
+import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
 
 const perPage = 10
 const paperTypeOptions = [
@@ -44,6 +46,8 @@ type ItemForm = SlipCollateralPayload & {
   gemstone_type?: string
   gemstone_weight?: string
   material_price_per_kyat?: number
+  estimated_value_unit?: FinancialUnitCode
+  material_price_per_kyat_unit?: FinancialUnitCode
 }
 
 const emptyCustomer = {
@@ -58,6 +62,7 @@ const emptyCustomer = {
 const emptyLoan = {
   account_id: '',
   loan_amount: '',
+  loan_amount_unit: 'UNIT' as FinancialUnitCode,
   interest_rate: '',
   interest_type_id: '',
   expiry_quota: '1',
@@ -254,6 +259,7 @@ export function SlipsPage() {
         },
         collateral_items: items.map(toPayloadItem),
         loan_amount: Number(loan.loan_amount),
+        loan_amount_unit: loan.loan_amount_unit,
         interest_rate: Number(loan.interest_rate),
         interest_type_id: Number(loan.interest_type_id),
         expiry_quota: Number(loan.expiry_quota),
@@ -472,7 +478,7 @@ export function SlipsPage() {
                   {item.type === 'Normal' && (
                     <FormGroup className="slip-form-collateral-summary-grid" columns={3}>
                       <FormField id={`${item.key}-estimated`} label="Estimated Value">
-                        <Input id={`${item.key}-estimated`} min="0" type="number" value={item.estimated_value ?? ''} onChange={(event) => updateItem(item.key, { estimated_value: Number(event.target.value) })} />
+                        <FinancialAmountInput id={`${item.key}-estimated`} min="0" value={{ amount: String(item.estimated_value ?? ''), unit: item.estimated_value_unit ?? 'UNIT' }} onChange={(next) => updateItem(item.key, { estimated_value: Number(next.amount), estimated_value_unit: next.unit })} />
                       </FormField>
                       <FormField id={`${item.key}-quantity`} label="Quantity">
                         <Input id={`${item.key}-quantity`} min="1" type="number" value={item.quantity ?? 1} onChange={(event) => updateItem(item.key, { quantity: Number(event.target.value) })} />
@@ -490,7 +496,7 @@ export function SlipsPage() {
                           </Select>
                         </FormField>
                         <FormField id={`${item.key}-material-price`} label="Material Price per Kyat">
-                          <Input id={`${item.key}-material-price`} min="0" type="number" value={item.material_price_per_kyat ?? ''} onChange={(event) => updateItem(item.key, { material_price_per_kyat: Number(event.target.value) })} />
+                          <FinancialAmountInput id={`${item.key}-material-price`} min="0" value={{ amount: String(item.material_price_per_kyat ?? ''), unit: item.material_price_per_kyat_unit ?? 'UNIT' }} onChange={(next) => updateItem(item.key, { material_price_per_kyat: Number(next.amount), material_price_per_kyat_unit: next.unit })} />
                         </FormField>
                       </FormGroup>
                       <FormGroup className="slip-form-jewellery-weight-grid" columns={3} title="Weight">
@@ -561,7 +567,7 @@ export function SlipsPage() {
                 <FinancialAccountSelect hasError={Boolean(formErrors.accountId)} id="loan-account" onChange={(accountId) => setLoan({ ...loan, account_id: accountId })} value={loan.account_id} />
               </FormField>
               <FormField id="loan-amount" label="Loan Amount" error={formErrors.loanAmount}>
-                <Input id="loan-amount" min="0.01" step="0.01" type="number" value={loan.loan_amount} onChange={(event) => setLoan({ ...loan, loan_amount: event.target.value })} hasError={Boolean(formErrors.loanAmount)} />
+                <FinancialAmountInput id="loan-amount" min="0.01" step="0.01" value={{ amount: loan.loan_amount, unit: loan.loan_amount_unit }} onChange={(next) => setLoan({ ...loan, loan_amount: next.amount, loan_amount_unit: next.unit })} hasError={Boolean(formErrors.loanAmount)} />
               </FormField>
               <FormField id="interest-rate" label="Interest Rate" error={formErrors.interestRate}>
                 <Input id="interest-rate" min="0.01" step="0.01" type="number" value={loan.interest_rate} onChange={(event) => setLoan({ ...loan, interest_rate: event.target.value })} hasError={Boolean(formErrors.interestRate)} />
@@ -738,10 +744,12 @@ function makeItem(type: 'Normal' | 'Jewellery'): ItemForm {
     description: '',
     brand_name: type === 'Jewellery' ? 'None' : '',
     estimated_value: 0,
+    estimated_value_unit: 'UNIT',
     item_status: 'active',
     quantity: 1,
     minimum_retail_price: 0,
     material_price_per_kyat: 0,
+    material_price_per_kyat_unit: 'UNIT',
   }
 }
 
@@ -864,8 +872,10 @@ function toPayloadItem(item: ItemForm): SlipCollateralPayload {
     description: item.description?.trim() || undefined,
     brand_name: item.type === 'Jewellery' ? 'None' : item.brand_name?.trim() || undefined,
     estimated_value: item.type === 'Jewellery' ? 0 : Number(item.estimated_value ?? 0),
+    estimated_value_unit: item.estimated_value_unit ?? 'UNIT',
     material_type_id: item.material_type_id,
     material_price_per_kyat: item.type === 'Jewellery' ? Number(item.material_price_per_kyat ?? 0) : undefined,
+    material_price_per_kyat_unit: item.type === 'Jewellery' ? item.material_price_per_kyat_unit ?? 'UNIT' : undefined,
     item_category_type_id: item.type === 'Normal' ? item.item_category_type_id : undefined,
     kyat: Number(item.kyat ?? 0),
     pal: Number(item.pal ?? 0),
@@ -874,6 +884,7 @@ function toPayloadItem(item: ItemForm): SlipCollateralPayload {
     gemstone_details: makeGemstoneDetails(item),
     quantity: Number(item.quantity ?? 1),
     minimum_retail_price: calculateMinimumRetailPrice(item),
+    minimum_retail_price_unit: 'UNIT',
     item_status: item.item_status ?? 'active',
     image_reference: item.image_reference,
   }
@@ -934,10 +945,10 @@ function makeGemstoneDetails(item: ItemForm) {
 
 function calculateMinimumRetailPrice(item: ItemForm) {
   if (item.type === 'Jewellery') {
-    return roundMoney(Number(item.material_price_per_kyat ?? 0) * calculateJewelleryWeightInKyat(item) * Number(item.quantity ?? 1))
+    return roundMoney(financialAmountToBase({ amount: String(item.material_price_per_kyat ?? 0), unit: item.material_price_per_kyat_unit ?? 'UNIT' }) * calculateJewelleryWeightInKyat(item) * Number(item.quantity ?? 1))
   }
 
-  return roundMoney(Number(item.estimated_value ?? 0) * Number(item.quantity ?? 1))
+  return roundMoney(financialAmountToBase({ amount: String(item.estimated_value ?? 0), unit: item.estimated_value_unit ?? 'UNIT' }) * Number(item.quantity ?? 1))
 }
 
 function calculateJewelleryWeightInKyat(item: ItemForm) {

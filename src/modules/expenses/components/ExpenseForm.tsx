@@ -1,12 +1,13 @@
 import type { FormEvent, ReactNode } from 'react'
-import { Button, Input, Select, Textarea } from '../../../components/atoms'
-import { ActionBar, Card, FormField, FormGroup } from '../../../components/molecules'
+import { Button, Select, Textarea } from '../../../components/atoms'
+import { ActionBar, Card, FinancialAmountInput, FormField, FormGroup } from '../../../components/molecules'
 import type { ExpenseTypeOption } from '../../../dataobjects/tenant/finance'
 import type { ExpenseFormErrors, ExpenseFormState } from './expenseFormModel'
 import { ExpenseImageInput } from './ExpenseImageInput'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 
 type ExpenseFormProps = {
+  editing?: boolean
   errors: ExpenseFormErrors
   expenseTypes: ExpenseTypeOption[]
   isLoadingExpenseTypes: boolean
@@ -19,6 +20,7 @@ type ExpenseFormProps = {
 }
 
 export function ExpenseForm({
+  editing = false,
   errors,
   expenseTypes,
   isLoadingExpenseTypes,
@@ -37,8 +39,8 @@ export function ExpenseForm({
           <FormField id="expense-create-account" label="Payment Account">
             <FinancialAccountSelect id="expense-create-account" onChange={(accountId) => onChange('account_id', accountId)} value={value.account_id} />
           </FormField>
-          <FormField error={errors.amount} id="expense-create-amount" label="Amount">
-            <Input hasError={Boolean(errors.amount)} id="expense-create-amount" min="0.01" onChange={(event) => onChange('amount', event.target.value)} step="0.01" type="number" value={value.amount} />
+          <FormField error={errors.amount} helperText={editing ? 'The posted expense amount cannot be changed.' : undefined} id="expense-create-amount" label="Amount">
+            <FinancialAmountInput disabled={editing} hasError={Boolean(errors.amount)} id="expense-create-amount" min="0.01" onChange={(next) => { onChange('amount', next.amount); onChange('amount_unit', next.unit) }} step="0.01" value={{ amount: value.amount, unit: value.amount_unit }} />
           </FormField>
           <FormField error={errors.expense_type_id} id="expense-create-type-id" label="Expense type">
             <Select disabled={isLoadingExpenseTypes} hasError={Boolean(errors.expense_type_id)} id="expense-create-type-id" onChange={(event) => onChange('expense_type_id', event.target.value)} value={value.expense_type_id}>
@@ -64,7 +66,7 @@ export function ExpenseForm({
         </FormGroup>
         <ActionBar>
           <Button onClick={onCancel} variant="secondary">Cancel</Button>
-          <Button isLoading={isSaving} type="submit" variant="primary">Add Expense</Button>
+          <Button isLoading={isSaving} type="submit" variant="primary">{editing ? 'Save Changes' : 'Add Expense'}</Button>
         </ActionBar>
       </form>
     </Card>

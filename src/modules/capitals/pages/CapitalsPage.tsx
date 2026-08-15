@@ -1,5 +1,5 @@
-import { Badge, Input, Textarea } from '../../../components/atoms'
-import { FormField, FormGroup } from '../../../components/molecules'
+import { Badge, Textarea } from '../../../components/atoms'
+import { FinancialAmountInput, FormField, FormGroup } from '../../../components/molecules'
 import type { DataTableColumn } from '../../../components/organisms'
 import type { TenantCapital } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
@@ -23,12 +23,14 @@ import { FinancialAccountSelect } from '../../financialAccounts/components/Finan
 type CapitalForm = FinanceFormState & {
   account_id: string
   amount: string
+  amount_unit: import('../../finance/financialUnits').FinancialUnitCode
   description: string
 }
 
 const initialForm: CapitalForm = {
   account_id: '',
   amount: '',
+  amount_unit: 'UNIT',
   description: '',
 }
 
@@ -75,6 +77,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
   itemToForm: (item) => ({
     account_id: String(item.account_id ?? item.accountId ?? ''),
     amount: item.amount,
+    amount_unit: 'UNIT',
     description: item.description,
   }),
   list: (params) => tenantResourceService.listCapitals(params),
@@ -86,6 +89,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
     const payload = {
       ...(form.account_id ? { account_id: Number(form.account_id) } : {}),
       amount: Number(form.amount),
+      amount_unit: form.amount_unit,
       description: form.description.trim(),
     }
 
@@ -131,14 +135,13 @@ function CapitalFormFields({
         <FinancialAccountSelect id="capital-account" onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
       </FormField>
       <FormField error={errors.amount} id="capital-amount" label="Amount">
-        <Input
+        <FinancialAmountInput
           hasError={Boolean(errors.amount)}
           id="capital-amount"
           min="0.01"
-          onChange={(event) => updateField('amount', event.target.value)}
+          onChange={(next) => { updateField('amount', next.amount); updateField('amount_unit', next.unit) }}
           step="0.01"
-          type="number"
-          value={form.amount}
+          value={{ amount: form.amount, unit: form.amount_unit }}
         />
       </FormField>
       <div className="ui-form-field">

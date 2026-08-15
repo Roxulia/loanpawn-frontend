@@ -30,6 +30,7 @@ import {
 type ExpenseForm = FinanceFormState & {
   account_id: string
   amount: string
+  amount_unit: import('../../finance/financialUnits').FinancialUnitCode
   description: string
   expense_type_id: string
   has_existing_image: boolean
@@ -40,6 +41,7 @@ type ExpenseForm = FinanceFormState & {
 const initialForm: ExpenseForm = {
   account_id: '',
   amount: '',
+  amount_unit: 'UNIT',
   description: '',
   expense_type_id: '',
   has_existing_image: false,
@@ -87,6 +89,7 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
   deletePermission: 'delete_expense',
   emptyDescription: 'No shop expenses found.',
   emptyTitle: 'No expenses',
+  editPath: (item) => routePaths.expenseEdit(item.code),
   getItemId: (item) => item.id,
   getItemTitle: (item) => item.description,
   getSearchText: (item) => [
@@ -100,6 +103,7 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
   itemToForm: (item) => ({
     account_id: String(item.account_id ?? item.accountId ?? ''),
     amount: item.amount,
+    amount_unit: 'UNIT',
     description: item.description,
     expense_type_id: String(getNumberField(item, 'expense_type_id', 'expenseTypeId') ?? ''),
     has_existing_image: Boolean(item.has_image_reference ?? item.hasImageReference),

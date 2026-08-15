@@ -9,6 +9,12 @@
 .financial-account-history-filters--mobile, .financial-account-history--mobile { display: none; }
 .financial-account-history--desktop { overflow-x: auto; }
 .financial-account-history--desktop table { border-collapse: collapse; min-width: 60rem; width: 100%; }
+.financial-account-users--desktop { overflow-x: auto; }
+.financial-account-users--desktop table { border-collapse: collapse; min-width: 32rem; width: 100%; }
+.financial-account-users--desktop th, .financial-account-users--desktop td { border-bottom: 1px solid var(--color-border); padding: .8rem; text-align: left; }
+.financial-account-users--desktop td:first-child { display: grid; gap: .2rem; }
+.financial-account-users--desktop small, .financial-account-user-card span { color: var(--color-text-secondary); }
+.financial-account-users--mobile { display: none; }
 .financial-account-history--desktop th, .financial-account-history--desktop td { border-bottom: 1px solid var(--color-border); padding: .85rem .75rem; text-align: left; vertical-align: top; }
 .financial-account-history--desktop th { color: var(--color-text-secondary); font-size: .78rem; text-transform: uppercase; }
 .financial-account-history--desktop td small { color: var(--color-text-secondary); display: block; margin-top: .2rem; max-width: 18rem; overflow-wrap: anywhere; }
@@ -27,6 +33,11 @@
   .financial-account-history-filters { align-items: stretch; display: flex; flex-direction: column; }
   .financial-account-history-filters--desktop, .financial-account-history--desktop { display: none; }
   .financial-account-history-filters--mobile, .financial-account-history--mobile { display: block; }
+  .financial-account-users--desktop { display: none; }
+  .financial-account-users--mobile { display: grid; gap: .75rem; }
+  .financial-account-user-card { align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; gap: .75rem; justify-content: space-between; padding: .9rem; }
+  .financial-account-user-card > div { display: grid; gap: .2rem; min-width: 0; }
+  .financial-account-user-card strong, .financial-account-user-card span { overflow-wrap: anywhere; }
   .financial-account-history-filters--mobile { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: .8rem; }
   .financial-account-history-filters--mobile summary { cursor: pointer; font-weight: 700; min-height: 2.75rem; padding-top: .6rem; }
   .financial-account-history-filters--mobile[open] summary { margin-bottom: .75rem; }

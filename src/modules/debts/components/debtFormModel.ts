@@ -4,6 +4,7 @@ export type DebtLinkMode = 'slip' | 'customer'
 
 export type DebtFormState = Record<string, string> & {
   amount: string
+  amount_unit: string
   created_account_id: string
   customer_code: string
   description: string
@@ -16,6 +17,7 @@ export type DebtFormErrors = Partial<Record<keyof DebtFormState, string>>
 
 export const emptyDebtForm: DebtFormState = {
   amount: '',
+  amount_unit: 'UNIT',
   created_account_id: '',
   customer_code: '',
   description: '',
@@ -30,6 +32,7 @@ export function debtFormToPayload(form: DebtFormState) {
 
   return {
     amount: Number(form.amount),
+    amount_unit: form.amount_unit,
     ...(form.created_account_id ? { created_account_id: Number(form.created_account_id) } : {}),
     description: form.description.trim(),
     slip_code: slipCode || null,

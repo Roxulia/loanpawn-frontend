@@ -119,6 +119,7 @@ export function SettingsPage() {
   const [currencyOptions, setCurrencyOptions] = useState<Currency[]>([])
   const [currencyPreferencesInitial, setCurrencyPreferencesInitial] = useState(emptyCurrencyPreferences)
   const [currencyPreferences, setCurrencyPreferences] = useState(emptyCurrencyPreferences)
+  const [currencyRecalculation, setCurrencyRecalculation] = useState<CurrencyPreferences['reporting_currency_recalculation']>(null)
   const [interestTypes, setInterestTypes] = useState<DefaultTypeOption[]>([])
   const [expenseTypes, setExpenseTypes] = useState<DefaultTypeOption[]>([])
   const [materialTypes, setMaterialTypes] = useState<DefaultTypeOption[]>([])
@@ -264,6 +265,7 @@ export function SettingsPage() {
       const nextPreferences = normalizeCurrencyPreferences(preferences)
       setCurrencyPreferencesInitial(nextPreferences)
       setCurrencyPreferences(nextPreferences)
+      setCurrencyRecalculation(preferences.reporting_currency_recalculation)
       setCurrencyOptions(currencyPage.items.filter((currency) => currency.is_active))
     }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load currency settings.'))
   }, [canViewCurrencyPreferences])
@@ -290,10 +292,15 @@ export function SettingsPage() {
 
   async function saveCurrencyPreferences() {
     await saveSection('currency-preferences', async () => {
-      const response = await settingsService.updateCurrencyPreferences(currencyPreferences)
+      const response = await settingsService.updateCurrencyPreferences({
+        default_currency_id: currencyPreferences.default_currency_id,
+        reporting_currency_id: currencyPreferences.reporting_currency_id,
+        update_key: currencyPreferences.update_key,
+      })
       const nextPreferences = normalizeCurrencyPreferences(response)
       setCurrencyPreferencesInitial(nextPreferences)
       setCurrencyPreferences(nextPreferences)
+      setCurrencyRecalculation(response.reporting_currency_recalculation)
     }, 'Currency settings saved successfully.')
   }
 
@@ -808,6 +815,13 @@ export function SettingsPage() {
         </Card>}
 
         {canViewCurrencyPreferences && <Card title="Currency Settings" description="Choose the currencies used for account defaults and financial reporting.">
+          {currencyRecalculation && <Alert
+            message={currencyRecalculation.missing_rates.length > 0
+              ? `Reporting totals remain in the previous currency. Add exact-date rates for: ${currencyRecalculation.missing_rates.map((rate) => rate.date).join(', ')}.`
+              : `Reporting currency recalculation is ${currencyRecalculation.status.replaceAll('_', ' ')}.`}
+            title="Reporting currency update pending"
+            tone="warning"
+          />}
           <FormGroup columns={2}>
             <FormField id="settings-default-currency" label="Default Currency">
               <Select id="settings-default-currency" disabled={!canUpdateCurrencyPreferences} value={String(currencyPreferences.default_currency_id || '')} onChange={(event) => setCurrencyPreferences({ ...currencyPreferences, default_currency_id: Number(event.target.value) })}>

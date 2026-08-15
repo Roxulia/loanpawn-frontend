@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { Badge, Button, Input } from '../../../components/atoms'
+import { Badge, Button } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
-import { FormField, FormGroup, KeyValueList } from '../../../components/molecules'
+import { FinancialAmountInput, FormField, FormGroup, KeyValueList } from '../../../components/molecules'
 import { Modal, ModalForm, type DataTableColumn } from '../../../components/organisms'
 import type { TenantDebt } from '../../../dataobjects/tenant/finance'
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
@@ -20,6 +20,7 @@ import {
 import { DebtFormFields } from '../components/DebtForm'
 import { debtFormToPayload, emptyDebtForm, validateDebtForm, type DebtFormErrors, type DebtFormState } from '../components/debtFormModel'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
+import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
   {
@@ -74,6 +75,7 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
   initialForm: emptyDebtForm,
   itemToForm: (item) => ({
     amount: item.amount,
+    amount_unit: 'UNIT',
     created_account_id: String(item.created_account_id ?? item.createdAccountId ?? ''),
     customer_code: getStringField(item, 'customer_code', 'customerCode'),
     description: item.description,
@@ -153,6 +155,7 @@ function formatDebtLink(item: TenantDebt) {
 function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: TenantDebt) => void }) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
   const [acceptAccountId, setAcceptAccountId] = useState('')
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [isPaying, setIsPaying] = useState(false)
@@ -166,7 +169,7 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (Number(paymentAmount) <= 0) {
+    if (financialAmountToBase({ amount: paymentAmount, unit: paymentAmountUnit }) <= 0) {
       setPaymentError('Payment amount must be greater than zero.')
       return
     }
@@ -177,6 +180,7 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
     try {
       const response = await tenantResourceService.payDebt(debt.code, {
         amount_paid: Number(paymentAmount),
+        amount_paid_unit: paymentAmountUnit,
         ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
       })
 
@@ -211,13 +215,12 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
         {paymentError && <Alert message={paymentError} onDismiss={() => setPaymentError(null)} title="Debt payment failed" tone="danger" />}
         <FormGroup columns={1}>
           <FormField id={`debt-pay-${debt.id}`} label="Payment Amount">
-            <Input
+            <FinancialAmountInput
               id={`debt-pay-${debt.id}`}
               min="0.01"
-              onChange={(event) => setPaymentAmount(event.target.value)}
+              onChange={(next) => { setPaymentAmount(next.amount); setPaymentAmountUnit(next.unit) }}
               step="0.01"
-              type="number"
-              value={paymentAmount}
+              value={{ amount: paymentAmount, unit: paymentAmountUnit }}
             />
           </FormField>
           <FormField id={`debt-pay-account-${debt.id}`} label="Accepting Account" helperText="Only accounts using the debt currency are shown.">

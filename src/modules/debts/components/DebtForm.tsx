@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode } from 'react'
 import { Button, Input, Textarea } from '../../../components/atoms'
-import { ActionBar, Card, FormField, FormGroup } from '../../../components/molecules'
+import { ActionBar, Card, FinancialAmountInput, FormField, FormGroup } from '../../../components/molecules'
 import type { DebtFormErrors, DebtFormState } from './debtFormModel'
 import { CustomerSearchField } from './CustomerSearchField'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
@@ -22,7 +22,7 @@ export function DebtFormFields({ errors, onChange, value }: DebtFormFieldsProps)
   return (
     <FormGroup columns={2}>
       <FormField error={errors.amount} id="debt-amount" label="Amount">
-        <Input hasError={Boolean(errors.amount)} id="debt-amount" min="0.01" onChange={(event) => onChange('amount', event.target.value)} step="0.01" type="number" value={value.amount} />
+        <FinancialAmountInput hasError={Boolean(errors.amount)} id="debt-amount" min="0.01" onChange={(next) => { onChange('amount', next.amount); onChange('amount_unit', next.unit) }} step="0.01" value={{ amount: value.amount, unit: value.amount_unit as import('../../finance/financialUnits').FinancialUnitCode }} />
       </FormField>
       <FormField error={errors.created_account_id} helperText="The debt is recorded in this account's currency." id="debt-created-account" label="Created Account">
         <FinancialAccountSelect hasError={Boolean(errors.created_account_id)} id="debt-created-account" onChange={(accountId) => onChange('created_account_id', accountId)} value={value.created_account_id} />

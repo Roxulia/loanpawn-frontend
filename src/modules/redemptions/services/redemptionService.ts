@@ -82,6 +82,7 @@ export type RedemptionCreatePayload = {
   slip_no: string
   calculated_total: number
   payment_amount: number
+  payment_amount_unit?: import('../../finance/financialUnits').FinancialUnitCode
   interests: Array<{
     id: number
     update_key: number

@@ -1,0 +1,19 @@
+.financial-account-assignment__notice { background: var(--color-background); border-left: .25rem solid var(--color-primary); border-radius: var(--radius-md); color: var(--color-text-secondary); padding: .85rem 1rem; }
+.financial-account-assignment__search { display: grid; gap: .4rem; margin-bottom: 1rem; max-width: 28rem; }
+.financial-account-assignment__search label { font-size: var(--font-size-sm); font-weight: 700; }
+.financial-account-assignment--desktop { overflow-x: auto; }
+.financial-account-assignment--desktop table { border-collapse: collapse; min-width: 38rem; width: 100%; }
+.financial-account-assignment--desktop th, .financial-account-assignment--desktop td { border-bottom: 1px solid var(--color-border); padding: .8rem; text-align: left; }
+.financial-account-assignment--desktop td:first-child { display: grid; gap: .2rem; }
+.financial-account-assignment--desktop small, .financial-account-assignment-card span, .financial-account-assignment-card small { color: var(--color-text-secondary); }
+.financial-account-assignment--mobile { display: none; }
+.financial-account-assignment-toggle { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary); cursor: pointer; min-height: 2.25rem; padding: .35rem .8rem; }
+.financial-account-assignment-toggle.is-active { background: color-mix(in srgb, var(--color-primary) 12%, white); border-color: var(--color-primary); color: var(--color-primary); }
+.financial-account-assignment-toggle:disabled { cursor: not-allowed; opacity: .7; }
+@media (max-width: 48rem) {
+  .financial-account-assignment--desktop { display: none; }
+  .financial-account-assignment--mobile { display: grid; gap: .75rem; }
+  .financial-account-assignment-card { align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; gap: .75rem; justify-content: space-between; padding: .9rem; }
+  .financial-account-assignment-card > div { display: grid; gap: .2rem; min-width: 0; }
+  .financial-account-assignment-card strong, .financial-account-assignment-card span { overflow-wrap: anywhere; }
+}

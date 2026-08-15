@@ -9,6 +9,9 @@ import { useTenantSession } from '../../../contexts/useTenantSession'
 import type { TenantRoleOption } from '../../../dataobjects/tenant/staff'
 import { permissionCodes, type PermissionCode } from '../../auth'
 import { PermissionToggleForm } from '../components/PermissionToggleForm'
+import { FinancialAccountAssignmentForm } from '../components/FinancialAccountAssignmentForm'
+import { financialAccountService } from '../../financialAccounts/financialAccountService'
+import type { FinancialAccount } from '../../financialAccounts/types'
 import { StaffForm } from '../components/StaffForm'
 import {
   emptyStaffForm,
@@ -28,7 +31,10 @@ export function StaffEditPage() {
   const { hasPermission } = usePermissions()
   const { currentUser, session, setSession } = useTenantSession()
   const [targetRoleName, setTargetRoleName] = useState('')
+  const [targetStatus, setTargetStatus] = useState('')
   const isAdminTarget = targetRoleName.toLowerCase() === 'admin'
+  const isOwnerTarget = targetRoleName.toLowerCase() === 'owner'
+  const isSelfTarget = (currentUser?.code ?? session?.user.code) === staffCode
   const canEditTarget = isAdminTarget
     ? hasPermission('update_admin_user')
     : hasPermission('update_user_admin') || hasPermission('update_user_all')
@@ -38,15 +44,20 @@ export function StaffEditPage() {
   const canResetPassword = isAdminTarget
     ? hasPermission('update_admin_user')
     : hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const canManageFinancialAccounts = hasPermission('manage_financial_account_assignments') && !isSelfTarget && !isOwnerTarget
   const [form, setForm] = useState<StaffFormState>(emptyStaffForm)
   const [initialForm, setInitialForm] = useState<StaffFormState>(emptyStaffForm)
   const [errors, setErrors] = useState<StaffFormErrors>({})
   const [roleOptions, setRoleOptions] = useState<TenantRoleOption[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<PermissionCode[]>([])
+  const [financialAccounts, setFinancialAccounts] = useState<FinancialAccount[]>([])
+  const [selectedFinancialAccountIds, setSelectedFinancialAccountIds] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingRoles, setIsLoadingRoles] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isSavingPermissions, setIsSavingPermissions] = useState(false)
+  const [isLoadingFinancialAccounts, setIsLoadingFinancialAccounts] = useState(true)
+  const [isSavingFinancialAccounts, setIsSavingFinancialAccounts] = useState(false)
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
   const [pageError, setPageError] = useState<string | null>(null)
@@ -66,13 +77,27 @@ export function StaffEditPage() {
       setForm(nextFormWithRole)
       setInitialForm(nextFormWithRole)
       setTargetRoleName(getUserRoleName(response))
+      setTargetStatus(response.status)
       setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
+      setSelectedFinancialAccountIds((response.financial_accounts ?? []).map((account) => account.id))
     } catch (loadError) {
       setPageError(loadError instanceof Error ? loadError.message : 'Unable to load staff account.')
     } finally {
       setIsLoading(false)
     }
   }, [roleOptions])
+
+  const loadFinancialAccounts = useCallback(async () => {
+    setIsLoadingFinancialAccounts(true)
+    try {
+      const response = await financialAccountService.list({ perPage: 100 })
+      setFinancialAccounts(response.items)
+    } catch (loadError) {
+      setPageError(loadError instanceof Error ? loadError.message : 'Unable to load financial accounts.')
+    } finally {
+      setIsLoadingFinancialAccounts(false)
+    }
+  }, [])
 
   const loadRoleOptions = useCallback(async () => {
     setIsLoadingRoles(true)
@@ -102,6 +127,11 @@ export function StaffEditPage() {
 
     return () => window.clearTimeout(loadTimer)
   }, [loadRoleOptions])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => { void loadFinancialAccounts() }, 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadFinancialAccounts])
 
   useEffect(() => {
     if (!staffCode) {
@@ -136,6 +166,10 @@ export function StaffEditPage() {
         ? current.filter((currentPermission) => currentPermission !== permission)
         : [...current, permission],
     )
+  }
+
+  function handleFinancialAccountToggle(accountId: number) {
+    setSelectedFinancialAccountIds((current) => current.includes(accountId) ? current.filter((id) => id !== accountId) : [...current, accountId])
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -181,6 +215,22 @@ export function StaffEditPage() {
       setPageError(saveError instanceof Error ? saveError.message : 'Unable to update permissions.')
     } finally {
       setIsSavingPermissions(false)
+    }
+  }
+
+  async function handleFinancialAccountSave() {
+    if (!canManageFinancialAccounts) return
+    setIsSavingFinancialAccounts(true)
+    setPageError(null)
+    setNotice(null)
+    try {
+      const response = await staffService.updateFinancialAccountAssignments(staffCode, selectedFinancialAccountIds)
+      setSelectedFinancialAccountIds(response.financial_accounts.map((account) => account.id))
+      setNotice('Financial account access updated.')
+    } catch (saveError) {
+      setPageError(saveError instanceof Error ? saveError.message : 'Unable to update financial account access.')
+    } finally {
+      setIsSavingFinancialAccounts(false)
     }
   }
 
@@ -248,6 +298,18 @@ export function StaffEditPage() {
             onSave={() => void handlePermissionSave()}
             onToggle={handlePermissionToggle}
             value={selectedPermissions}
+          />
+
+          <FinancialAccountAssignmentForm
+            accounts={financialAccounts}
+            disabled={!canManageFinancialAccounts || targetStatus !== 'active'}
+            isLoading={isLoadingFinancialAccounts}
+            isSaving={isSavingFinancialAccounts}
+            onSave={() => void handleFinancialAccountSave()}
+            onToggle={handleFinancialAccountToggle}
+            protectedReason={isOwnerTarget ? 'Owner account access is managed automatically and cannot be changed.' : isSelfTarget ? 'You cannot change your own financial account access.' : targetStatus !== 'active' ? 'Activate this staff account before assigning financial accounts.' : null}
+            readOnly={!hasPermission('manage_financial_account_assignments') || isOwnerTarget || isSelfTarget}
+            selectedAccountIds={selectedFinancialAccountIds}
           />
         </>
       )}

@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button, Input } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
 import { ArrowRightIcon, SearchIcon } from '../../../components/icons/icon'
-import { ActionBar, Card, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
+import { ActionBar, Card, FinancialAmountInput, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney } from '../../slips/slipFormat'
 import { interestService, type InterestBreakdownRow, type InterestCalculationResult, type InterestPaymentHistoryItem, type InterestPaymentResult } from '../services/interestService'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
+import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
 
 const perPage = 10
 
@@ -19,6 +20,7 @@ export function InterestPaymentsPage() {
   const [activeTab, setActiveTab] = useState<InterestTab>('workflow')
   const [slipNo, setSlipNo] = useState('')
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
   const [acceptAccountId, setAcceptAccountId] = useState('')
   const [recordDebt, setRecordDebt] = useState(false)
   const [calculation, setCalculation] = useState<InterestCalculationResult | null>(null)
@@ -38,7 +40,7 @@ export function InterestPaymentsPage() {
   const rows = getBreakdown(calculation)
   const totalInterest = getTotalInterest(calculation)
   const normalizedSlipNo = getSlipNo(calculation) || slipNo.trim()
-  const paidAmount = Number(paymentAmount || 0)
+  const paidAmount = financialAmountToBase({ amount: paymentAmount, unit: paymentAmountUnit })
   const isInsufficient = calculation !== null && paidAmount > 0 && paidAmount < totalInterest
 
   const loadHistory = useCallback(async (page: number) => {
@@ -108,7 +110,7 @@ export function InterestPaymentsPage() {
       return
     }
 
-    if (Number(paymentAmount) <= 0) {
+    if (paidAmount <= 0) {
       setError('Payment amount must be greater than zero.')
       return
     }
@@ -133,6 +135,7 @@ export function InterestPaymentsPage() {
         ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
         slip_update_key: slipUpdateKey,
         payment_amount: Number(paymentAmount),
+        payment_amount_unit: paymentAmountUnit,
         record_debt: forceDebt,
         interest_breakdown: rows.map(toPaymentBreakdownPayload),
       }, undefined, {
@@ -254,7 +257,7 @@ export function InterestPaymentsPage() {
               <Card title="Record Payment">
                 <form className="workflow-stack" onSubmit={handlePaymentSubmit}>
                   <FormField id="interest-payment-amount" label="Payment Amount">
-                    <Input id="interest-payment-amount" min="0.01" step="0.01" type="number" value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
+                    <FinancialAmountInput id="interest-payment-amount" min="0.01" step="0.01" value={{ amount: paymentAmount, unit: paymentAmountUnit }} onChange={(next) => { setPaymentAmount(next.amount); setPaymentAmountUnit(next.unit) }} />
                   </FormField>
                   <FormField id="interest-accept-account" label="Accepting Account" helperText="Only accounts using the loan currency are shown.">
                     <FinancialAccountSelect

@@ -21,6 +21,7 @@ export type InterestPaymentPayload = {
   accept_account_id?: number
   slip_update_key: number
   payment_amount: number
+  payment_amount_unit?: import('../../finance/financialUnits').FinancialUnitCode
   record_debt: boolean
   interest_breakdown: Array<{
     id: number
