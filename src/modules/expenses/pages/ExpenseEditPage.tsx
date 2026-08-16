@@ -51,6 +51,8 @@ export function ExpenseEditPage() {
         ),
         image_reference: null,
         remove_image_reference: false,
+        reporting_exchange_rate: '',
+        reporting_exchange_rate_inversed: false,
       })
     }).catch((loadError: unknown) => {
       if (active) setError(loadError instanceof Error ? loadError.message : 'Unable to load expense.')

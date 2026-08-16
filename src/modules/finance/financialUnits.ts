@@ -24,6 +24,10 @@ export const defaultFinancialUnits: FinancialUnit[] = [
   { code: 'BILLION', label_en: 'Billion', label_mm: 'ဘီလီယံ', multiplier: 1_000_000_000 },
 ]
 
+export function isFinancialUnitCode(value: unknown): value is FinancialUnitCode {
+  return defaultFinancialUnits.some((unit) => unit.code === value)
+}
+
 let unitsRequest: Promise<FinancialUnit[]> | null = null
 
 export const financialUnitService = {
@@ -76,11 +80,24 @@ export function financialAmountToBase(value: FinancialAmountValue, units = defau
   return Number(value.amount || 0) * multiplier
 }
 
-export function formatFinancialAmount(value: string | number | null | undefined, symbol = '', units = defaultFinancialUnits, locale?: string) {
+export function formatFinancialAmount(
+  value: string | number | null | undefined,
+  symbol = '',
+  units = defaultFinancialUnits,
+  locale?: string,
+  preferredUnit: FinancialUnitCode | null = null,
+) {
   const amount = Number(value ?? 0)
   if (!Number.isFinite(amount)) return '-'
 
-  const unit = [...units].reverse().find((item) => Math.abs(amount) >= item.multiplier) ?? units[0]
+  const configuredUnit = preferredUnit
+    ? units.find((item) => item.code === preferredUnit) ?? defaultFinancialUnits.find((item) => item.code === preferredUnit)
+    : null
+  const unit = configuredUnit
+    ?? (Math.abs(amount) >= 100_000
+      ? [...units].reverse().find((item) => Math.abs(amount) >= item.multiplier)
+      : null)
+    ?? units[0]
   const scaled = amount / unit.multiplier
   const formatted = scaled.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 })
   const label = locale === 'mm' ? unit.label_mm : unit.label_en

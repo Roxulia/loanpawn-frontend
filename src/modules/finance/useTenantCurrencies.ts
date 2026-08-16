@@ -1,5 +1,7 @@
 import { useTenantSession } from '../../contexts/useTenantSession'
 
+import { isFinancialUnitCode } from './financialUnits'
+
 export function useTenantCurrencies() {
   const { tenantResolution } = useTenantSession()
   const settings = tenantResolution.status === 'resolved'
@@ -14,5 +16,8 @@ export function useTenantCurrencies() {
     effectiveReportingCurrencyId: settings?.effective_reporting_currency_id ?? settings?.reporting_currency_id ?? null,
     effectiveReportingCurrencySymbol: settings?.effective_reporting_currency_symbol ?? settings?.reporting_currency_symbol ?? '',
     reportingCurrencyRecalculation: settings?.reporting_currency_recalculation ?? null,
+    defaultFinancialUnit: isFinancialUnitCode(settings?.default_financial_unit)
+      ? settings.default_financial_unit
+      : null,
   }
 }

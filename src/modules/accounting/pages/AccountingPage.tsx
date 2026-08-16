@@ -9,11 +9,11 @@ import type { AccountingDay, AccountingOverview, AccountingTransaction } from '.
 import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
 import { usePermissions } from '../../auth'
 import {
-  formatCurrencyAmount,
   getStringField,
   transactionTypeLabel,
 } from '../../finance/financeFormat'
 import { useTenantCurrencies } from '../../finance/useTenantCurrencies'
+import { defaultFinancialUnits, formatFinancialAmount, type FinancialUnitCode } from '../../finance/financialUnits'
 
 const perPage = 10
 const today = new Date().toISOString().slice(0, 10)
@@ -25,7 +25,8 @@ const ledgerHistoryStartDate = (() => {
 })()
 
 export function AccountingPage() {
-  const { defaultCurrencySymbol, effectiveReportingCurrencySymbol, reportingCurrencyRecalculation } = useTenantCurrencies()
+  const { effectiveReportingCurrencySymbol, reportingCurrencyRecalculation, defaultFinancialUnit } = useTenantCurrencies()
+  const formatReportingAmount = (amount: number) => formatFinancialAmount(amount, effectiveReportingCurrencySymbol, defaultFinancialUnits, 'en-US', defaultFinancialUnit)
   const { hasPermission } = usePermissions()
   const canList = hasPermission('list_accounting')
   const canCloseAccountingDay = hasPermission('close_accounting_day')
@@ -176,21 +177,21 @@ export function AccountingPage() {
           label="System Vault"
           meta="Total Liquid Capital"
           trend="Live ledger balance"
-          value={formatCurrencyAmount(getOverviewNumber(overview, 'liquidCapital', 'liquid_capital'), effectiveReportingCurrencySymbol)}
+          value={formatReportingAmount(getOverviewNumber(overview, 'liquidCapital', 'liquid_capital'))}
           variant="primary"
         />
         <AccountingMetricCard
           label="Incoming Flows"
           meta={`${formatPercent(getOverviewNumber(overview, 'incomingProgress', 'incoming_progress'))} of monthly flow`}
           progress={getOverviewNumber(overview, 'incomingProgress', 'incoming_progress')}
-          value={formatCurrencyAmount(getOverviewNumber(overview, 'monthIncoming', 'month_incoming'), effectiveReportingCurrencySymbol)}
+          value={formatReportingAmount(getOverviewNumber(overview, 'monthIncoming', 'month_incoming'))}
           variant="incoming"
         />
         <AccountingMetricCard
           label="Operational Outgo"
           meta={`${formatPercent(getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress'))} of monthly movement`}
           progress={getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress')}
-          value={formatCurrencyAmount(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'), effectiveReportingCurrencySymbol)}
+          value={formatReportingAmount(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'))}
           variant="outgoing"
         />
       </section>
@@ -256,7 +257,7 @@ export function AccountingPage() {
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <TransactionRow currencySymbol={defaultCurrencySymbol} item={transaction} key={transaction.id} />
+                    <TransactionRow currencySymbol={effectiveReportingCurrencySymbol} defaultFinancialUnit={defaultFinancialUnit} item={transaction} key={transaction.id} />
                   ))}
                 </tbody>
               </table>
@@ -366,7 +367,7 @@ function AccountingMetricCard({
   )
 }
 
-function TransactionRow({ currencySymbol, item }: { currencySymbol: string; item: AccountingTransaction }) {
+function TransactionRow({ currencySymbol, defaultFinancialUnit, item }: { currencySymbol: string; defaultFinancialUnit: FinancialUnitCode | null; item: AccountingTransaction }) {
   const transactionType = getStringField(item, 'transaction_type', 'transactionType') || 'incoming'
   const isIncoming = transactionType === 'incoming'
   const referenceLabel = getStringField(item, 'reference_label', 'referenceLabel')
@@ -393,7 +394,7 @@ function TransactionRow({ currencySymbol, item }: { currencySymbol: string; item
       </td>
       <td data-label="Amount">
         <strong className={`accounting-serene-amount accounting-serene-amount--${isIncoming ? 'incoming' : 'outgoing'}`}>
-          {isIncoming ? '' : '-'}{formatCurrencyAmount(item.amount, currencySymbol)}
+          {isIncoming ? '' : '-'}{formatFinancialAmount(item.reporting_amount ?? item.reportingAmount ?? 0, currencySymbol, defaultFinancialUnits, 'en-US', defaultFinancialUnit)}
         </strong>
       </td>
       <td data-label="Status">

@@ -9,6 +9,8 @@ export type ExpenseFormState = {
   has_existing_image: boolean
   image_reference: File | null
   remove_image_reference: boolean
+  reporting_exchange_rate: string
+  reporting_exchange_rate_inversed: boolean
 }
 
 export type ExpenseFormErrors = Partial<Record<keyof ExpenseFormState, string>>
@@ -22,6 +24,8 @@ export const emptyExpenseForm: ExpenseFormState = {
   has_existing_image: false,
   image_reference: null,
   remove_image_reference: false,
+  reporting_exchange_rate: '',
+  reporting_exchange_rate_inversed: false,
 }
 
 export function expenseFormToPayload(form: ExpenseFormState) {
@@ -73,6 +77,10 @@ function expenseMetadataToFormData(form: ExpenseFormState) {
   payload.set('description', form.description.trim())
   payload.set('expense_type_id', form.expense_type_id)
   if (form.account_id) payload.set('account_id', form.account_id)
+  if (form.reporting_exchange_rate) {
+    payload.set('reporting_exchange_rate', form.reporting_exchange_rate)
+    payload.set('reporting_exchange_rate_inversed', form.reporting_exchange_rate_inversed ? '1' : '0')
+  }
 
   if (form.image_reference) {
     payload.set('image_reference', form.image_reference)

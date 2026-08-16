@@ -133,6 +133,9 @@ export type FinancialAccountTransferPayload = {
   from_amount: number
   from_amount_unit?: import('../finance/financialUnits').FinancialUnitCode
   exchange_rate?: number
+  exchange_rate_inversed?: boolean
+  fee_reporting_exchange_rate?: number
+  fee_reporting_exchange_rate_inversed?: boolean
   fee_amount?: number
   fee_amount_unit?: import('../finance/financialUnits').FinancialUnitCode
   note?: string

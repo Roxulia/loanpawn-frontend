@@ -13,6 +13,8 @@ type IdempotentRequestOptions = {
 export type RedemptionDetail = {
   id: number
   update_key?: number
+  account_id?: number | null
+  accountId?: number | null
   slip_id: number
   slip_number: string
   gross_amount: number
@@ -45,6 +47,10 @@ export type RedemptionInterestPayment = {
   payment_at?: string | null
   is_paid?: boolean
   notes?: string | null
+  created_account_id?: number | null
+  createdAccountId?: number | null
+  accept_account_id?: number | null
+  acceptAccountId?: number | null
 }
 
 export type RedemptionDebt = {
@@ -78,6 +84,8 @@ export type RedemptionCalculationResult = {
 }
 
 export type RedemptionCreatePayload = {
+  reporting_exchange_rate?: number
+  reporting_exchange_rate_inversed?: boolean
   account_id?: number
   slip_no: string
   calculated_total: number

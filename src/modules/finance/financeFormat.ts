@@ -11,8 +11,24 @@ export function formatMoney(value: string | number | null | undefined) {
   })
 }
 
-export function formatCurrencyAmount(value: string | number | null | undefined, symbol: string) {
-  return formatFinancialAmount(value, symbol)
+export function formatCurrencyAmount(
+  value: string | number | null | undefined,
+  symbol: string,
+  financialUnit: FinancialUnitCode | null = null,
+  locale?: string,
+) {
+  return formatFinancialAmount(value, symbol, defaultFinancialUnits, locale, financialUnit)
+}
+
+export function formatAccountCurrencyAmount(
+  value: string | number | null | undefined,
+  symbol: string,
+  locale?: string,
+) {
+  const amount = Number(value ?? 0)
+  const unit = Number.isFinite(amount) && Math.abs(amount) < 100_000 ? 'UNIT' : null
+
+  return formatFinancialAmount(value, symbol, defaultFinancialUnits, locale, unit)
 }
 
 export function formatDate(value: string | null | undefined) {
@@ -81,4 +97,4 @@ export function nullableNumber(value: string) {
   return value.trim() ? Number(value) : null
 }
 import { formatLocalDate } from '../../utils/localDateTime'
-import { formatFinancialAmount } from './financialUnits'
+import { defaultFinancialUnits, formatFinancialAmount, type FinancialUnitCode } from './financialUnits'

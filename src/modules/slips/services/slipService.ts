@@ -128,6 +128,8 @@ export type GemstoneDetailsPayload = {
 }
 
 export type SlipCreatePayload = {
+  reporting_exchange_rate?: number
+  reporting_exchange_rate_inversed?: boolean
   account_id?: number
   customer: {
     name: string

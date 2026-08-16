@@ -1,3 +1,5 @@
+import type { FinancialUnitCode } from '../../modules/finance/financialUnits'
+
 export type TenantLicenseStatus = 'trial' | 'paid' | 'expired' | 'suspended'
 export type TenantPlanType = string
 
@@ -52,6 +54,7 @@ export type TenantDetail = {
     default_currency_symbol?: string | null
     reporting_currency_symbol?: string | null
     effective_reporting_currency_symbol?: string | null
+    default_financial_unit?: FinancialUnitCode | null
     reporting_currency_recalculation?: {
       id: number
       status: 'queued' | 'processing' | 'waiting_for_rates' | 'failed'

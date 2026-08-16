@@ -4,10 +4,11 @@ import { ActionBar, Card, FinancialAmountInput, FormField, FormGroup } from '../
 import type { DebtFormErrors, DebtFormState } from './debtFormModel'
 import { CustomerSearchField } from './CustomerSearchField'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 
 type DebtFormFieldsProps = {
   errors: DebtFormErrors
-  onChange: (field: keyof DebtFormState, value: string) => void
+  onChange: <TField extends keyof DebtFormState>(field: TField, value: DebtFormState[TField]) => void
   value: DebtFormState
 }
 
@@ -27,6 +28,7 @@ export function DebtFormFields({ errors, onChange, value }: DebtFormFieldsProps)
       <FormField error={errors.created_account_id} helperText="The debt is recorded in this account's currency." id="debt-created-account" label="Created Account">
         <FinancialAccountSelect hasError={Boolean(errors.created_account_id)} id="debt-created-account" onChange={(accountId) => onChange('created_account_id', accountId)} value={value.created_account_id} />
       </FormField>
+      <ReportingExchangeRateField accountId={value.created_account_id} inversed={value.reporting_exchange_rate_inversed} manualRate={value.reporting_exchange_rate} onInversedChange={(inversed) => onChange('reporting_exchange_rate_inversed', inversed)} onManualRateChange={(rate) => onChange('reporting_exchange_rate', rate)} />
       <FormField error={errors.slip_code ?? errors.customer_code} helperText="Optional link for this debt." id="debt-link" label="Debt link">
         <div className="debt-link-field">
           <div className="debt-link-field__toggle" role="group" aria-label="Debt link type">

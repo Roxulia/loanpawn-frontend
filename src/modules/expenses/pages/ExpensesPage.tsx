@@ -17,9 +17,10 @@ import {
   type FinanceResourcePageConfig,
 } from '../../finance/FinanceResourcePage'
 import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
+import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 import {
   formatDate,
-  formatMoney,
   getNumberField,
   getStringField,
   optionalInteger,
@@ -36,6 +37,8 @@ type ExpenseForm = FinanceFormState & {
   has_existing_image: boolean
   image_reference: File | null
   remove_image_reference: boolean
+  reporting_exchange_rate: string
+  reporting_exchange_rate_inversed: boolean
 }
 
 const initialForm: ExpenseForm = {
@@ -47,6 +50,8 @@ const initialForm: ExpenseForm = {
   has_existing_image: false,
   image_reference: null,
   remove_image_reference: false,
+  reporting_exchange_rate: '',
+  reporting_exchange_rate_inversed: false,
 }
 
 const columns: Array<DataTableColumn<TenantExpense>> = [
@@ -58,7 +63,7 @@ const columns: Array<DataTableColumn<TenantExpense>> = [
   {
     header: 'Amount',
     key: 'amount',
-    render: (item) => formatMoney(item.amount),
+    render: (item) => <AccountCurrencyAmount accountId={item.account_id ?? item.accountId} amount={item.amount} />,
   },
   {
     header: 'Expense type',
@@ -109,6 +114,8 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
     has_existing_image: Boolean(item.has_image_reference ?? item.hasImageReference),
     image_reference: null,
     remove_image_reference: false,
+    reporting_exchange_rate: '',
+    reporting_exchange_rate_inversed: false,
   }),
   list: (params) => tenantResourceService.listExpenses(params),
   listPermission: 'list_expense',
@@ -118,7 +125,7 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
   renderMobileCard: (item, actions) => (
     <FinanceHistoryMobileCard
       actions={actions}
-      amount={formatMoney(item.amount)}
+      amount={<AccountCurrencyAmount accountId={item.account_id ?? item.accountId} amount={item.amount} />}
       eyebrow={formatExpenseType(item)}
       meta={formatDate(getStringField(item, 'created_at', 'createdAt'))}
       status="Outgoing"
@@ -222,6 +229,7 @@ function ExpenseFormFields({
       <FormField id="expense-account" label="Payment Account">
         <FinancialAccountSelect id="expense-account" onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
       </FormField>
+      <ReportingExchangeRateField accountId={form.account_id} inversed={form.reporting_exchange_rate_inversed} manualRate={form.reporting_exchange_rate} onInversedChange={(inversed) => updateField('reporting_exchange_rate_inversed', inversed)} onManualRateChange={(rate) => updateField('reporting_exchange_rate', rate)} />
       <FormField error={errors.amount} id="expense-amount" label="Amount">
         <Input
           disabled

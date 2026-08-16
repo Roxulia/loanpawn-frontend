@@ -18,6 +18,8 @@ export type InterestBreakdownRow = {
 }
 
 export type InterestPaymentPayload = {
+  reporting_exchange_rate?: number
+  reporting_exchange_rate_inversed?: boolean
   accept_account_id?: number
   slip_update_key: number
   payment_amount: number
@@ -61,7 +63,9 @@ export type InterestPaymentHistoryItem = {
   is_paid: boolean
   notes?: string | null
   created_account_id?: number | null
+  createdAccountId?: number | null
   accept_account_id?: number | null
+  acceptAccountId?: number | null
 }
 
 export type InterestPaymentHistoryPage = {

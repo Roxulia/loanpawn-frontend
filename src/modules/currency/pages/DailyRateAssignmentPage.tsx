@@ -13,7 +13,7 @@ export function DailyRateAssignmentPage() {
   const [pairs, setPairs] = useState<ExchangeRatePair[]>([])
   const [rates, setRates] = useState<ExchangeRateEntry[]>([])
   const [selectedPair, setSelectedPair] = useState('')
-  const [rateForm, setRateForm] = useState({ buying_rate: '', selling_rate: '', effective_date: new Date().toISOString().slice(0, 10) })
+  const [rateForm, setRateForm] = useState({ buying_rate: '', selling_rate: '' })
   const [rateState, setRateState] = useState<ExchangeRateState | null>(null)
   const [rateTrend, setRateTrend] = useState<ExchangeRateTrend | null>(null)
   const [rateTab, setRateTab] = useState<'observations' | 'trends'>('observations')
@@ -50,7 +50,7 @@ export function DailyRateAssignmentPage() {
   async function saveRate() {
     if (!selectedPair || !rateForm.buying_rate || !rateForm.selling_rate) { setError('Choose a pair and enter buying and selling prices.'); return }
     setSaving(true); setError(null)
-    try { await currencyService.createRate({ pair_code: selectedPair, ...rateForm }); setRateForm((current) => ({ buying_rate: '', selling_rate: '', effective_date: current.effective_date })); setNotice(rateState?.opening_required ? 'Opening prices recorded.' : 'Exchange prices recorded.'); await loadSelectedPair() }
+    try { await currencyService.createRate({ pair_code: selectedPair, ...rateForm }); setRateForm({ buying_rate: '', selling_rate: '' }); setNotice(rateState?.opening_required ? 'Opening prices recorded.' : 'Exchange prices recorded.'); await loadSelectedPair() }
     catch (reason) { setError(messageOf(reason)) } finally { setSaving(false) }
   }
 
@@ -76,7 +76,7 @@ export function DailyRateAssignmentPage() {
       <div className="exchange-rate-pair-selector"><ExchangePairSearchField id="rate-pair" pairs={pairs} value={selectedPair} onChange={setSelectedPair} /></div>
       {selectedPair && hasPermission('create_exchange_rate') && <div className="subform-panel exchange-rate-entry-form">
         <header className="subform-panel__header"><strong>{rateState?.opening_required ? "Set today's opening prices" : 'Update current prices'}</strong>{rateState && <Badge tone="info">{rateState.business_date} · {rateState.timezone}</Badge>}</header>
-        <FormGroup columns={2}><FormPriceField id="buying-rate" label="Buying price" value={rateForm.buying_rate} onChange={(buying_rate) => setRateForm((current) => ({ ...current, buying_rate }))} /><FormPriceField id="selling-rate" label="Selling price" value={rateForm.selling_rate} onChange={(selling_rate) => setRateForm((current) => ({ ...current, selling_rate }))} /><div><label htmlFor="rate-effective-date">Effective date</label><Input id="rate-effective-date" max={new Date().toISOString().slice(0, 10)} onChange={(event) => setRateForm((current) => ({ ...current, effective_date: event.target.value }))} type="date" value={rateForm.effective_date} /></div></FormGroup>
+        <FormGroup columns={2}><FormPriceField id="buying-rate" label="Buying price" value={rateForm.buying_rate} onChange={(buying_rate) => setRateForm((current) => ({ ...current, buying_rate }))} /><FormPriceField id="selling-rate" label="Selling price" value={rateForm.selling_rate} onChange={(selling_rate) => setRateForm((current) => ({ ...current, selling_rate }))} /></FormGroup>
         <Button isLoading={saving} onClick={() => void saveRate()} variant="primary">{rateState?.opening_required ? 'Set Opening Prices' : 'Update Prices'}</Button>
       </div>}
       <div className="module-tabs exchange-rate-tabs" role="tablist" aria-label="Exchange price history"><Button aria-pressed={rateTab === 'observations'} onClick={() => setRateTab('observations')} variant={rateTab === 'observations' ? 'primary' : 'secondary'}>Rate Observations</Button><Button aria-pressed={rateTab === 'trends'} onClick={() => setRateTab('trends')} variant={rateTab === 'trends' ? 'primary' : 'secondary'}>Closing Price Trends</Button></div>

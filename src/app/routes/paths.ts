@@ -20,6 +20,7 @@ export const routePaths = {
   currencies: '/currencies',
   exchangePairs: '/exchange-pairs',
   dailyRates: '/daily-rates',
+  reportingCurrencyRates: '/settings/reporting-currency-rates',
   financialAccounts: '/financial-accounts',
   financialAccountCreate: '/financial-accounts/create',
   financialAccountTransfer: '/financial-accounts/transfer',

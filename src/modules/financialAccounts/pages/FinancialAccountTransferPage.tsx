@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
-import { Button, Input, Select, Textarea } from '../../../components/atoms'
+import { Button, Select, Textarea } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
 import { ActionBar, Card, FinancialAmountInput, FormField, FormGroup, KeyValueList, SectionHeader } from '../../../components/molecules'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { formatDate, formatMoney } from '../../finance/financeFormat'
 import { financialAmountToBase } from '../../finance/financialUnits'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 import type { FinancialUnitCode } from '../../finance/financialUnits'
 import { financialAccountService } from '../financialAccountService'
 import type { FinancialAccount, FinancialAccountTransfer } from '../types'
@@ -15,7 +16,7 @@ export function FinancialAccountTransferPage() {
   const navigate = useNavigate()
   const [accounts, setAccounts] = useState<FinancialAccount[]>([])
   const [transfers, setTransfers] = useState<FinancialAccountTransfer[]>([])
-  const [form, setForm] = useState<{ from: string; to: string; amount: string; amountUnit: FinancialUnitCode; rate: string; fee: string; feeUnit: FinancialUnitCode; note: string }>({ from: '', to: '', amount: '', amountUnit: 'UNIT', rate: '', fee: '', feeUnit: 'UNIT', note: '' })
+  const [form, setForm] = useState<{ from: string; to: string; amount: string; amountUnit: FinancialUnitCode; rate: string; rateInversed: boolean; resolvedRate: number | null; fee: string; feeUnit: FinancialUnitCode; feeReportingRate: string; feeReportingRateInversed: boolean; note: string }>({ from: '', to: '', amount: '', amountUnit: 'UNIT', rate: '', rateInversed: false, resolvedRate: null, fee: '', feeUnit: 'UNIT', feeReportingRate: '', feeReportingRateInversed: false, note: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ tone: 'danger' | 'success'; text: string } | null>(null)
@@ -39,18 +40,20 @@ export function FinancialAccountTransferPage() {
   const crossCurrency = Boolean(from && to && from.currency.id !== to.currency.id)
   const sourceAmount = financialAmountToBase({ amount: form.amount, unit: form.amountUnit })
   const sourceFee = financialAmountToBase({ amount: form.fee, unit: form.feeUnit })
-  const destinationAmount = crossCurrency ? sourceAmount * Number(form.rate || 0) : sourceAmount
+  const enteredRate = Number(form.rate || 0)
+  const manualMultiplier = enteredRate > 0 ? (form.rateInversed ? 1 / enteredRate : enteredRate) : 0
+  const destinationAmount = crossCurrency ? sourceAmount * (form.resolvedRate ?? manualMultiplier) : sourceAmount
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!from || !to || from.id === to.id || sourceAmount <= 0 || (crossCurrency && Number(form.rate) <= 0)) {
+    if (!from || !to || from.id === to.id || sourceAmount <= 0 || (crossCurrency && (form.resolvedRate ?? Number(form.rate)) <= 0)) {
       setMessage({ tone: 'danger', text: 'Choose different accounts and enter valid transfer values.' }); return
     }
     if (idempotency.current) return
     idempotency.current = createIdempotencyKey(); setSaving(true); setMessage(null)
     try {
-      await financialAccountService.transfer({ from_account_id: from.id, to_account_id: to.id, from_amount: Number(form.amount), from_amount_unit: form.amountUnit, exchange_rate: crossCurrency ? Number(form.rate) : undefined, fee_amount: Number(form.fee || 0), fee_amount_unit: form.feeUnit, note: form.note.trim() || undefined }, idempotency.current)
-      setForm((current) => ({ ...current, to: '', amount: '', amountUnit: 'UNIT', rate: '', fee: '', feeUnit: 'UNIT', note: '' })); setMessage({ tone: 'success', text: 'Account transfer completed.' }); await load()
+      await financialAccountService.transfer({ from_account_id: from.id, to_account_id: to.id, from_amount: Number(form.amount), from_amount_unit: form.amountUnit, exchange_rate: form.rate ? Number(form.rate) : undefined, exchange_rate_inversed: form.rate ? form.rateInversed : undefined, fee_amount: Number(form.fee || 0), fee_amount_unit: form.feeUnit, fee_reporting_exchange_rate: form.feeReportingRate ? Number(form.feeReportingRate) : undefined, fee_reporting_exchange_rate_inversed: form.feeReportingRate ? form.feeReportingRateInversed : undefined, note: form.note.trim() || undefined }, idempotency.current)
+      setForm((current) => ({ ...current, to: '', amount: '', amountUnit: 'UNIT', rate: '', rateInversed: false, resolvedRate: null, fee: '', feeUnit: 'UNIT', feeReportingRate: '', feeReportingRateInversed: false, note: '' })); setMessage({ tone: 'success', text: 'Account transfer completed.' }); await load()
     } catch (reason) {
       setMessage({ tone: 'danger', text: reason instanceof Error ? reason.message : 'Unable to complete transfer.' })
     } finally { idempotency.current = null; setSaving(false) }
@@ -65,8 +68,9 @@ export function FinancialAccountTransferPage() {
           <FormField id="transfer-from" label="Source Account"><Select id="transfer-from" value={form.from} onChange={(event) => setForm({ ...form, from: event.target.value, to: '' })}><option value="">Select source</option>{accounts.map((account) => <option key={account.id} value={account.id}>{account.account_name} · {account.currency.code} · {formatMoney(account.balance)}</option>)}</Select></FormField>
           <FormField id="transfer-to" label="Destination Account"><Select id="transfer-to" value={form.to} onChange={(event) => setForm({ ...form, to: event.target.value })}><option value="">Select destination</option>{accounts.filter((account) => String(account.id) !== form.from).map((account) => <option key={account.id} value={account.id}>{account.account_name} · {account.currency.code} · {formatMoney(account.balance)}</option>)}</Select></FormField>
           <FormField id="transfer-amount" label={`Amount${from ? ` (${from.currency.code})` : ''}`}><FinancialAmountInput id="transfer-amount" min="0.0001" step="0.0001" value={{ amount: form.amount, unit: form.amountUnit }} onChange={(next) => setForm({ ...form, amount: next.amount, amountUnit: next.unit })} /></FormField>
-          {crossCurrency && <FormField id="transfer-rate" label={`Rate (${from?.currency.code} → ${to?.currency.code})`}><Input id="transfer-rate" min="0.00000001" step="0.00000001" type="number" value={form.rate} onChange={(event) => setForm({ ...form, rate: event.target.value })} /></FormField>}
+          {crossCurrency && <ReportingExchangeRateField accountId={form.from} inversed={form.rateInversed} label="Exchange rate" manualRate={form.rate} onInversedChange={(rateInversed) => setForm((current) => ({ ...current, rateInversed }))} onManualRateChange={(rate) => setForm((current) => ({ ...current, rate }))} onResolvedMultiplier={(resolvedRate) => setForm((current) => current.resolvedRate === resolvedRate ? current : { ...current, resolvedRate })} toCurrencyId={to?.currency.id} />}
           <FormField id="transfer-fee" label={`Fee${from ? ` (${from.currency.code})` : ''}`} helperText="Deducted from the source account."><FinancialAmountInput id="transfer-fee" min="0" step="0.0001" value={{ amount: form.fee, unit: form.feeUnit }} onChange={(next) => setForm({ ...form, fee: next.amount, feeUnit: next.unit })} /></FormField>
+          {sourceFee > 0 && <ReportingExchangeRateField accountId={form.from} inversed={form.feeReportingRateInversed} label="Fee reporting exchange rate" manualRate={form.feeReportingRate} onInversedChange={(feeReportingRateInversed) => setForm((current) => ({ ...current, feeReportingRateInversed }))} onManualRateChange={(feeReportingRate) => setForm((current) => ({ ...current, feeReportingRate }))} />}
           <FormField id="transfer-note" label="Note"><Textarea id="transfer-note" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} /></FormField>
         </FormGroup>
         <KeyValueList items={[{ key: 'Destination receives', value: to ? `${to.currency.code} ${formatMoney(destinationAmount)}` : '-' }, { key: 'Total source deduction', value: from ? `${from.currency.code} ${formatMoney(sourceAmount + sourceFee)}` : '-' }]} />

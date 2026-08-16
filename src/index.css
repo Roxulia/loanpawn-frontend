@@ -278,6 +278,8 @@ p {
 .exchange-rate-pair-selector { max-width: 420px; position: relative; z-index: 5; }
 .exchange-rate-tabs { margin: 20px 0 12px; }
 .exchange-rate-empty-prompt { color: var(--muted-color, #64748b); padding: 24px 0; text-align: center; }
+.reporting-rate-direction--desktop { display: block; }
+.reporting-rate-direction--mobile { display: none; }
 .exchange-rate-trends { display: grid; gap: 16px; }
 .exchange-rate-trend-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .exchange-rate-trend-panel svg { display: block; height: auto; overflow: visible; width: 100%; }
@@ -296,6 +298,8 @@ p {
 .exchange-rate-observations--mobile { width: 100%; }
 
 @media (max-width: 720px) {
+  .reporting-rate-direction--desktop { display: none; }
+  .reporting-rate-direction--mobile { display: block; }
   .ui-searchable-select__menu { max-height: 220px; }
   .exchange-rate-trend-grid { grid-template-columns: 1fr; }
   .exchange-rate-observations--desktop { width: 100%; }

@@ -30,6 +30,8 @@ import { slipService, type InterestType, type ItemCategoryType, type LoanContrac
 import { ExpenseImageInput } from '../../expenses/components/ExpenseImageInput'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
+import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 
 const perPage = 10
 const paperTypeOptions = [
@@ -68,6 +70,8 @@ const emptyLoan = {
   expiry_quota: '1',
   expiry_quota_type: 'Month',
   notes: '',
+  reporting_exchange_rate: '',
+  reporting_exchange_rate_inversed: false,
 }
 
 export function SlipsPage() {
@@ -223,7 +227,7 @@ export function SlipsPage() {
   const columns: Array<DataTableColumn<LoanContractSlip>> = [
     { header: 'Slip No', key: 'slipNo', render: (slip) => <strong>{slip.slip_no}</strong> },
     { header: 'Customer', key: 'customer', render: getSlipCustomerName },
-    { header: 'Amount', key: 'amount', render: (slip) => formatMoney(slip.loan_amount) },
+    { header: 'Amount', key: 'amount', render: (slip) => <AccountCurrencyAmount accountId={slip.account_id ?? slip.accountId} amount={slip.loan_amount} /> },
     { header: 'Status', key: 'status', render: (slip) => <Badge tone={getStatusTone(slip.status)}>{slip.status}</Badge> },
     { header: 'Created', key: 'created', render: (slip) => formatDate(slip.created_at) },
   ]
@@ -249,6 +253,7 @@ export function SlipsPage() {
     try {
       const response = await slipService.createSlip({
         ...(loan.account_id ? { account_id: Number(loan.account_id) } : {}),
+        ...(loan.reporting_exchange_rate ? { reporting_exchange_rate: Number(loan.reporting_exchange_rate), reporting_exchange_rate_inversed: loan.reporting_exchange_rate_inversed } : {}),
         customer: {
           name: customer.name.trim(),
           email: customer.email.trim() || undefined,
@@ -566,6 +571,7 @@ export function SlipsPage() {
               <FormField id="loan-account" label="Loan Account" error={formErrors.accountId} helperText="The loan and its interest use this account's currency.">
                 <FinancialAccountSelect hasError={Boolean(formErrors.accountId)} id="loan-account" onChange={(accountId) => setLoan({ ...loan, account_id: accountId })} value={loan.account_id} />
               </FormField>
+              <ReportingExchangeRateField accountId={loan.account_id} inversed={loan.reporting_exchange_rate_inversed} manualRate={loan.reporting_exchange_rate} onInversedChange={(inversed) => setLoan((current) => ({ ...current, reporting_exchange_rate_inversed: inversed }))} onManualRateChange={(rate) => setLoan((current) => ({ ...current, reporting_exchange_rate: rate }))} />
               <FormField id="loan-amount" label="Loan Amount" error={formErrors.loanAmount}>
                 <FinancialAmountInput id="loan-amount" min="0.01" step="0.01" value={{ amount: loan.loan_amount, unit: loan.loan_amount_unit }} onChange={(next) => setLoan({ ...loan, loan_amount: next.amount, loan_amount_unit: next.unit })} hasError={Boolean(formErrors.loanAmount)} />
               </FormField>
@@ -913,7 +919,7 @@ function SlipHistoryMobileCard({
       <div className="slip-history-mobile-card__summary">
         <div>
           <span>Loan amount</span>
-          <strong>{formatMoney(slip.loan_amount)}</strong>
+          <strong><AccountCurrencyAmount accountId={slip.account_id ?? slip.accountId} amount={slip.loan_amount} /></strong>
         </div>
         <span>{formatDate(slip.created_at)}</span>
       </div>

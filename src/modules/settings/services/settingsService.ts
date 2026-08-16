@@ -3,6 +3,7 @@ import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import type { UiLocale } from '../../../locales/UiLocale'
 import type { Currency, CurrencyPage } from '../../currency/types'
 import type { AccountingDaySchedule } from '../../../dataobjects/tenant/finance'
+import type { FinancialUnitCode } from '../../finance/financialUnits'
 
 export type DefaultTypeOption = {
   id: number
@@ -104,6 +105,7 @@ export type CurrencyPreferences = {
       to_currency_id: number
     }>
   } | null
+  default_financial_unit: FinancialUnitCode | null
 }
 
 export type SettingsPayload = {
@@ -169,7 +171,8 @@ export const settingsService = {
   listTimezoneOptions() { return apiClient.get<string[]>('/tenant/settings/timezone-options') },
   updateTimezone(payload: { timezone: string; update_key: number }) { return apiClient.put<TimezoneSetting>('/tenant/settings/timezone', payload) },
   getCurrencyPreferences() { return apiClient.get<CurrencyPreferences>('/tenant/settings/currencies') },
-  updateCurrencyPreferences(payload: { default_currency_id: number; reporting_currency_id: number; update_key: number }) { return apiClient.put<CurrencyPreferences>('/tenant/settings/currencies', payload) },
+  updateCurrencyPreferences(payload: { default_currency_id: number; reporting_currency_id: number; default_financial_unit: FinancialUnitCode | null; update_key: number }) { return apiClient.put<CurrencyPreferences>('/tenant/settings/currencies', payload) },
+  abortReportingCurrencyChange(payload: { recalculation_id: number; update_key: number }) { return apiClient.post<CurrencyPreferences>('/tenant/settings/reporting-currency-recalculation/abort', payload) },
   getAccountingDaySchedule() { return apiClient.get<AccountingDaySchedule>('/tenant/accounting-days/schedule') },
   updateAccountingDaySchedule(days: AccountingDaySchedule['days']) { return apiClient.put<AccountingDaySchedule>('/tenant/accounting-days/schedule', { days }) },
   listCurrencyOptions() { return apiClient.get<CurrencyPage>('/tenant/currencies', { params: { per_page: 100 } }) },

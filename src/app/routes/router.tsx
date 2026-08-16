@@ -11,7 +11,7 @@ import { ChangePasswordPage } from '../../pages/profile/ChangePasswordPage'
 import { ProfilePage } from '../../pages/profile/ProfilePage'
 import { FeatureRoute, PermissionRoute } from '../../modules/auth'
 import { AccountingPage } from '../../modules/accounting'
-import { CurrencyManagementPage, DailyRateAssignmentPage, ExchangePairManagementPage } from '../../modules/currency'
+import { CurrencyManagementPage, DailyRateAssignmentPage, ExchangePairManagementPage, ReportingCurrencyRatesPage } from '../../modules/currency'
 import { FinancialAccountCreatePage, FinancialAccountDetailPage, FinancialAccountEditPage, FinancialAccountListPage, FinancialAccountTransferPage } from '../../modules/financialAccounts'
 import { CapitalsPage } from '../../modules/capitals'
 import { CollateralDetailPage, CollateralListPage } from '../../modules/collateral'
@@ -72,6 +72,7 @@ export const router = createBrowserRouter([
       { path: routePaths.currencies, element: featureGate('currency_management', 'Currency Management', <PermissionRoute permission="list_currency"><CurrencyManagementPage /></PermissionRoute>) },
       { path: routePaths.exchangePairs, element: featureGates(['currency_management', 'exchange_pair_management'], 'Exchange Pair Management', <PermissionRoute permission="list_exchange_pair"><ExchangePairManagementPage /></PermissionRoute>) },
       { path: routePaths.dailyRates, element: featureGates(['currency_management', 'exchange_pair_management', 'daily_rate_assignment'], 'Daily Rate Assignment', <PermissionRoute permission="list_exchange_rate"><DailyRateAssignmentPage /></PermissionRoute>) },
+      { path: routePaths.reportingCurrencyRates, element: featureGates(['currency_management', 'exchange_pair_management', 'daily_rate_assignment'], 'Required Historical Rates', <PermissionRoute permission="update_currency"><PermissionRoute permission="create_exchange_rate"><ReportingCurrencyRatesPage /></PermissionRoute></PermissionRoute>) },
       { path: routePaths.financialAccounts, element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="list_financial_account"><FinancialAccountListPage /></PermissionRoute>) },
       { path: routePaths.financialAccountCreate, element: featureGate('multi_account_management', 'Financial Accounts', <PermissionRoute permission="create_financial_account"><FinancialAccountCreatePage /></PermissionRoute>) },
       { path: routePaths.financialAccountTransfer, element: featureGates(['multi_account_management', 'account_transferable'], 'Account Transfers', <PermissionRoute permission="transfer_financial_account"><FinancialAccountTransferPage /></PermissionRoute>) },

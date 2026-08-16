@@ -6,10 +6,12 @@ import { ActionBar, Card, FinancialAmountInput, FormField, KeyValueList, Section
 import { ConfirmDialog, DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
-import { formatDate, formatMoney } from '../../slips/slipFormat'
+import { formatDate } from '../../slips/slipFormat'
 import { interestService, type InterestBreakdownRow, type InterestCalculationResult, type InterestPaymentHistoryItem, type InterestPaymentResult } from '../services/interestService'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
+import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 
 const perPage = 10
 
@@ -22,9 +24,12 @@ export function InterestPaymentsPage() {
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
   const [acceptAccountId, setAcceptAccountId] = useState('')
+  const [reportingExchangeRate, setReportingExchangeRate] = useState('')
+  const [reportingExchangeRateInversed, setReportingExchangeRateInversed] = useState(false)
   const [recordDebt, setRecordDebt] = useState(false)
   const [calculation, setCalculation] = useState<InterestCalculationResult | null>(null)
   const [paymentResult, setPaymentResult] = useState<InterestPaymentResult | null>(null)
+  const [paymentResultAccountId, setPaymentResultAccountId] = useState<number | null>(null)
   const [history, setHistory] = useState<InterestPaymentHistoryItem[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
@@ -133,6 +138,7 @@ export function InterestPaymentsPage() {
     try {
       const response = await interestService.pay(normalizedSlipNo, {
         ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
+        ...(reportingExchangeRate ? { reporting_exchange_rate: Number(reportingExchangeRate), reporting_exchange_rate_inversed: reportingExchangeRateInversed } : {}),
         slip_update_key: slipUpdateKey,
         payment_amount: Number(paymentAmount),
         payment_amount_unit: paymentAmountUnit,
@@ -147,6 +153,7 @@ export function InterestPaymentsPage() {
       setAcceptAccountId('')
       setRecordDebt(false)
       setCalculation(null)
+      setPaymentResultAccountId(acceptAccountId ? Number(acceptAccountId) : (calculation.account_id ?? calculation.accountId ?? null))
       setPaymentResult(response)
       setNotice('Interest payment processed successfully.')
       if (activeTab === 'history') {
@@ -174,15 +181,15 @@ export function InterestPaymentsPage() {
   const columns: Array<DataTableColumn<InterestBreakdownRow>> = [
     { header: 'Start Date', key: 'start', render: (row) => formatDate(row.start_period_at) },
     { header: 'End Date', key: 'end', render: (row) => formatDate(row.end_period_at) },
-    { header: 'Interest Amount', key: 'amount', render: (row) => formatMoney(getInterestAmount(row)) },
+    { header: 'Interest Amount', key: 'amount', render: (row) => <AccountCurrencyAmount accountId={calculation?.account_id ?? calculation?.accountId} amount={getInterestAmount(row)} /> },
   ]
 
   const historyColumns: Array<DataTableColumn<InterestPaymentHistoryItem>> = [
     { header: 'Slip No', key: 'slip', render: (row) => <strong>{row.slip_no ?? '-'}</strong> },
     { header: 'Period', key: 'period', render: (row) => `${formatDate(row.start_period_at)} - ${formatDate(row.end_period_at)}` },
-    { header: 'Interest', key: 'interest', render: (row) => formatMoney(row.interest_amount) },
-    { header: 'Paid Amount', key: 'paid', render: (row) => formatMoney(row.payment_amount) },
-    { header: 'Change', key: 'change', render: (row) => formatMoney(row.change_amount) },
+    { header: 'Interest', key: 'interest', render: (row) => <AccountCurrencyAmount accountId={row.created_account_id ?? row.createdAccountId} amount={row.interest_amount} /> },
+    { header: 'Paid Amount', key: 'paid', render: (row) => <AccountCurrencyAmount accountId={row.accept_account_id ?? row.acceptAccountId} amount={row.payment_amount} fallbackAccountId={row.created_account_id ?? row.createdAccountId} /> },
+    { header: 'Change', key: 'change', render: (row) => <AccountCurrencyAmount accountId={row.accept_account_id ?? row.acceptAccountId} amount={row.change_amount} fallbackAccountId={row.created_account_id ?? row.createdAccountId} /> },
     { header: 'Payment Date', key: 'paymentDate', render: (row) => formatDate(row.payment_at) },
     { header: 'Notes', key: 'notes', render: (row) => row.notes || '-' },
   ]
@@ -194,7 +201,7 @@ export function InterestPaymentsPage() {
         <div className="ops-metrics" aria-label={t('Interest payment summary')}>
           <div className="ops-metric ops-metric--amount">
             <span>Total interest</span>
-            <strong>{formatMoney(totalInterest)}</strong>
+            <strong><AccountCurrencyAmount accountId={calculation?.account_id ?? calculation?.accountId} amount={totalInterest} /></strong>
           </div>
           <div className="ops-metric">
             <span>Accrual rows</span>
@@ -233,7 +240,7 @@ export function InterestPaymentsPage() {
                   <KeyValueList items={[
                     { key: 'Slip No', value: normalizedSlipNo },
                     { key: 'Current Date', value: formatDate(calculation.current_date) },
-                    { key: 'Total Interest', value: formatMoney(totalInterest) },
+                    { key: 'Total Interest', value: <AccountCurrencyAmount accountId={calculation.account_id ?? calculation.accountId} amount={totalInterest} /> },
                   ]} />
                 </div>
                 <div className="interest-accrual-desktop-detail">
@@ -247,6 +254,7 @@ export function InterestPaymentsPage() {
                   />
                 </div>
                 <InterestAccrualMobileDetail
+                  accountId={calculation.account_id ?? calculation.accountId}
                   currentDate={formatDate(calculation.current_date)}
                   rows={rows}
                   slipNo={normalizedSlipNo}
@@ -267,6 +275,7 @@ export function InterestPaymentsPage() {
                       value={acceptAccountId}
                     />
                   </FormField>
+                  <ReportingExchangeRateField accountId={acceptAccountId || calculation.account_id || calculation.accountId} inversed={reportingExchangeRateInversed} manualRate={reportingExchangeRate} onInversedChange={setReportingExchangeRateInversed} onManualRateChange={setReportingExchangeRate} />
                   <label className="checkbox-line">
                     <input checked={recordDebt} onChange={(event) => setRecordDebt(event.target.checked)} type="checkbox" />
                     <span><LocalizedText text="Create debt if payment is insufficient" /></span>
@@ -322,9 +331,9 @@ export function InterestPaymentsPage() {
         {paymentResult && (
           <KeyValueList items={[
             { key: 'Status', value: formatPaymentStatus(paymentResult.status) },
-            { key: 'Paid Amount', value: formatMoney(paymentResult.paidAmount) },
-            { key: 'Debt Amount', value: formatMoney(paymentResult.debtAmount) },
-            { key: 'Change', value: formatMoney(paymentResult.changeAmount) },
+            { key: 'Paid Amount', value: <AccountCurrencyAmount accountId={paymentResultAccountId} amount={paymentResult.paidAmount} /> },
+            { key: 'Debt Amount', value: <AccountCurrencyAmount accountId={paymentResultAccountId} amount={paymentResult.debtAmount} /> },
+            { key: 'Change', value: <AccountCurrencyAmount accountId={paymentResultAccountId} amount={paymentResult.changeAmount} /> },
           ]} />
         )}
       </Modal>
@@ -345,11 +354,13 @@ function formatNumber(value: number) {
 }
 
 function InterestAccrualMobileDetail({
+  accountId,
   currentDate,
   rows,
   slipNo,
   totalInterest,
 }: {
+  accountId?: number | null
   currentDate: string
   rows: InterestBreakdownRow[]
   slipNo: string
@@ -374,7 +385,7 @@ function InterestAccrualMobileDetail({
           </div>
           <div>
             <p>Total Interest</p>
-            <strong>{formatMoney(totalInterest)}</strong>
+            <strong><AccountCurrencyAmount accountId={accountId} amount={totalInterest} /></strong>
           </div>
         </div>
       </div>
@@ -383,7 +394,7 @@ function InterestAccrualMobileDetail({
         <article className="interest-accrual-mobile-row" key={row.id}>
           <div className="interest-accrual-mobile-row__top">
             <span>{index === 0 ? 'Active Row' : `Row ${index + 1}`}</span>
-            <strong>{formatMoney(getInterestAmount(row))}</strong>
+            <strong><AccountCurrencyAmount accountId={accountId} amount={getInterestAmount(row)} /></strong>
           </div>
           <div className="interest-accrual-mobile-row__period">
             <div>

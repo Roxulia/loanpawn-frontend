@@ -12,19 +12,22 @@ import {
 } from '../../finance/FinanceResourcePage'
 import {
   formatDate,
-  formatMoney,
   getNumberField,
   getStringField,
   positiveAmount,
   required,
 } from '../../finance/financeFormat'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
+import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 
 type CapitalForm = FinanceFormState & {
   account_id: string
   amount: string
   amount_unit: import('../../finance/financialUnits').FinancialUnitCode
   description: string
+  reporting_exchange_rate: string
+  reporting_exchange_rate_inversed: boolean
 }
 
 const initialForm: CapitalForm = {
@@ -32,6 +35,8 @@ const initialForm: CapitalForm = {
   amount: '',
   amount_unit: 'UNIT',
   description: '',
+  reporting_exchange_rate: '',
+  reporting_exchange_rate_inversed: false,
 }
 
 const columns: Array<DataTableColumn<TenantCapital>> = [
@@ -43,7 +48,7 @@ const columns: Array<DataTableColumn<TenantCapital>> = [
   {
     header: 'Amount',
     key: 'amount',
-    render: (item) => formatMoney(item.amount),
+    render: (item) => <AccountCurrencyAmount accountId={item.account_id ?? item.accountId} amount={item.amount} />,
   },
   {
     header: 'Accounting effect',
@@ -79,6 +84,8 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
     amount: item.amount,
     amount_unit: 'UNIT',
     description: item.description,
+    reporting_exchange_rate: '',
+    reporting_exchange_rate_inversed: false,
   }),
   list: (params) => tenantResourceService.listCapitals(params),
   listPermission: 'list_capital',
@@ -91,6 +98,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
       amount: Number(form.amount),
       amount_unit: form.amount_unit,
       description: form.description.trim(),
+      ...(form.reporting_exchange_rate ? { reporting_exchange_rate: Number(form.reporting_exchange_rate), reporting_exchange_rate_inversed: form.reporting_exchange_rate_inversed } : {}),
     }
 
     return mode === 'create'
@@ -144,6 +152,7 @@ function CapitalFormFields({
           value={{ amount: form.amount, unit: form.amount_unit }}
         />
       </FormField>
+      <ReportingExchangeRateField accountId={form.account_id} inversed={form.reporting_exchange_rate_inversed} manualRate={form.reporting_exchange_rate} onInversedChange={(value) => updateField('reporting_exchange_rate_inversed', value)} onManualRateChange={(value) => updateField('reporting_exchange_rate', value)} />
       <div className="ui-form-field">
         <span className="ui-label"><LocalizedText text="Accounting effect" /></span>
         <Badge tone="success">Incoming</Badge>

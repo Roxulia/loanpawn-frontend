@@ -2,7 +2,7 @@ import { positiveAmount, required } from '../../finance/financeFormat'
 
 export type DebtLinkMode = 'slip' | 'customer'
 
-export type DebtFormState = Record<string, string> & {
+export type DebtFormState = {
   amount: string
   amount_unit: string
   created_account_id: string
@@ -11,6 +11,8 @@ export type DebtFormState = Record<string, string> & {
   link_mode: DebtLinkMode
   slip_code: string
   tag: string
+  reporting_exchange_rate: string
+  reporting_exchange_rate_inversed: boolean
 }
 
 export type DebtFormErrors = Partial<Record<keyof DebtFormState, string>>
@@ -24,6 +26,8 @@ export const emptyDebtForm: DebtFormState = {
   link_mode: 'slip',
   slip_code: '',
   tag: '',
+  reporting_exchange_rate: '',
+  reporting_exchange_rate_inversed: false,
 }
 
 export function debtFormToPayload(form: DebtFormState) {
@@ -38,6 +42,7 @@ export function debtFormToPayload(form: DebtFormState) {
     slip_code: slipCode || null,
     customer_code: customerCode || null,
     tag: form.tag.trim() || null,
+    ...(form.reporting_exchange_rate ? { reporting_exchange_rate: Number(form.reporting_exchange_rate), reporting_exchange_rate_inversed: form.reporting_exchange_rate_inversed } : {}),
   }
 }
 

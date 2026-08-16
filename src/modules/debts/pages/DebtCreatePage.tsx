@@ -23,7 +23,7 @@ export function DebtCreatePage() {
   const [error, setError] = useState<string | null>(null)
   const createIdempotencyKeyRef = useRef<string | null>(null)
 
-  function updateField(field: keyof DebtFormState, value: string) {
+  function updateField<TField extends keyof DebtFormState>(field: TField, value: DebtFormState[TField]) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
   }

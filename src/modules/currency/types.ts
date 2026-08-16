@@ -77,3 +77,28 @@ export type CurrencyPage = CurrencyListPage<Currency>
 export type ExchangePairPage = CurrencyListPage<ExchangeRatePair>
 export type ExchangeRatePage = CurrencyListPage<ExchangeRateEntry>
 export type DailyExchangeRatePage = CurrencyListPage<DailyExchangeRateSummary>
+
+export type HistoricalRateRequirement = {
+  requirement_key: string
+  date: string
+  from_currency: Pick<Currency, 'id' | 'code' | 'name'>
+  to_currency: Pick<Currency, 'id' | 'code' | 'name'>
+  pair: { code: string; display_code: string; direction: 'direct' | 'reverse' } | null
+}
+
+export type HistoricalRateRequirements = {
+  recalculation_id: number
+  status: string
+  previous_currency: Pick<Currency, 'id' | 'code' | 'name'>
+  requested_currency: Pick<Currency, 'id' | 'code' | 'name'>
+  requirements: HistoricalRateRequirement[]
+  currency_setting_update_key: number
+}
+
+export type HistoricalRateValues = {
+  requirement_key: string
+  buying_open: string
+  buying_close: string
+  selling_open: string
+  selling_close: string
+}

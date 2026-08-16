@@ -12,6 +12,7 @@ import type { UiLocale } from '../../../locales/UiLocale'
 import type { Currency } from '../../currency/types'
 import type { AccountingDayScheduleDay } from '../../../dataobjects/tenant/finance'
 import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
+import { DashboardFinancialUnitSetting } from '../components/DashboardFinancialUnitSetting'
 
 type TypeForm = {
   name: string
@@ -74,9 +75,10 @@ const emptyTenant: TenantForm = {
   update_key: 0,
 }
 
-const emptyCurrencyPreferences: Pick<CurrencyPreferences, 'default_currency_id' | 'reporting_currency_id' | 'update_key'> = {
+const emptyCurrencyPreferences: Pick<CurrencyPreferences, 'default_currency_id' | 'reporting_currency_id' | 'default_financial_unit' | 'update_key'> = {
   default_currency_id: 0,
   reporting_currency_id: 0,
+  default_financial_unit: null,
   update_key: 0,
 }
 
@@ -140,9 +142,10 @@ export function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [savingSection, setSavingSection] = useState<string | null>(null)
   const [deletingType, setDeletingType] = useState<TypeToDelete | null>(null)
+  const [isAbortCurrencyDialogOpen, setIsAbortCurrencyDialogOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const { currentUser, session, setCurrentUser, setLocale, setSession, tenantResolution } = useTenantSession()
+  const { currentUser, session, setCurrentUser, setLocale, setSession, setTenantResolution, tenantResolution } = useTenantSession()
   const { hasPermission } = usePermissions()
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
   const canViewGeneralSettings = hasPermission('manage_slip_document')
@@ -167,6 +170,7 @@ export function SettingsPage() {
   const canManageTimezone = hasEnabledFeature(tenantResolution, 'tenant_timezone_management') && hasPermission('manage_tenant_timezone')
   const canViewCurrencyPreferences = hasEnabledFeature(tenantResolution, 'currency_management') && hasPermission('list_currency')
   const canUpdateCurrencyPreferences = canViewCurrencyPreferences && hasPermission('update_currency')
+  const canProvideHistoricalRates = canUpdateCurrencyPreferences && hasPermission('list_exchange_rate') && hasPermission('create_exchange_rate')
   const canManageAccountingSchedule = hasEnabledFeature(tenantResolution, 'automatic_open_close')
     && hasPermission('open_accounting_day')
     && hasPermission('close_accounting_day')
@@ -295,13 +299,57 @@ export function SettingsPage() {
       const response = await settingsService.updateCurrencyPreferences({
         default_currency_id: currencyPreferences.default_currency_id,
         reporting_currency_id: currencyPreferences.reporting_currency_id,
+        default_financial_unit: currencyPreferences.default_financial_unit,
         update_key: currencyPreferences.update_key,
       })
       const nextPreferences = normalizeCurrencyPreferences(response)
       setCurrencyPreferencesInitial(nextPreferences)
       setCurrencyPreferences(nextPreferences)
       setCurrencyRecalculation(response.reporting_currency_recalculation)
+      if (tenantResolution.status === 'resolved') {
+        setTenantResolution({
+          ...tenantResolution,
+          tenant: {
+            ...tenantResolution.tenant,
+            tenant_setting: {
+              ...tenantResolution.tenant.tenant_setting,
+              default_financial_unit: response.default_financial_unit,
+            },
+          },
+        })
+      }
     }, 'Currency settings saved successfully.')
+  }
+
+  async function abortReportingCurrencyChange() {
+    if (!currencyRecalculation) return
+    await saveSection('abort-reporting-currency', async () => {
+      const response = await settingsService.abortReportingCurrencyChange({
+        recalculation_id: currencyRecalculation.id,
+        update_key: currencyPreferences.update_key,
+      })
+      const nextPreferences = normalizeCurrencyPreferences(response)
+      setCurrencyPreferencesInitial(nextPreferences)
+      setCurrencyPreferences(nextPreferences)
+      setCurrencyRecalculation(null)
+      setIsAbortCurrencyDialogOpen(false)
+      if (tenantResolution.status === 'resolved') {
+        setTenantResolution({
+          ...tenantResolution,
+          tenant: {
+            ...tenantResolution.tenant,
+            tenant_setting: {
+              ...tenantResolution.tenant.tenant_setting,
+              reporting_currency_id: response.reporting_currency_id,
+              effective_reporting_currency_id: response.effective_reporting_currency_id,
+              reporting_currency_symbol: response.reporting_currency.symbol ?? '',
+              effective_reporting_currency_symbol: response.effective_reporting_currency.symbol ?? '',
+              reporting_currency_recalculation: null,
+            },
+          },
+        })
+      }
+    }, 'Reporting currency change aborted successfully.')
   }
 
   async function saveAccountingSchedule() {
@@ -816,13 +864,17 @@ export function SettingsPage() {
 
         {canViewCurrencyPreferences && <Card title="Currency Settings" description="Choose the currencies used for account defaults and financial reporting.">
           {currencyRecalculation && <Alert
+            action={<div className="settings-recalculation-actions">
+              {currencyRecalculation.missing_rates.length > 0 && canProvideHistoricalRates && <Button onClick={() => navigate(routePaths.reportingCurrencyRates)} variant="primary">Provide Required Rates</Button>}
+              {canUpdateCurrencyPreferences && <Button onClick={() => setIsAbortCurrencyDialogOpen(true)} variant="danger">Abort Currency Change</Button>}
+            </div>}
             message={currencyRecalculation.missing_rates.length > 0
               ? `Reporting totals remain in the previous currency. Add exact-date rates for: ${currencyRecalculation.missing_rates.map((rate) => rate.date).join(', ')}.`
               : `Reporting currency recalculation is ${currencyRecalculation.status.replaceAll('_', ' ')}.`}
             title="Reporting currency update pending"
             tone="warning"
           />}
-          <FormGroup columns={2}>
+          <FormGroup columns={3}>
             <FormField id="settings-default-currency" label="Default Currency">
               <Select id="settings-default-currency" disabled={!canUpdateCurrencyPreferences} value={String(currencyPreferences.default_currency_id || '')} onChange={(event) => setCurrencyPreferences({ ...currencyPreferences, default_currency_id: Number(event.target.value) })}>
                 <option value="">Select currency</option>
@@ -835,6 +887,11 @@ export function SettingsPage() {
                 {currencyOptions.map((currency) => <option key={currency.id} value={currency.id}>{currency.code} — {currency.name}</option>)}
               </Select>
             </FormField>
+            <DashboardFinancialUnitSetting
+              disabled={!canUpdateCurrencyPreferences}
+              onChange={(default_financial_unit) => setCurrencyPreferences({ ...currencyPreferences, default_financial_unit })}
+              value={currencyPreferences.default_financial_unit}
+            />
           </FormGroup>
           {canUpdateCurrencyPreferences && <ActionBar>
             <Button disabled={!currencyPreferencesChanged || savingSection === 'currency-preferences'} onClick={() => setCurrencyPreferences(currencyPreferencesInitial)} variant="secondary">Cancel</Button>
@@ -902,6 +959,15 @@ export function SettingsPage() {
         onCancel={() => setDeletingType(null)}
         onConfirm={() => void deleteTypeData()}
         title="Confirm type deletion"
+      />
+      <ConfirmDialog
+        confirmLabel="Abort Currency Change"
+        isLoading={savingSection === 'abort-reporting-currency'}
+        isOpen={isAbortCurrencyDialogOpen}
+        message="Return reporting reports to the previous currency? Historical rates already submitted will be retained."
+        onCancel={() => setIsAbortCurrencyDialogOpen(false)}
+        onConfirm={() => void abortReportingCurrencyChange()}
+        title="Abort reporting currency change"
       />
     </section>
   )
@@ -1145,6 +1211,7 @@ function normalizeCurrencyPreferences(value: CurrencyPreferences) {
   return {
     default_currency_id: value.default_currency_id,
     reporting_currency_id: value.reporting_currency_id,
+    default_financial_unit: value.default_financial_unit ?? null,
     update_key: value.update_key,
   }
 }

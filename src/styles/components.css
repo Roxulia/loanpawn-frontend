@@ -4764,6 +4764,93 @@
   gap: 0.75rem;
 }
 
+.dashboard-financial-unit-setting--mobile {
+  display: none;
+}
+
+.dashboard-financial-unit-setting__error {
+  color: var(--color-danger);
+  display: block;
+  margin-top: var(--space-1);
+}
+
+.settings-recalculation-actions,
+.historical-rate-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.historical-rate-requirements {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.historical-rate-requirements--mobile {
+  display: none;
+}
+
+.historical-rate-row,
+.historical-rate-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.historical-rate-row {
+  grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 2fr);
+}
+
+.historical-rate-row header,
+.historical-rate-card header {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.historical-rate-fields {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.historical-rate-fields label {
+  display: grid;
+  gap: var(--space-1);
+  text-transform: capitalize;
+}
+
+@media (max-width: 640px) {
+  .dashboard-financial-unit-setting--desktop {
+    display: none;
+  }
+
+  .dashboard-financial-unit-setting--mobile {
+    display: block;
+  }
+
+  .historical-rate-requirements--desktop {
+    display: none;
+  }
+
+  .historical-rate-requirements--mobile {
+    display: grid;
+  }
+
+  .historical-rate-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-recalculation-actions,
+  .historical-rate-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .financial-amount-input {
   display: grid;
   gap: 0;

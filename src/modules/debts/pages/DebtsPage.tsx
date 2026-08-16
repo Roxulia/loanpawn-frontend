@@ -13,7 +13,6 @@ import {
 import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 import {
   formatDate,
-  formatMoney,
   getNumberField,
   getStringField,
 } from '../../finance/financeFormat'
@@ -21,6 +20,8 @@ import { DebtFormFields } from '../components/DebtForm'
 import { debtFormToPayload, emptyDebtForm, validateDebtForm, type DebtFormErrors, type DebtFormState } from '../components/debtFormModel'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
+import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
   {
@@ -31,7 +32,7 @@ const columns: Array<DataTableColumn<TenantDebt>> = [
   {
     header: 'Amount',
     key: 'amount',
-    render: (item) => <strong>{formatMoney(item.amount)}</strong>,
+    render: (item) => <strong><AccountCurrencyAmount accountId={item.created_account_id ?? item.createdAccountId} amount={item.amount} /></strong>,
   },
   {
     header: 'Tag',
@@ -82,6 +83,8 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
     link_mode: getStringField(item, 'customer_code', 'customerCode') ? 'customer' : 'slip',
     slip_code: getStringField(item, 'slip_no', 'slipNo'),
     tag: item.tag ?? '',
+    reporting_exchange_rate: '',
+    reporting_exchange_rate_inversed: false,
   }),
   list: (params) => tenantResourceService.listDebts(params),
   listPermission: 'list_debt',
@@ -96,7 +99,7 @@ const config: FinanceResourcePageConfig<TenantDebt, DebtFormState> = {
   renderMobileCard: (item, actions) => (
     <FinanceHistoryMobileCard
       actions={actions}
-      amount={formatMoney(item.amount)}
+      amount={<AccountCurrencyAmount accountId={item.created_account_id ?? item.createdAccountId} amount={item.amount} />}
       eyebrow={formatDebtLink(item)}
       meta={formatDate(getStringField(item, 'created_at', 'createdAt'))}
       status={item.is_paid ? 'Paid' : 'Unpaid'}
@@ -157,6 +160,8 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
   const [acceptAccountId, setAcceptAccountId] = useState('')
+  const [reportingExchangeRate, setReportingExchangeRate] = useState('')
+  const [reportingExchangeRateInversed, setReportingExchangeRateInversed] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [isPaying, setIsPaying] = useState(false)
   const [paidDebt, setPaidDebt] = useState<TenantDebt | null>(null)
@@ -182,6 +187,7 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
         amount_paid: Number(paymentAmount),
         amount_paid_unit: paymentAmountUnit,
         ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
+        ...(reportingExchangeRate ? { reporting_exchange_rate: Number(reportingExchangeRate), reporting_exchange_rate_inversed: reportingExchangeRateInversed } : {}),
       })
 
       setPaidDebt(response)
@@ -231,6 +237,7 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
               value={acceptAccountId}
             />
           </FormField>
+          <ReportingExchangeRateField accountId={acceptAccountId || debt.created_account_id || debt.createdAccountId} inversed={reportingExchangeRateInversed} manualRate={reportingExchangeRate} onInversedChange={setReportingExchangeRateInversed} onManualRateChange={setReportingExchangeRate} />
         </FormGroup>
       </ModalForm>
       <Modal
@@ -243,9 +250,9 @@ function PayDebtAction({ debt, onPaid }: { debt: TenantDebt; onPaid: (debt: Tena
           <KeyValueList items={[
             { key: 'Status', value: 'Processed' },
             { key: 'Debt', value: paidDebt.code },
-            { key: 'Debt Amount', value: formatMoney(paidDebt.amount) },
-            { key: 'Paid Amount', value: formatMoney(paidAmount || paidDebt.amount) },
-            { key: 'Change', value: formatMoney(paidDebt.change_amount ?? paidDebt.changeAmount ?? 0) },
+            { key: 'Debt Amount', value: <AccountCurrencyAmount accountId={paidDebt.created_account_id ?? paidDebt.createdAccountId} amount={paidDebt.amount} /> },
+            { key: 'Paid Amount', value: <AccountCurrencyAmount accountId={paidDebt.accept_account_id ?? paidDebt.acceptAccountId} amount={paidAmount || paidDebt.amount} fallbackAccountId={paidDebt.created_account_id ?? paidDebt.createdAccountId} /> },
+            { key: 'Change', value: <AccountCurrencyAmount accountId={paidDebt.accept_account_id ?? paidDebt.acceptAccountId} amount={paidDebt.change_amount ?? paidDebt.changeAmount ?? 0} fallbackAccountId={paidDebt.created_account_id ?? paidDebt.createdAccountId} /> },
             { key: 'Paid State', value: paidDebt.is_paid ? 'Paid' : 'Unpaid' },
           ]} />
         )}

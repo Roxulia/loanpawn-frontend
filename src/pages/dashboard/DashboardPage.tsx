@@ -16,6 +16,9 @@ import { formatCurrencyAmount, formatDate } from '../../modules/finance/financeF
 import { useTenantCurrencies } from '../../modules/finance/useTenantCurrencies'
 import { settingsService, type DefaultTypeOption } from '../../modules/settings/services/settingsService'
 import { tenantResourceService } from '../../services/tenant/tenantResourceService'
+import { useTenantSession } from '../../contexts/useTenantSession'
+
+type DashboardAmountFormatter = (value: string | number | null | undefined) => string
 
 type MaterialPriceMap = Record<string, string>
 
@@ -27,7 +30,7 @@ type AdjustedCollateralItem = DashboardCollateralReviewItem & {
 const today = new Date().toISOString().slice(0, 10)
 const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
 
-function makeLoanAttentionColumns(currencySymbol: string): Array<DataTableColumn<DashboardLoanAttention>> { return [
+function makeLoanAttentionColumns(formatAmount: DashboardAmountFormatter): Array<DataTableColumn<DashboardLoanAttention>> { return [
   {
     header: 'Customer Name',
     key: 'customerName',
@@ -46,7 +49,7 @@ function makeLoanAttentionColumns(currencySymbol: string): Array<DataTableColumn
   {
     header: 'Loan Amount',
     key: 'loanAmount',
-    render: (item) => formatCurrencyAmount(item.loanAmount, currencySymbol),
+    render: (item) => formatAmount(item.loanAmount),
   },
   {
     header: 'Overdue Days',
@@ -60,7 +63,7 @@ function makeLoanAttentionColumns(currencySymbol: string): Array<DataTableColumn
   },
 ] }
 
-function makeCollateralColumns(currencySymbol: string): Array<DataTableColumn<AdjustedCollateralItem>> { return [
+function makeCollateralColumns(formatAmount: DashboardAmountFormatter): Array<DataTableColumn<AdjustedCollateralItem>> { return [
   {
     header: 'Item Name',
     key: 'itemName',
@@ -74,12 +77,12 @@ function makeCollateralColumns(currencySymbol: string): Array<DataTableColumn<Ad
   {
     header: 'Estimated Market Value',
     key: 'estimatedMarketValue',
-    render: (item) => formatCurrencyAmount(item.currentMarketValue, currencySymbol),
+    render: (item) => formatAmount(item.currentMarketValue),
   },
   {
     header: 'Loan Amount',
     key: 'loanAmount',
-    render: (item) => formatCurrencyAmount(item.loanAmount, currencySymbol),
+    render: (item) => formatAmount(item.loanAmount),
   },
   {
     header: 'LTV Ratio',
@@ -94,7 +97,8 @@ function makeCollateralColumns(currencySymbol: string): Array<DataTableColumn<Ad
 ] }
 
 export function DashboardPage() {
-  const { effectiveReportingCurrencySymbol, reportingCurrencyRecalculation } = useTenantCurrencies()
+  const { defaultFinancialUnit, effectiveReportingCurrencySymbol, reportingCurrencyRecalculation } = useTenantCurrencies()
+  const { locale } = useTenantSession()
   const [summary, setSummary] = useState<TenantDashboardSummary | null>(null)
   const [materialTypes, setMaterialTypes] = useState<DefaultTypeOption[]>([])
   const [materialPrices, setMaterialPrices] = useState<MaterialPriceMap>({})
@@ -170,8 +174,12 @@ export function DashboardPage() {
       .slice(0, 8),
     [adjustedCollateral],
   )
-  const loanAttentionColumns = useMemo(() => makeLoanAttentionColumns(effectiveReportingCurrencySymbol), [effectiveReportingCurrencySymbol])
-  const collateralColumns = useMemo(() => makeCollateralColumns(effectiveReportingCurrencySymbol), [effectiveReportingCurrencySymbol])
+  const formatDashboardAmount = useCallback(
+    (value: string | number | null | undefined) => formatCurrencyAmount(value, effectiveReportingCurrencySymbol, defaultFinancialUnit, locale),
+    [defaultFinancialUnit, effectiveReportingCurrencySymbol, locale],
+  )
+  const loanAttentionColumns = useMemo(() => makeLoanAttentionColumns(formatDashboardAmount), [formatDashboardAmount])
+  const collateralColumns = useMemo(() => makeCollateralColumns(formatDashboardAmount), [formatDashboardAmount])
 
   if (isLoading) {
     return (
@@ -220,25 +228,25 @@ export function DashboardPage() {
               label="Cash Available"
               tone="primary"
               trend="Live ledger balance"
-              value={formatCurrencyAmount(summary.financial.cashAvailable, effectiveReportingCurrencySymbol)}
+              value={formatDashboardAmount(summary.financial.cashAvailable)}
             />
             <SituationKpiCard
               label="Active Loan Amount"
               tone="info"
               trend={`${summary.financial.activeLoanCount} active pawn contracts`}
-              value={formatCurrencyAmount(summary.financial.activeLoanAmount, effectiveReportingCurrencySymbol)}
+              value={formatDashboardAmount(summary.financial.activeLoanAmount)}
             />
             <SituationKpiCard
               label="Interest Collected"
               tone="success"
-              trend={trendText(summary.financial.interestCollected, summary.financial.previousInterestCollected, 'monthly comparison', effectiveReportingCurrencySymbol)}
-              value={formatCurrencyAmount(summary.financial.interestCollected, effectiveReportingCurrencySymbol)}
+              trend={trendText(summary.financial.interestCollected, summary.financial.previousInterestCollected, 'monthly comparison', formatDashboardAmount)}
+              value={formatDashboardAmount(summary.financial.interestCollected)}
             />
             <SituationKpiCard
               label="Net Profit"
               tone={summary.financial.netProfit >= 0 ? 'success' : 'danger'}
               trend={summary.financial.netProfit >= 0 ? 'Positive period result' : 'Negative period result'}
-              value={formatCurrencyAmount(summary.financial.netProfit, effectiveReportingCurrencySymbol)}
+              value={formatDashboardAmount(summary.financial.netProfit)}
             />
           </section>
 
@@ -248,12 +256,12 @@ export function DashboardPage() {
           >
             <div className="dashboard-financial-grid">
               <div className="dashboard-metric-grid">
-                <DashboardMetric label="Cash Available" value={formatCurrencyAmount(summary.financial.cashAvailable, effectiveReportingCurrencySymbol)} />
-                <DashboardMetric label="Active Loan Amount" value={formatCurrencyAmount(summary.financial.activeLoanAmount, effectiveReportingCurrencySymbol)} />
-                <DashboardMetric label="Interest Collected" value={formatCurrencyAmount(summary.financial.interestCollected, effectiveReportingCurrencySymbol)} />
-                <DashboardMetric label="Total Income" value={formatCurrencyAmount(summary.financial.totalIncome, effectiveReportingCurrencySymbol)} />
-                <DashboardMetric label="Total Expenses" tone="warning" value={formatCurrencyAmount(summary.financial.totalExpenses, effectiveReportingCurrencySymbol)} />
-                <DashboardMetric label="Net Profit" tone={summary.financial.netProfit >= 0 ? 'success' : 'danger'} value={formatCurrencyAmount(summary.financial.netProfit, effectiveReportingCurrencySymbol)} />
+                <DashboardMetric label="Cash Available" value={formatDashboardAmount(summary.financial.cashAvailable)} />
+                <DashboardMetric label="Active Loan Amount" value={formatDashboardAmount(summary.financial.activeLoanAmount)} />
+                <DashboardMetric label="Interest Collected" value={formatDashboardAmount(summary.financial.interestCollected)} />
+                <DashboardMetric label="Total Income" value={formatDashboardAmount(summary.financial.totalIncome)} />
+                <DashboardMetric label="Total Expenses" tone="warning" value={formatDashboardAmount(summary.financial.totalExpenses)} />
+                <DashboardMetric label="Net Profit" tone={summary.financial.netProfit >= 0 ? 'success' : 'danger'} value={formatDashboardAmount(summary.financial.netProfit)} />
               </div>
               <div className="dashboard-chart-card">
                 <div className="dashboard-chart-card__header">
@@ -277,7 +285,7 @@ export function DashboardPage() {
               <DashboardMetric label="Due Today" tone="warning" value={`${summary.risk.dueToday} loans`} />
               <DashboardMetric label="Due This Week" tone="warning" value={`${summary.risk.dueThisWeek} loans`} />
               <DashboardMetric label="Overdue Loans" tone="danger" value={`${summary.risk.overdueLoans} loans`} />
-              <DashboardMetric label="Overdue Amount" tone="danger" value={formatCurrencyAmount(summary.risk.overdueAmount, effectiveReportingCurrencySymbol)} />
+              <DashboardMetric label="Overdue Amount" tone="danger" value={formatDashboardAmount(summary.risk.overdueAmount)} />
               <DashboardMetric label="High-Risk Customers" tone="danger" value={summary.risk.highRiskCustomers} />
               <DashboardMetric label="Bad Repayment History Count" tone="warning" value={summary.risk.badRepaymentHistoryCount} />
             </div>
@@ -306,9 +314,9 @@ export function DashboardPage() {
             title="Collateral Situation"
           >
             <div className="dashboard-collateral-cards">
-              <DashboardMetric label="Total Collateral Value" value={formatCurrencyAmount(adjustedCollateralSummary.totalValue, effectiveReportingCurrencySymbol)} />
+              <DashboardMetric label="Total Collateral Value" value={formatDashboardAmount(adjustedCollateralSummary.totalValue)} />
               <DashboardMetric label="Average Loan-to-Value Ratio" tone={adjustedCollateralSummary.averageLtv >= 85 ? 'danger' : 'success'} value={formatPercent(adjustedCollateralSummary.averageLtv)} />
-              <DashboardMetric label="Gold / Jewelry Value" value={formatCurrencyAmount(adjustedCollateralSummary.jewelleryValue, effectiveReportingCurrencySymbol)} />
+              <DashboardMetric label="Gold / Jewelry Value" value={formatDashboardAmount(adjustedCollateralSummary.jewelleryValue)} />
               <DashboardMetric label="Expired Collateral Count" tone="danger" value={adjustedCollateralSummary.expiredCount} />
               <DashboardMetric label="Low-Margin Collateral Items" tone="warning" value={adjustedCollateralSummary.lowMarginCount} />
             </div>
@@ -320,7 +328,7 @@ export function DashboardPage() {
                     <p>Jewelry by material, normal items by category.</p>
                   </div>
                 </div>
-                <DonutChart categories={adjustedCollateralSummary.categories} currencySymbol={effectiveReportingCurrencySymbol} />
+                <DonutChart categories={adjustedCollateralSummary.categories} formatAmount={formatDashboardAmount} />
               </div>
               <div className="dashboard-table-card">
                 <TableHeader count={reviewItems.length} title="Collateral Items Needing Review" />
@@ -507,7 +515,7 @@ function LineChart({ points }: { points: DashboardFinancialChartPoint[] }) {
   )
 }
 
-function DonutChart({ categories, currencySymbol }: { categories: DashboardCollateralCategory[]; currencySymbol: string }) {
+function DonutChart({ categories, formatAmount }: { categories: DashboardCollateralCategory[]; formatAmount: DashboardAmountFormatter }) {
   const validCategories = categories.filter((category) => category.value > 0)
   const total = validCategories.reduce((sum, category) => sum + category.value, 0)
   const colors = ['#00677f', '#0ea5e9', '#10b981', '#f59e0b', '#1f5161', '#64748b']
@@ -546,7 +554,7 @@ function DonutChart({ categories, currencySymbol }: { categories: DashboardColla
         {validCategories.map((category, index) => (
           <div key={category.category}>
             <span><i style={{ background: colors[index % colors.length] }} />{category.category}</span>
-            <strong>{formatCurrencyAmount(category.value, currencySymbol)}</strong>
+            <strong>{formatAmount(category.value)}</strong>
           </div>
         ))}
       </div>
@@ -663,11 +671,11 @@ function financialSummary(summary: TenantDashboardSummary) {
     : `Your interest income is lower than last period, with ${loanLabel} currently open.`
 }
 
-function trendText(current: number, previous: number, suffix: string, currencySymbol: string) {
+function trendText(current: number, previous: number, suffix: string, formatAmount: DashboardAmountFormatter) {
   const difference = current - previous
   const sign = difference >= 0 ? '+' : '-'
 
-  return `${sign}${formatCurrencyAmount(Math.abs(difference), currencySymbol)} ${suffix}`
+  return `${sign}${formatAmount(Math.abs(difference))} ${suffix}`
 }
 
 function formatPercent(value: number) {
