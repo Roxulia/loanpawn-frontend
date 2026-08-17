@@ -4329,6 +4329,16 @@
   overflow-wrap: anywhere;
 }
 
+.dashboard-currency-values {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.dashboard-currency-values > span {
+  color: inherit;
+  font: inherit;
+}
+
 .dashboard-metric--success {
   background: color-mix(in srgb, var(--color-success) 7%, var(--color-surface));
 }
@@ -4390,6 +4400,23 @@
   gap: var(--space-3);
 }
 
+.dashboard-chart-source-totals {
+  align-items: start;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  padding: var(--space-3);
+}
+
+.dashboard-chart-source-totals > span:first-child {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
 .dashboard-chart-legend span,
 .dashboard-donut__legend span {
   align-items: center;
@@ -4420,6 +4447,16 @@
   display: grid;
   gap: var(--space-6);
   grid-template-columns: minmax(10rem, 0.55fr) minmax(0, 1fr);
+}
+
+.dashboard-donut-groups {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.dashboard-donut__currency {
+  color: var(--color-accent);
+  grid-column: 1 / -1;
 }
 
 .dashboard-donut svg {

@@ -212,9 +212,22 @@ export type TenantDebt = {
 
 export type DashboardTimeFilter = 'this_day' | 'this_week' | 'this_month' | 'custom'
 
+export type DashboardCurrency = {
+  id: number | null
+  code: string
+  symbol: string
+}
+
+export type DashboardCurrencyAmount = {
+  amount: number
+  currency: DashboardCurrency
+}
+
 export type DashboardFinancialChartPoint = {
   date: string
   loanAmount: number
+  loanAmounts: DashboardCurrencyAmount[]
+  debt: number
   returnedAmount: number
   interest: number
   expenses: number
@@ -225,6 +238,7 @@ export type DashboardLoanAttention = {
   loanCode: string
   dueDate: string | null
   loanAmount: number
+  currency: DashboardCurrency
   overdueDays: number
   riskLevel: 'Low' | 'Medium' | 'High'
   trustPercent: number
@@ -234,6 +248,7 @@ export type DashboardCollateralCategory = {
   category: string
   value: number
   count: number
+  currency: DashboardCurrency
 }
 
 export type DashboardCollateralReviewItem = {
@@ -242,6 +257,7 @@ export type DashboardCollateralReviewItem = {
   category: string
   estimatedMarketValue: number
   loanAmount: number
+  currency: DashboardCurrency
   ltvRatio: number
   status: 'Safe' | 'Low Margin' | 'Expired'
   isJewellery: boolean
@@ -263,6 +279,7 @@ export type TenantDashboardSummary = {
   financial: {
     cashAvailable: number
     activeLoanAmount: number
+    activeLoanAmounts: DashboardCurrencyAmount[]
     activeLoanCount: number
     interestCollected: number
     totalIncome: number
@@ -279,14 +296,17 @@ export type TenantDashboardSummary = {
     dueThisWeek: number
     overdueLoans: number
     overdueAmount: number
+    overdueAmounts: DashboardCurrencyAmount[]
     highRiskCustomers: number
     badRepaymentHistoryCount: number
     loansRequiringAttention: DashboardLoanAttention[]
   }
   collateral: {
     totalCollateralValue: number
+    totalCollateralValues: DashboardCurrencyAmount[]
     averageLtvRatio: number
     goldJewelryValue: number
+    goldJewelryValues: DashboardCurrencyAmount[]
     expiredCollateralCount: number
     lowMarginCollateralItems: number
     categoryBreakdown: DashboardCollateralCategory[]
