@@ -12,6 +12,18 @@ export const uiLocaleOptions: Array<{ label: string; locale: UiLocale; nativeLab
 type TranslateParams = Record<string, string | number>
 
 const mmTranslations: Record<string, string> = {
+  Notifications: 'အသိပေးချက်များ',
+  'Mark all as read': 'အားလုံးကို ဖတ်ပြီးအဖြစ် သတ်မှတ်ရန်',
+  'Loading notifications...': 'အသိပေးချက်များ ဖွင့်နေသည်...',
+  'Unable to load notifications.': 'အသိပေးချက်များကို ဖွင့်၍မရပါ။',
+  'No notifications yet.': 'အသိပေးချက် မရှိသေးပါ။',
+  'Reporting currency recalculation queued': 'အစီရင်ခံငွေကြေး ပြန်လည်တွက်ချက်မှု တန်းစီထားသည်',
+  'Reporting currency recalculation started': 'အစီရင်ခံငွေကြေး ပြန်လည်တွက်ချက်မှု စတင်ပြီ',
+  'Historical exchange rates required': 'ယခင်ငွေလဲနှုန်းများ လိုအပ်သည်',
+  'Reporting currency recalculation completed': 'အစီရင်ခံငွေကြေး ပြန်လည်တွက်ချက်မှု ပြီးစီးပြီ',
+  'Reporting currency recalculation failed': 'အစီရင်ခံငွေကြေး ပြန်လည်တွက်ချက်မှု မအောင်မြင်ပါ',
+  'Reporting currency change cancelled': 'အစီရင်ခံငွေကြေး ပြောင်းလဲမှု ပယ်ဖျက်ပြီးပါပြီ',
+  'missing rate dates': 'လိုအပ်သော နှုန်းထားရက်များ',
   'Financial Account Access': 'ငွေစာရင်း အကောင့်အသုံးပြုခွင့်',
   'Choose which accounts this staff member can use for financial operations.': 'ဤဝန်ထမ်းက ငွေကြေးလုပ်ငန်းများတွင် အသုံးပြုနိုင်မည့် အကောင့်များကို ရွေးချယ်ပါ။',
   'Loading financial accounts...': 'ငွေစာရင်းအကောင့်များ ဖွင့်နေပါသည်...',

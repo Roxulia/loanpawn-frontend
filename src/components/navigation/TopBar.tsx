@@ -4,6 +4,7 @@ import { routePaths } from '../../app/routes/paths'
 import { useTenantSession } from '../../contexts/useTenantSession'
 import { useUiLocale } from '../../locales/UiLocale'
 import { tenantAuthService } from '../../services/tenant/authService'
+import { NotificationMenu } from './NotificationMenu'
 
 type TopBarProps = {
   onOpenSidebar?: () => void
@@ -72,31 +73,34 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
           <strong>{tenantLabel}</strong>
         </div>
       </div>
-      <div className="topbar-user-menu" ref={userMenuRef}>
-        <button
-          aria-expanded={isUserMenuOpen}
-          aria-haspopup="menu"
-          className="topbar-user"
-          onClick={() => setIsUserMenuOpen((isOpen) => !isOpen)}
-          type="button"
-        >
-          <span className="topbar-user__avatar" aria-hidden="true">{userInitials}</span>
-          <span className="topbar-user__identity">
-            <strong>{displayName}</strong>
-            <span>{userRole ?? userStatus ?? t('User')}</span>
-          </span>
-          <span className="topbar-user__chevron" aria-hidden="true">v</span>
-        </button>
-        {isUserMenuOpen && (
-          <div className="topbar-user-dropdown" role="menu">
-            <button disabled={!currentUserId} onClick={handleProfileSetting} role="menuitem" type="button">
-              {t('Profile Setting')}
-            </button>
-            <button onClick={() => void handleLogout()} role="menuitem" type="button">
-              {t('Logout')}
-            </button>
-          </div>
-        )}
+      <div className="topbar-actions">
+        <NotificationMenu />
+        <div className="topbar-user-menu" ref={userMenuRef}>
+          <button
+            aria-expanded={isUserMenuOpen}
+            aria-haspopup="menu"
+            className="topbar-user"
+            onClick={() => setIsUserMenuOpen((isOpen) => !isOpen)}
+            type="button"
+          >
+            <span className="topbar-user__avatar" aria-hidden="true">{userInitials}</span>
+            <span className="topbar-user__identity">
+              <strong>{displayName}</strong>
+              <span>{userRole ?? userStatus ?? t('User')}</span>
+            </span>
+            <span className="topbar-user__chevron" aria-hidden="true">v</span>
+          </button>
+          {isUserMenuOpen && (
+            <div className="topbar-user-dropdown" role="menu">
+              <button disabled={!currentUserId} onClick={handleProfileSetting} role="menuitem" type="button">
+                {t('Profile Setting')}
+              </button>
+              <button onClick={() => void handleLogout()} role="menuitem" type="button">
+                {t('Logout')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
