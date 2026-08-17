@@ -11,6 +11,8 @@ import { usePermissions } from '../../auth'
 import type { UiLocale } from '../../../locales/UiLocale'
 import type { Currency } from '../../currency/types'
 import type { AccountingDayScheduleDay } from '../../../dataobjects/tenant/finance'
+import { useNotifications } from '../../notifications/useNotifications'
+import type { TenantNotification } from '../../notifications/types'
 import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
 import { DashboardFinancialUnitSetting } from '../components/DashboardFinancialUnitSetting'
 
@@ -146,6 +148,7 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const { currentUser, session, setCurrentUser, setLocale, setSession, setTenantResolution, tenantResolution } = useTenantSession()
+  const { notifications } = useNotifications()
   const { hasPermission } = usePermissions()
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
   const canViewGeneralSettings = hasPermission('manage_slip_document')
@@ -190,6 +193,18 @@ export function SettingsPage() {
   const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
   const accountingScheduleChanged = useMemo(() => hasChanged(accountingSchedule, accountingScheduleInitial), [accountingSchedule, accountingScheduleInitial])
+  const currencyRecalculationNotification = useMemo(() => {
+    if (!currencyRecalculation) return null
+
+    return notifications.find((notification) => (
+      notification.type === 'reporting_currency_recalculation'
+      && notification.recalculation_id === currencyRecalculation.id
+    )) ?? null
+  }, [currencyRecalculation, notifications])
+  const currencyRecalculationNotice = reportingCurrencyNotice(
+    currencyRecalculation,
+    currencyRecalculationNotification,
+  )
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true)
@@ -863,16 +878,14 @@ export function SettingsPage() {
         </Card>}
 
         {canViewCurrencyPreferences && <Card title="Currency Settings" description="Choose the currencies used for account defaults and financial reporting.">
-          {currencyRecalculation && <Alert
-            action={<div className="settings-recalculation-actions">
-              {currencyRecalculation.missing_rates.length > 0 && canProvideHistoricalRates && <Button onClick={() => navigate(routePaths.reportingCurrencyRates)} variant="primary">Provide Required Rates</Button>}
+          {currencyRecalculationNotice && <Alert
+            action={!currencyRecalculationNotice.isTerminal && <div className="settings-recalculation-actions">
+              {currencyRecalculationNotice.status === 'waiting_for_rates' && canProvideHistoricalRates && <Button onClick={() => navigate(routePaths.reportingCurrencyRates)} variant="primary">Provide Required Rates</Button>}
               {canUpdateCurrencyPreferences && <Button onClick={() => setIsAbortCurrencyDialogOpen(true)} variant="danger">Abort Currency Change</Button>}
             </div>}
-            message={currencyRecalculation.missing_rates.length > 0
-              ? `Reporting totals remain in the previous currency. Add exact-date rates for: ${currencyRecalculation.missing_rates.map((rate) => rate.date).join(', ')}.`
-              : `Reporting currency recalculation is ${currencyRecalculation.status.replaceAll('_', ' ')}.`}
-            title="Reporting currency update pending"
-            tone="warning"
+            message={currencyRecalculationNotice.message}
+            title={currencyRecalculationNotice.title}
+            tone={currencyRecalculationNotice.tone}
           />}
           <FormGroup columns={3}>
             <FormField id="settings-default-currency" label="Default Currency">
@@ -963,7 +976,7 @@ export function SettingsPage() {
       <ConfirmDialog
         confirmLabel="Abort Currency Change"
         isLoading={savingSection === 'abort-reporting-currency'}
-        isOpen={isAbortCurrencyDialogOpen}
+        isOpen={isAbortCurrencyDialogOpen && !currencyRecalculationNotice?.isTerminal}
         message="Return reporting reports to the previous currency? Historical rates already submitted will be retained."
         onCancel={() => setIsAbortCurrencyDialogOpen(false)}
         onConfirm={() => void abortReportingCurrencyChange()}
@@ -1213,6 +1226,81 @@ function normalizeCurrencyPreferences(value: CurrencyPreferences) {
     reporting_currency_id: value.reporting_currency_id,
     default_financial_unit: value.default_financial_unit ?? null,
     update_key: value.update_key,
+  }
+}
+
+function reportingCurrencyNotice(
+  recalculation: CurrencyPreferences['reporting_currency_recalculation'],
+  notification: TenantNotification | null,
+) {
+  if (!recalculation) return null
+
+  const status = notification?.status ?? recalculation.status
+  const previousCode = notification?.data.previous_currency.code ?? 'the previous currency'
+  const requestedCode = notification?.data.requested_currency.code ?? 'the requested currency'
+
+  if (status === 'completed') {
+    return {
+      isTerminal: true,
+      message: `Reporting totals now use ${requestedCode}. The recalculation completed successfully.`,
+      status,
+      title: 'Reporting currency update completed',
+      tone: 'success' as const,
+    }
+  }
+
+  if (status === 'cancelled') {
+    return {
+      isTerminal: true,
+      message: `The reporting currency change was cancelled. Reporting totals continue to use ${previousCode}.`,
+      status,
+      title: 'Reporting currency update cancelled',
+      tone: 'info' as const,
+    }
+  }
+
+  if (status === 'failed') {
+    return {
+      isTerminal: false,
+      message: `The recalculation to ${requestedCode} failed. You can abort the currency change or retry after correcting the required exchange rates.`,
+      status,
+      title: 'Reporting currency update failed',
+      tone: 'danger' as const,
+    }
+  }
+
+  if (status === 'waiting_for_rates') {
+    const dates = recalculation.missing_rates.map((rate) => rate.date)
+    const missingRateCount = notification?.data.missing_rate_count ?? dates.length
+    const requirement = dates.length > 0
+      ? `Add exact-date rates for: ${dates.join(', ')}.`
+      : `Add the required exchange rates for ${missingRateCount} date${missingRateCount === 1 ? '' : 's'}.`
+
+    return {
+      isTerminal: false,
+      message: `Reporting totals remain in ${previousCode}. ${requirement}`,
+      status,
+      title: 'Historical exchange rates required',
+      tone: 'warning' as const,
+    }
+  }
+
+  if (status === 'processing') {
+    return {
+      isTerminal: false,
+      message: `Reporting totals remain in ${previousCode} while transactions are recalculated to ${requestedCode}.`,
+      status,
+      title: 'Reporting currency recalculation in progress',
+      tone: 'info' as const,
+    }
+  }
+
+  return {
+    isTerminal: false,
+    message: `The change from ${previousCode} to ${requestedCode} is queued. Reporting totals will remain in ${previousCode} until recalculation completes.`,
+    status,
+    title: 'Reporting currency recalculation queued',
+    tone: 'warning' as const,
   }
 }
 
