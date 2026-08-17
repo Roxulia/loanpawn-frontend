@@ -302,12 +302,12 @@ export function StaffEditPage() {
 
           <FinancialAccountAssignmentForm
             accounts={financialAccounts}
-            disabled={!canManageFinancialAccounts || targetStatus !== 'active'}
+            disabled={!canManageFinancialAccounts}
             isLoading={isLoadingFinancialAccounts}
             isSaving={isSavingFinancialAccounts}
             onSave={() => void handleFinancialAccountSave()}
             onToggle={handleFinancialAccountToggle}
-            protectedReason={isOwnerTarget ? 'Owner account access is managed automatically and cannot be changed.' : isSelfTarget ? 'You cannot change your own financial account access.' : targetStatus !== 'active' ? 'Activate this staff account before assigning financial accounts.' : null}
+            protectedReason={isOwnerTarget ? 'Owner account access is managed automatically and cannot be changed.' : isSelfTarget ? 'You cannot change your own financial account access.' : null}
             readOnly={!hasPermission('manage_financial_account_assignments') || isOwnerTarget || isSelfTarget}
             selectedAccountIds={selectedFinancialAccountIds}
           />
