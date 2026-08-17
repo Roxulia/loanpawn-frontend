@@ -31,7 +31,6 @@ export function StaffEditPage() {
   const { hasPermission } = usePermissions()
   const { currentUser, session, setSession } = useTenantSession()
   const [targetRoleName, setTargetRoleName] = useState('')
-  const [targetStatus, setTargetStatus] = useState('')
   const isAdminTarget = targetRoleName.toLowerCase() === 'admin'
   const isOwnerTarget = targetRoleName.toLowerCase() === 'owner'
   const isSelfTarget = (currentUser?.code ?? session?.user.code) === staffCode
@@ -77,7 +76,6 @@ export function StaffEditPage() {
       setForm(nextFormWithRole)
       setInitialForm(nextFormWithRole)
       setTargetRoleName(getUserRoleName(response))
-      setTargetStatus(response.status)
       setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
       setSelectedFinancialAccountIds((response.financial_accounts ?? []).map((account) => account.id))
     } catch (loadError) {
