@@ -92,17 +92,123 @@ function FormPriceField({ id, label, value, onChange }: { id: string; label: str
 function formatRate(value: string) { return value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value }
 
 function ClosingPriceTrends({ trend, days, onDaysChange }: { trend: ExchangeRateTrend | null; days: 7 | 30 | 90; onDaysChange: (days: 7 | 30 | 90) => void }) {
-  return <section className="exchange-rate-trends"><div className="row-actions">{([7, 30, 90] as const).map((range) => <Button key={range} onClick={() => onDaysChange(range)} variant={days === range ? 'primary' : 'secondary'}>{range} days</Button>)}</div><div className="exchange-rate-trend-grid"><PriceTrendPanel title="Tenant closing prices" points={trend?.tenant_points ?? []} />{Boolean(trend?.platform_points.length) && <PriceTrendPanel title="Admin closing prices" points={trend?.platform_points ?? []} />}</div></section>
+  return <section className="exchange-rate-trends">
+    <header className="exchange-rate-trends__header">
+      <div>
+        <span className="eyebrow">Daily close</span>
+        <h3>{trend?.pair_code ?? 'Exchange-rate'} price movement</h3>
+        <p>{trend ? `${formatChartDate(trend.from_date)} – ${formatChartDate(trend.to_date)}` : 'Select a period to review closing prices.'}</p>
+      </div>
+      <div className="exchange-rate-range-picker" role="group" aria-label="Trend period">
+        {([7, 30, 90] as const).map((range) => <button aria-pressed={days === range} className={days === range ? 'is-active' : undefined} key={range} onClick={() => onDaysChange(range)} type="button">{range}D</button>)}
+      </div>
+    </header>
+    <div className="exchange-rate-trend-grid">
+      <PriceTrendPanel title="Tenant closing prices" source="Tenant rate" points={trend?.tenant_points ?? []} />
+      {Boolean(trend?.platform_points.length) && <PriceTrendPanel title="Admin closing prices" source="Platform reference" points={trend?.platform_points ?? []} />}
+    </div>
+  </section>
 }
 
-function PriceTrendPanel({ title, points }: { title: string; points: ExchangeRateTrendPoint[] }) {
-  if (!points.length) return <div className="subform-panel"><h3>{title}</h3><p>No closing prices for this period.</p></div>
-  const width = 640, height = 240, padding = 30
-  const values = points.flatMap((point) => [Number(point.buying_close), Number(point.selling_close)]).filter(Number.isFinite)
-  const min = Math.min(...values), max = Math.max(...values), spread = max - min || 1
-  const coordinate = (index: number, value: string) => `${padding + (points.length === 1 ? 0 : index / (points.length - 1) * (width - padding * 2))},${height - padding - ((Number(value) - min) / spread) * (height - padding * 2)}`
-  const segments = splitTrendSegments(points)
-  return <div className="subform-panel exchange-rate-trend-panel"><h3>{title}</h3><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}><line className="exchange-rate-chart-axis" x1={padding} x2={width - padding} y1={height - padding} y2={height - padding} />{segments.map((segment) => <polyline key={`buying-${segment[0].point.date}`} className="exchange-rate-chart-line exchange-rate-chart-line--buying" points={segment.map(({ point, index }) => coordinate(index, point.buying_close)).join(' ')} />)}{segments.map((segment) => <polyline key={`selling-${segment[0].point.date}`} className="exchange-rate-chart-line exchange-rate-chart-line--selling" points={segment.map(({ point, index }) => coordinate(index, point.selling_close)).join(' ')} />)}{points.map((point, index) => <g key={point.date}><circle className="exchange-rate-chart-point exchange-rate-chart-point--buying" cx={coordinate(index, point.buying_close).split(',')[0]} cy={coordinate(index, point.buying_close).split(',')[1]} r="4"><title>{`${point.date} Buying ${formatRate(point.buying_close)}`}</title></circle><circle className="exchange-rate-chart-point exchange-rate-chart-point--selling" cx={coordinate(index, point.selling_close).split(',')[0]} cy={coordinate(index, point.selling_close).split(',')[1]} r="4"><title>{`${point.date} Selling ${formatRate(point.selling_close)}`}</title></circle></g>)}</svg><div className="exchange-rate-chart-legend"><span><i className="is-buying" />Buying</span><span><i className="is-selling" />Selling</span></div></div>
+function PriceTrendPanel({ title, source, points }: { title: string; source: string; points: ExchangeRateTrendPoint[] }) {
+  const orderedPoints = [...points].sort((left, right) => left.date.localeCompare(right.date))
+  const [focusedDate, setFocusedDate] = useState<string | null>(orderedPoints.at(-1)?.date ?? null)
+
+  if (!orderedPoints.length) return <div className="subform-panel exchange-rate-trend-panel exchange-rate-trend-panel--empty"><div><span className="eyebrow">{source}</span><h3>{title}</h3></div><p>No closing prices were recorded for this period.</p></div>
+
+  const width = 760
+  const height = 330
+  const plot = { top: 24, right: 24, bottom: 48, left: 76 }
+  const plotWidth = width - plot.left - plot.right
+  const plotHeight = height - plot.top - plot.bottom
+  const values = orderedPoints.flatMap((point) => [Number(point.buying_close), Number(point.selling_close)]).filter(Number.isFinite)
+  const dataMin = Math.min(...values)
+  const dataMax = Math.max(...values)
+  const dataSpread = dataMax - dataMin
+  const domainPadding = dataSpread > 0 ? dataSpread * 0.12 : Math.max(Math.abs(dataMax) * 0.02, 1)
+  const domainMin = Math.max(0, dataMin - domainPadding)
+  const domainMax = dataMax + domainPadding
+  const domainSpread = domainMax - domainMin || 1
+  const timestamps = orderedPoints.map((point) => Date.parse(`${point.date}T00:00:00Z`))
+  const timeMin = Math.min(...timestamps)
+  const timeMax = Math.max(...timestamps)
+  const x = (index: number) => plot.left + (timeMax === timeMin ? plotWidth / 2 : ((timestamps[index] - timeMin) / (timeMax - timeMin)) * plotWidth)
+  const y = (value: string | number) => plot.top + (1 - ((Number(value) - domainMin) / domainSpread)) * plotHeight
+  const yTicks = Array.from({ length: 5 }, (_, index) => domainMin + (domainSpread * index) / 4).reverse()
+  const xTickIndexes = chartTickIndexes(orderedPoints.length)
+  const segments = splitTrendSegments(orderedPoints)
+  const matchedFocusedIndex = orderedPoints.findIndex((point) => point.date === focusedDate)
+  const focusedIndex = matchedFocusedIndex >= 0 ? matchedFocusedIndex : orderedPoints.length - 1
+  const focusedPoint = orderedPoints[focusedIndex] ?? orderedPoints.at(-1)!
+  const latestPoint = orderedPoints.at(-1)!
+  const previousPoint = orderedPoints.at(-2)
+  const buyingChange = previousPoint ? percentageChange(Number(latestPoint.buying_close), Number(previousPoint.buying_close)) : null
+  const sellingChange = previousPoint ? percentageChange(Number(latestPoint.selling_close), Number(previousPoint.selling_close)) : null
+  const hitWidth = Math.max(18, Math.min(48, plotWidth / orderedPoints.length))
+
+  function focusPoint(index: number) {
+    setFocusedDate(orderedPoints[index].date)
+  }
+
+  return <article className="subform-panel exchange-rate-trend-panel">
+    <header className="exchange-rate-trend-panel__header">
+      <div><span className="eyebrow">{source}</span><h3>{title}</h3><p>{orderedPoints.length} daily close{orderedPoints.length === 1 ? '' : 's'}</p></div>
+      <div className="exchange-rate-chart-legend" aria-label="Chart series"><span><i className="is-buying" />Buying</span><span><i className="is-selling" />Selling</span></div>
+    </header>
+    <div className="exchange-rate-chart-summary">
+      <ChartMetric label="Latest buying" value={formatChartRate(Number(latestPoint.buying_close))} change={buyingChange} tone="buying" />
+      <ChartMetric label="Latest selling" value={formatChartRate(Number(latestPoint.selling_close))} change={sellingChange} tone="selling" />
+      <ChartMetric label="Latest spread" value={formatChartRate(Number(latestPoint.selling_close) - Number(latestPoint.buying_close))} />
+    </div>
+    <div className="exchange-rate-chart-canvas">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${title}. Buying and selling closing prices from ${orderedPoints[0].date} to ${latestPoint.date}.`}>
+        <desc>Choose or focus a date to inspect its buying and selling closing prices.</desc>
+        {yTicks.map((tick) => <g key={tick}><line className="exchange-rate-chart-gridline" x1={plot.left} x2={width - plot.right} y1={y(tick)} y2={y(tick)} /><text className="exchange-rate-chart-axis-label exchange-rate-chart-axis-label--y" x={plot.left - 12} y={y(tick)}>{formatChartRate(tick)}</text></g>)}
+        {xTickIndexes.map((index) => <text className="exchange-rate-chart-axis-label exchange-rate-chart-axis-label--x" key={orderedPoints[index].date} x={x(index)} y={height - 14}>{formatShortChartDate(orderedPoints[index].date)}</text>)}
+        <line className="exchange-rate-chart-focus-line" x1={x(focusedIndex)} x2={x(focusedIndex)} y1={plot.top} y2={height - plot.bottom} />
+        {segments.map((segment) => <polyline key={`buying-${segment[0].point.date}`} className="exchange-rate-chart-line exchange-rate-chart-line--buying" points={segment.map(({ point, index }) => `${x(index)},${y(point.buying_close)}`).join(' ')} />)}
+        {segments.map((segment) => <polyline key={`selling-${segment[0].point.date}`} className="exchange-rate-chart-line exchange-rate-chart-line--selling" points={segment.map(({ point, index }) => `${x(index)},${y(point.selling_close)}`).join(' ')} />)}
+        {orderedPoints.map((point, index) => <g aria-label={`${formatChartDate(point.date)}. Buying ${formatChartRate(Number(point.buying_close))}. Selling ${formatChartRate(Number(point.selling_close))}.`} className="exchange-rate-chart-hit-target" key={point.date} onClick={() => focusPoint(index)} onFocus={() => focusPoint(index)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); focusPoint(index) } }} role="button" tabIndex={0}>
+          <rect fill="transparent" height={plotHeight} width={hitWidth} x={x(index) - hitWidth / 2} y={plot.top} />
+          <circle className={`exchange-rate-chart-point exchange-rate-chart-point--buying${index === focusedIndex ? ' is-focused' : ''}`} cx={x(index)} cy={y(point.buying_close)} r={index === focusedIndex ? 6 : 3.5} />
+          <circle className={`exchange-rate-chart-point exchange-rate-chart-point--selling${index === focusedIndex ? ' is-focused' : ''}`} cx={x(index)} cy={y(point.selling_close)} r={index === focusedIndex ? 6 : 3.5} />
+        </g>)}
+      </svg>
+    </div>
+    <div className="exchange-rate-chart-focus" aria-live="polite">
+      <div><span>Selected date</span><strong>{formatChartDate(focusedPoint.date)}</strong></div>
+      <div><span>Buying close</span><strong className="is-buying">{formatChartRate(Number(focusedPoint.buying_close))}</strong></div>
+      <div><span>Selling close</span><strong className="is-selling">{formatChartRate(Number(focusedPoint.selling_close))}</strong></div>
+      <div><span>Spread</span><strong>{formatChartRate(Number(focusedPoint.selling_close) - Number(focusedPoint.buying_close))}</strong></div>
+    </div>
+  </article>
+}
+
+function ChartMetric({ label, value, change, tone }: { label: string; value: string; change?: number | null; tone?: 'buying' | 'selling' }) {
+  const changeTone = change === null || change === undefined || change === 0 ? 'is-flat' : change > 0 ? 'is-up' : 'is-down'
+  return <div className={`exchange-rate-chart-metric${tone ? ` exchange-rate-chart-metric--${tone}` : ''}`}><span>{label}</span><strong>{value}</strong>{change !== null && change !== undefined && <small className={changeTone}>{change > 0 ? '+' : ''}{change.toFixed(2)}% vs prior close</small>}</div>
+}
+
+function chartTickIndexes(length: number) {
+  if (length <= 1) return [0]
+  const tickCount = Math.min(5, length)
+  return Array.from(new Set(Array.from({ length: tickCount }, (_, index) => Math.round((index * (length - 1)) / (tickCount - 1)))))
+}
+
+function percentageChange(current: number, previous: number) {
+  return previous === 0 ? 0 : ((current - previous) / previous) * 100
+}
+
+function formatChartRate(value: number) {
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 }).format(value)
+}
+
+function formatChartDate(value: string) {
+  return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`))
+}
+
+function formatShortChartDate(value: string) {
+  return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`))
 }
 
 function splitTrendSegments(points: ExchangeRateTrendPoint[]) {

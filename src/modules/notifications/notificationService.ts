@@ -5,7 +5,7 @@ type AuthOptions = { token?: string; tenantCode?: string }
 
 export const notificationService = {
   list(options: AuthOptions) {
-    return apiClient.get<TenantNotificationList>('/tenant/notifications?per_page=20', options)
+    return apiClient.get<TenantNotificationList>('/tenant/notifications?per_page=5', options)
   },
 
   markRead(id: string, options: AuthOptions) {

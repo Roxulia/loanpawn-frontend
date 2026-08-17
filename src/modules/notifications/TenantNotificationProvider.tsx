@@ -61,7 +61,7 @@ export function TenantNotificationProvider({ children }: { children: ReactNode }
         setNotifications((current) => [
           event.notification,
           ...current.filter((item) => item.id !== event.notification.id),
-        ].slice(0, 20))
+        ].slice(0, 5))
         if (event.notification.read_at === null) {
           setUnreadCount((count) => count + 1)
         }
