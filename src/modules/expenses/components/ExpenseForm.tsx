@@ -38,7 +38,8 @@ export function ExpenseForm({
       <form className="ui-form" onSubmit={onSubmit}>
         <FormGroup columns={2}>
           <FormField id="expense-create-account" label="Payment Account">
-            <FinancialAccountSelect id="expense-create-account" onChange={(accountId) => onChange('account_id', accountId)} value={value.account_id} />
+            <FinancialAccountSelect id="expense-create-account" locked={editing} onChange={(accountId) => onChange('account_id', accountId)} value={value.account_id} />
+            {editing ? <span className="ui-form-field__hint">The account used by a posted expense cannot be changed.</span> : null}
           </FormField>
           <ReportingExchangeRateField accountId={value.account_id} inversed={value.reporting_exchange_rate_inversed} manualRate={value.reporting_exchange_rate} onInversedChange={(inversed) => onChange('reporting_exchange_rate_inversed', inversed)} onManualRateChange={(rate) => onChange('reporting_exchange_rate', rate)} />
           <FormField error={errors.amount} helperText={editing ? 'The posted expense amount cannot be changed.' : undefined} id="expense-create-amount" label="Amount">

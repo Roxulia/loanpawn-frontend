@@ -31,6 +31,16 @@ export type TenantDetail = {
     plan_type: TenantPlanType
     expires_at: string | null
     status: TenantLicenseStatus
+    current_month_slip_count: number
+    current_staff_count: number
+    current_account_count: number
+    current_currency_type_count: number
+    current_exchange_pair_count: number
+    max_slip_per_month: number | null
+    max_staff_count: number | null
+    max_account_count: number | null
+    max_currency_type_count: number | null
+    max_exchange_pair_count: number | null
   }
   tenant_branding?: {
     logo_path?: string | null

@@ -176,6 +176,10 @@ export const tenantResourceService = {
     return apiClient.post<TenantCapital>('/tenant/capitals', payload, authOptions(auth))
   },
 
+  getCapital(capitalCode: string, auth?: TenantAuth) {
+    return apiClient.get<TenantCapital>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
+  },
+
   updateCapital(capitalCode: string, payload: unknown, auth?: TenantAuth) {
     return apiClient.put<TenantCapital>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, payload, authOptions(auth))
   },

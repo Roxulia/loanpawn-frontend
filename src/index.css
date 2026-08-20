@@ -269,6 +269,7 @@ p {
 
 .ui-searchable-select { position: relative; width: 100%; }
 .ui-searchable-select__menu { background: var(--surface, #fff); border: 1px solid var(--border-color, #dbe4e8); border-radius: 10px; box-shadow: 0 12px 30px rgb(15 23 42 / 14%); left: 0; max-height: 280px; overflow-y: auto; position: absolute; right: 0; top: calc(100% + 4px); z-index: 40; }
+.ui-searchable-select__menu--portal { bottom: auto; position: fixed; right: auto; top: auto; z-index: 80; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .ui-searchable-select__option { align-items: flex-start; background: transparent; border: 0; border-bottom: 1px solid var(--border-color, #edf2f4); color: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; text-align: left; width: 100%; }
 .ui-searchable-select__option:hover, .ui-searchable-select__option.is-active { background: rgb(0 103 127 / 8%); }
 .ui-searchable-select__option span, .ui-searchable-select__status { color: var(--muted-color, #64748b); font-size: .82rem; }
@@ -325,6 +326,15 @@ p {
 .exchange-rate-chart-legend i { border-radius: 999px; display: inline-block; height: 3px; width: 18px; }
 .exchange-rate-chart-legend .is-buying { background: #007f8f; }
 .exchange-rate-chart-legend .is-selling { background: #e98700; }
+.exchange-rate-chart-switches, .exchange-rate-chart-switches > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.exchange-rate-chart-switches { justify-content: space-between; margin-bottom: 12px; }
+.exchange-rate-candle { stroke-width: 2; }
+.exchange-rate-candle.is-up, .exchange-rate-candle__body.is-up { fill: #0f9f72; stroke: #0f7959; }
+.exchange-rate-candle.is-down, .exchange-rate-candle__body.is-down { fill: #df5d5d; stroke: #b83e3e; }
+.exchange-rate-candle__body { rx: 2px; stroke-width: 1; }
+.exchange-rate-candle__body.is-focused { filter: drop-shadow(0 2px 3px rgb(15 23 42 / 30%)); stroke-width: 2; }
+.exchange-rate-chart-legend .is-up { background: #0f9f72; }
+.exchange-rate-chart-legend .is-down { background: #df5d5d; }
 .exchange-rate-chart-focus { background: var(--color-surface-muted); border: 1px solid var(--color-border-muted); border-radius: 12px; display: grid; gap: 12px; grid-template-columns: 1.3fr repeat(3, 1fr); padding: 12px 14px; }
 .exchange-rate-chart-focus > div { display: grid; gap: 3px; min-width: 0; }
 .exchange-rate-chart-focus strong { font-size: .88rem; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -631,6 +641,16 @@ p {
 .notification-item__content time {
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+}
+
+@media (max-width: 760px) {
+  .notification-dropdown { border-radius: 18px 18px 0 0; bottom: 0; left: 0; min-width: 0; position: fixed; right: 0; top: auto; width: 100%; z-index: 75; }
+  .notification-dropdown__header { gap: 12px; padding: 16px; }
+  .notification-dropdown__header button { min-height: 44px; padding: 0 8px; }
+  .notification-dropdown__body { max-height: min(70svh, 36rem); overscroll-behavior: contain; }
+  .notification-item { min-height: 64px; padding: 14px 16px; }
+  .exchange-rate-chart-switches { align-items: stretch; flex-direction: column; }
+  .exchange-rate-chart-switches > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .topbar-user__avatar {

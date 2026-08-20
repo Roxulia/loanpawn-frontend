@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { Badge, Button } from '../../components/atoms'
 import { Alert } from '../../components/feedback'
 import { EditIcon, CirclePlusIcon as PlusIcon, TrashIcon } from '../../components/icons/icon'
@@ -33,6 +33,7 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
     form: TForm,
     errors: FinanceFormErrors<TForm>,
     updateField: (field: keyof TForm, value: FinanceFormValue) => void,
+    context: { item: TItem | null; mode: 'create' | 'edit' },
   ) => ReactNode
   save: (mode: 'create' | 'edit', form: TForm, item: TItem | null) => Promise<unknown>
   searchPlaceholder: string
@@ -43,7 +44,9 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
   validate: (form: TForm) => FinanceFormErrors<TForm>
   createPermission?: PermissionCode
   createPath?: string
+  mobileCreatePath?: string
   editPath?: (item: TItem) => string
+  mobileEditPath?: (item: TItem) => string
   hideUpdateAction?: boolean
   onDelete?: (item: TItem) => Promise<unknown>
   renderItemActions?: (item: TItem, helpers: { removeItem: (item: TItem) => void; reload: () => Promise<void>; updateItem: (item: TItem) => void }) => ReactNode
@@ -59,6 +62,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   config: FinanceResourcePageConfig<TItem, TForm>
 }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { hasPermission } = usePermissions()
   const canList = hasPermission(config.listPermission)
   const canCreate = config.createPermission ? hasPermission(config.createPermission) : false
@@ -80,7 +84,11 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(() => routeNotice(location.state))
+
+  useEffect(() => {
+    if (routeNotice(location.state)) navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state, navigate])
 
   const loadItems = useCallback(async (page: number) => {
     if (!canList) {
@@ -129,8 +137,11 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   }, [config, items, searchTerm])
 
   function openCreateForm() {
-    if (config.createPath) {
-      navigate(config.createPath)
+    const createPath = config.mobileCreatePath && window.matchMedia('(max-width: 760px)').matches
+      ? config.mobileCreatePath
+      : config.createPath
+    if (createPath) {
+      navigate(createPath)
       return
     }
 
@@ -141,8 +152,11 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   }
 
   function openEditForm(item: TItem) {
-    if (config.editPath) {
-      navigate(config.editPath(item))
+    const editPath = config.mobileEditPath && window.matchMedia('(max-width: 760px)').matches
+      ? config.mobileEditPath(item)
+      : config.editPath?.(item)
+    if (editPath) {
+      navigate(editPath)
       return
     }
 
@@ -347,7 +361,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
         }}
         title={config.modalTitle(editingItem ? 'edit' : 'create')}
       >
-        {config.renderForm(form, formErrors, updateField)}
+        {config.renderForm(form, formErrors, updateField, { item: editingItem, mode: editingItem ? 'edit' : 'create' })}
       </ModalForm>
 
       <ConfirmDialog
@@ -361,6 +375,10 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
       />
     </section>
   )
+}
+
+function routeNotice(state: unknown) {
+  return typeof state === 'object' && state !== null && 'notice' in state && typeof state.notice === 'string' ? state.notice : null
 }
 
 function getPageValue<TItem>(

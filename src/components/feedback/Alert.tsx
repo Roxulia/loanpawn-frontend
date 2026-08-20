@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Button } from '../atoms'
 import { useUiLocale } from '../../locales/UiLocale'
 
@@ -21,6 +21,12 @@ const toneIcon: Record<AlertTone, string> = {
 
 export function Alert({ action, message, onDismiss, title, tone = 'info' }: AlertProps) {
   const { t } = useUiLocale()
+
+  useEffect(() => {
+    if (!onDismiss || (tone !== 'success' && tone !== 'info')) return
+    const timeout = window.setTimeout(onDismiss, 5000)
+    return () => window.clearTimeout(timeout)
+  }, [message, onDismiss, tone])
 
   return (
     <section className={`ui-alert ui-alert--${tone}`} role={tone === 'danger' ? 'alert' : 'status'}>

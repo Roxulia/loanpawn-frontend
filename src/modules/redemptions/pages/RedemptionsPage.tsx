@@ -12,6 +12,7 @@ import { FinancialAccountSelect } from '../../financialAccounts/components/Finan
 import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
 import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
 import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
+import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 
 const perPage = 10
 
@@ -264,22 +265,26 @@ export function RedemptionsPage() {
       {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Redemption updated" tone="success" />}
 
       {activeTab === 'workflow' ? (
-        <div className="workflow-stack">
-          <Card title="Slip Lookup">
-            <form className="inline-form ops-lookup-form redemption-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
-              <FormField id="redemption-slip-no" label="Slip Number or Barcode">
-                <Input id="redemption-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
-              </FormField>
-              <Button aria-label="Load Detail" className="redemption-lookup-submit" isLoading={isCalculating} leftIcon={<SearchIcon />} title="Load Detail" type="submit" variant="primary">Load Detail</Button>
-            </form>
-          </Card>
+        <div className="redemption-creation-flow">
+          <RedemptionCreationStep description="Find the active slip and confirm the amounts and collateral before payment." isComplete={Boolean(calculation)} number={1} title="Slip details">
+            <Card title="Slip Lookup">
+              <form className="inline-form ops-lookup-form redemption-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
+                <FormField id="redemption-slip-no" label="Slip Number or Barcode">
+                  <Input id="redemption-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
+                </FormField>
+                <Button aria-label="Load Detail" className="redemption-lookup-submit" isLoading={isCalculating} leftIcon={<SearchIcon />} title="Load Detail" type="submit" variant="primary">Load Detail</Button>
+              </form>
+            </Card>
 
-          {calculation && (
-            <div className="ops-post-lookup-grid">
+            {calculation && (
               <Card title="Redemption Detail">
                 <RedemptionSummary calculation={calculation} />
               </Card>
+            )}
+          </RedemptionCreationStep>
 
+          {calculation && (
+            <RedemptionCreationStep description="Record the received amount, receiving account, and final redemption details." number={2} title="Receive payment">
               <Card title="Receive Payment">
                 <form className="workflow-stack redemption-payment-form" onSubmit={(event) => void handleRedeem(event)}>
                   <div className="form-grid-compact redemption-payment-form__fields">
@@ -313,13 +318,13 @@ export function RedemptionsPage() {
                     <Button onClick={() => { resetRedemptionForm(); setRedemptionResult(null) }} variant="secondary">Reset</Button>
                     <Button disabled={!calculation} isLoading={isRedeeming} type="submit" variant="primary">Redeem</Button>
                   </ActionBar>
+                  <div className="redemption-caution">
+                    <strong><LocalizedText text="Before finalizing" /></strong>
+                    <span><LocalizedText text="Inspect returned collateral before redeeming. Redeem will permanently update this slip." /></span>
+                  </div>
                 </form>
-                <div className="redemption-caution">
-                  <strong><LocalizedText text="Before finalizing" /></strong>
-                  <span><LocalizedText text="Inspect returned collateral before redeeming. Redeem will permanently update this slip." /></span>
-                </div>
               </Card>
-            </div>
+            </RedemptionCreationStep>
           )}
         </div>
       ) : (
@@ -430,6 +435,22 @@ export function RedemptionsPage() {
   )
 }
 
+function RedemptionCreationStep({ children, description, isComplete = false, number, title }: { children: ReactNode; description: string; isComplete?: boolean; number: number; title: string }) {
+  return (
+    <section className={`redemption-creation-step${isComplete ? ' redemption-creation-step--complete' : ''}`}>
+      <header className="redemption-creation-step__header">
+        <span className="redemption-creation-step__number" aria-hidden="true">{number}</span>
+        <div>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+        {isComplete && <Badge tone="success">Ready</Badge>}
+      </header>
+      <div className="redemption-creation-step__content">{children}</div>
+    </section>
+  )
+}
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat('en-US').format(value)
 }
@@ -530,19 +551,16 @@ function RedemptionManagementMobileList({
     <div className="redemption-management-mobile-list">
       <div className="redemption-management-mobile-cards">
         {records.map((record) => (
-          <button className="redemption-management-mobile-card" key={record.id} onClick={() => onSelect(record)} type="button">
-            <strong>{getRedemptionSlipNumber(record)}</strong>
-            <span>
-              <span>
-                <small>Total Amount</small>
-                <b><AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'net')} /></b>
-              </span>
-              <span>
-                <small>Redeemed Date</small>
-                <b>{formatDate(getRedemptionDate(record))}</b>
-              </span>
-            </span>
-          </button>
+          <FinanceHistoryMobileCard
+            amount={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'net')} />}
+            eyebrow="Redemption"
+            key={record.id}
+            meta={formatDate(getRedemptionDate(record))}
+            onClick={() => onSelect(record)}
+            status="Redeemed"
+            statusTone="active"
+            title={`Slip ${getRedemptionSlipNumber(record)}`}
+          />
         ))}
       </div>
       <div className="ui-pagination redemption-management-mobile-pagination">

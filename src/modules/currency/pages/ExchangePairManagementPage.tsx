@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Button } from '../../../components/atoms'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { Badge, Button } from '../../../components/atoms'
 import { Alert } from '../../../components/feedback'
-import { Card, FormGroup, SectionHeader } from '../../../components/molecules'
+import { CheckIcon, CloseIcon, TrashIcon } from '../../../components/icons/icon'
+import { Card, DataCard, FormGroup, SectionHeader } from '../../../components/molecules'
 import { DataTable } from '../../../components/organisms'
-import { usePermissions } from '../../auth'
+import { ResourceUsageBadge, usePermissions } from '../../auth'
 import { ExchangeCurrencyField } from '../components/CurrencyFields'
 import { currencyService } from '../currencyService'
 import type { Currency, ExchangeRatePair } from '../types'
@@ -50,14 +51,26 @@ export function ExchangePairManagementPage() {
   }
 
   return <section className="page exchange-pair-management-page">
-    <SectionHeader title="Exchange Pair Management" subtitle="Configure explicit base and quote currency directions." />
+    <SectionHeader title="Exchange Pair Management" subtitle="Configure explicit base and quote currency directions." action={<ResourceUsageBadge resource="exchangePairs" />} />
     {error && <Alert message={error} onDismiss={() => setError(null)} title="Exchange-pair action failed" tone="danger" />}
     {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Exchange pairs updated" tone="success" />}
     <Card title="Exchange Pairs" description="Direction is explicit: one base currency equals the entered rate in quote currency.">
       {hasPermission('create_exchange_pair') && <div className="subform-panel exchange-pair-form"><FormGroup columns={2}><ExchangeCurrencyField currencies={currencies} id="pair-base" label="Base currency" onChange={(value) => setPairForm((current) => ({ ...current, base: value }))} value={pairForm.base} /><ExchangeCurrencyField currencies={currencies} id="pair-quote" label="Quote currency" onChange={(value) => setPairForm((current) => ({ ...current, quote: value }))} value={pairForm.quote} /></FormGroup><Button isLoading={saving} onClick={() => void savePair()} variant="primary">Add Pair</Button></div>}
-      <div className="exchange-pair-table--desktop exchange-pair-cards--mobile"><DataTable columns={[{ key: 'pair', header: 'Pair', render: (item: ExchangeRatePair) => <strong>{item.display_code}</strong> }, { key: 'meaning', header: 'Meaning', render: (item: ExchangeRatePair) => `1 ${item.base_currency.code} = rate × ${item.quote_currency.code}` }, { key: 'source', header: 'Source', render: (item: ExchangeRatePair) => item.is_default ? 'Built-in' : 'Tenant' }, { key: 'status', header: 'Status', render: (item: ExchangeRatePair) => item.is_active ? 'Active' : 'Inactive' }]} actions={(item) => <div className="row-actions">{item.can_update && hasPermission('update_exchange_pair') && <Button onClick={() => void togglePair(item)} variant="secondary">{item.is_active ? 'Deactivate' : 'Activate'}</Button>}{item.can_delete && hasPermission('delete_exchange_pair') && <Button onClick={() => void removePair(item)} variant="danger">Delete</Button>}</div>} emptyTitle="No exchange pairs" getItemId={(item) => item.id} getItemTitle={(item) => item.display_code} isLoading={loading} items={pairs} /></div>
+      <div className="exchange-pair-table--desktop exchange-pair-cards--mobile"><DataTable columns={[{ key: 'pair', header: 'Pair', render: (item: ExchangeRatePair) => <strong>{item.display_code}</strong> }, { key: 'meaning', header: 'Meaning', render: (item: ExchangeRatePair) => `1 ${item.base_currency.code} = rate × ${item.quote_currency.code}` }, { key: 'source', header: 'Source', render: (item: ExchangeRatePair) => item.is_default ? 'Built-in' : 'Tenant' }, { key: 'status', header: 'Status', render: (item: ExchangeRatePair) => item.is_active ? 'Active' : 'Inactive' }]} actions={(item) => <div className="row-actions">{item.can_update && hasPermission('update_exchange_pair') && <Button aria-label={`${item.is_active ? 'Deactivate' : 'Activate'} ${item.display_code}`} className="ui-button--icon" onClick={() => void togglePair(item)} title={item.is_active ? 'Deactivate' : 'Activate'} variant="secondary">{item.is_active ? <CloseIcon /> : <CheckIcon />}</Button>}{item.can_delete && hasPermission('delete_exchange_pair') && <Button aria-label={`Delete ${item.display_code}`} className="ui-button--icon" onClick={() => void removePair(item)} title="Delete" variant="danger"><TrashIcon /></Button>}</div>} emptyTitle="No exchange pairs" getItemId={(item) => item.id} getItemTitle={(item) => item.display_code} isLoading={loading} items={pairs} renderMobileCard={(item, actions) => <ExchangePairMobileCard actions={actions} pair={item} />} /></div>
     </Card>
   </section>
+}
+
+function ExchangePairMobileCard({ actions, pair }: { actions: ReactNode; pair: ExchangeRatePair }) {
+  return <DataCard
+    actions={actions}
+    className="exchange-pair-mobile-card"
+    items={[
+      { key: 'Direction', value: `1 ${pair.base_currency.code} = rate × ${pair.quote_currency.code}` },
+      { key: 'Source', value: pair.is_default ? 'Built-in' : 'Tenant pair' },
+    ]}
+    title={<div className="mobile-data-card__heading"><strong>{pair.display_code}</strong><Badge tone={pair.is_active ? 'success' : 'warning'}>{pair.is_active ? 'Active' : 'Inactive'}</Badge></div>}
+  />
 }
 
 function messageOf(error: unknown) { return error instanceof Error ? error.message : 'The request could not be completed.' }

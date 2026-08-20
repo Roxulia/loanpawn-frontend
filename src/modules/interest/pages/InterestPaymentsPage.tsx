@@ -12,6 +12,7 @@ import { FinancialAccountSelect } from '../../financialAccounts/components/Finan
 import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
 import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
 import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
+import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 
 const perPage = 10
 
@@ -309,6 +310,7 @@ export function InterestPaymentsPage() {
               onPrevious: () => setCurrentPage((page) => page - 1),
               total,
             }}
+            renderMobileCard={(row) => <InterestHistoryMobileCard item={row} />}
           />
         </Card>
       )}
@@ -339,6 +341,19 @@ export function InterestPaymentsPage() {
       </Modal>
     </section>
   )
+}
+
+function InterestHistoryMobileCard({ item }: { item: InterestPaymentHistoryItem }) {
+  const createdAccountId = item.created_account_id ?? item.createdAccountId
+  const acceptAccountId = item.accept_account_id ?? item.acceptAccountId
+  return <FinanceHistoryMobileCard
+    amount={<AccountCurrencyAmount accountId={acceptAccountId} amount={item.payment_amount} fallbackAccountId={createdAccountId} />}
+    eyebrow={`${formatDate(item.start_period_at)} – ${formatDate(item.end_period_at)}`}
+    meta={formatDate(item.payment_at)}
+    status="Paid"
+    statusTone="active"
+    title={item.slip_no ? `Slip ${item.slip_no}` : `Payment #${item.id}`}
+  />
 }
 
 function formatPaymentStatus(status: string) {

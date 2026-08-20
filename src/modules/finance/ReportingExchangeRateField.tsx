@@ -45,12 +45,14 @@ export function ReportingExchangeRateField({ accountId, manualRate, onManualRate
   const targetId = toCurrencyId ?? effectiveReportingCurrencyId
   const [quote, setQuote] = useState<ReportingExchangeRateQuote | null>(null)
   const [loading, setLoading] = useState(false)
+  const [manualOverride, setManualOverride] = useState(false)
   const differs = Boolean(account && targetId && account.currency.id !== targetId)
 
   useEffect(() => {
     let active = true
     if (!account || !targetId || account.currency.id === targetId) {
       setQuote(null)
+      setManualOverride(false)
       onResolvedMultiplier?.(null)
       onInversedChange(false)
       return () => { active = false }
@@ -63,6 +65,7 @@ export function ReportingExchangeRateField({ accountId, manualRate, onManualRate
         onResolvedMultiplier?.(result.multiplier)
         onInversedChange(false)
         if (!result.requires_manual) onManualRateChange('')
+        setManualOverride(result.requires_manual)
       })
       .catch(() => { if (active) { setQuote(null); onResolvedMultiplier?.(null) } })
       .finally(() => { if (active) setLoading(false) })
@@ -71,11 +74,15 @@ export function ReportingExchangeRateField({ accountId, manualRate, onManualRate
 
   if (!differs) return null
   if (loading) return <div className="reporting-rate-field reporting-rate-field--loading">Checking the business-date exchange rate…</div>
-  if (quote && !quote.requires_manual) return <div className="reporting-rate-field reporting-rate-field--resolved">Using the {quote.source} rate ({quote.multiplier}) for {quote.business_date}.</div>
+  if (quote && !quote.requires_manual && !manualOverride) return <div className="reporting-rate-field reporting-rate-field--resolved">
+    <span>Using the {quote.source} rate ({quote.multiplier}) for {quote.business_date}.</span>
+    <button className="reporting-rate-field__override" type="button" onClick={() => setManualOverride(true)}>Use manual rate</button>
+  </div>
 
   const directionProps = { fromCode: quote?.from_currency_code ?? account?.currency.code ?? '', toCode: quote?.to_currency_code ?? '', inversed, onChange: onInversedChange }
 
   return <div className="reporting-rate-field reporting-rate-field--manual">
+    {quote && !quote.requires_manual && <button className="reporting-rate-field__override" type="button" onClick={() => { setManualOverride(false); onManualRateChange(''); onInversedChange(false) }}>Use automatic rate</button>}
     <FormField id={`reporting-rate-direction-${accountId ?? 'account'}`} label="Exchange-rate pair">
       <DesktopDirectionSelector {...directionProps} />
       <MobileDirectionSelector {...directionProps} />

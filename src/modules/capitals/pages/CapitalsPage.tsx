@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Badge, Textarea } from '../../../components/atoms'
 import { FinancialAmountInput, FormField, FormGroup } from '../../../components/molecules'
 import type { DataTableColumn } from '../../../components/organisms'
@@ -19,9 +20,11 @@ import {
 } from '../../finance/financeFormat'
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
+import { routePaths } from '../../../app/routes/paths'
 
-type CapitalForm = FinanceFormState & {
+export type CapitalForm = FinanceFormState & {
   account_id: string
   amount: string
   amount_unit: import('../../finance/financialUnits').FinancialUnitCode
@@ -30,7 +33,7 @@ type CapitalForm = FinanceFormState & {
   reporting_exchange_rate_inversed: boolean
 }
 
-const initialForm: CapitalForm = {
+export const initialCapitalForm: CapitalForm = {
   account_id: '',
   amount: '',
   amount_unit: 'UNIT',
@@ -78,7 +81,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
     item.description,
     item.amount,
   ].join(' '),
-  initialForm,
+  initialForm: initialCapitalForm,
   itemToForm: (item) => ({
     account_id: String(item.account_id ?? item.accountId ?? ''),
     amount: item.amount,
@@ -93,14 +96,7 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
   onDelete: (item) => tenantResourceService.deleteCapital(item.code),
   renderForm,
   save: (mode, form, item) => {
-    const payload = {
-      ...(form.account_id ? { account_id: Number(form.account_id) } : {}),
-      amount: Number(form.amount),
-      amount_unit: form.amount_unit,
-      description: form.description.trim(),
-      ...(form.reporting_exchange_rate ? { reporting_exchange_rate: Number(form.reporting_exchange_rate), reporting_exchange_rate_inversed: form.reporting_exchange_rate_inversed } : {}),
-    }
-
+    const payload = capitalPayload(form)
     return mode === 'create'
       ? tenantResourceService.createCapital(payload)
       : tenantResourceService.updateCapital(item?.code ?? '', {
@@ -113,7 +109,18 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
   title: 'Capital Management',
   totalLabel: 'capital entry',
   updatePermission: 'update_capital',
-  validate,
+  validate: validateCapitalForm,
+  mobileCreatePath: routePaths.capitalCreate,
+  mobileEditPath: (item) => routePaths.capitalEdit(item.code),
+  renderMobileCard: (item, actions) => <FinanceHistoryMobileCard
+    actions={actions}
+    amount={<AccountCurrencyAmount accountId={item.account_id ?? item.accountId} amount={item.amount} />}
+    eyebrow="Shop capital"
+    meta={formatDate(getStringField(item, 'created_at', 'createdAt'))}
+    status="Incoming"
+    statusTone="active"
+    title={item.description}
+  />,
 }
 
 export function CapitalsPage() {
@@ -124,23 +131,27 @@ function renderForm(
   form: CapitalForm,
   errors: FinanceFormErrors<CapitalForm>,
   updateField: (field: keyof CapitalForm, value: string | boolean) => void,
+  context: { mode: 'create' | 'edit' },
 ) {
-  return <CapitalFormFields errors={errors} form={form} updateField={updateField} />
+  return <CapitalFormFields errors={errors} form={form} isEditing={context.mode === 'edit'} updateField={updateField} />
 }
 
-function CapitalFormFields({
+export function CapitalFormFields({
   errors,
   form,
+  isEditing = false,
   updateField,
 }: {
   errors: FinanceFormErrors<CapitalForm>
   form: CapitalForm
+  isEditing?: boolean
   updateField: (field: keyof CapitalForm, value: string | boolean) => void
 }) {
   return (
     <FormGroup columns={2}>
       <FormField id="capital-account" label="Financial Account">
-        <FinancialAccountSelect id="capital-account" onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
+        <FinancialAccountSelect id="capital-account" locked={isEditing} onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
+        {isEditing ? <span className="ui-form-field__hint">The account used by posted capital cannot be changed.</span> : null}
       </FormField>
       <FormField error={errors.amount} id="capital-amount" label="Amount">
         <FinancialAmountInput
@@ -170,7 +181,7 @@ function CapitalFormFields({
   )
 }
 
-function validate(form: CapitalForm) {
+export function validateCapitalForm(form: CapitalForm) {
   const errors: FinanceFormErrors<CapitalForm> = {}
 
   if (!required(form.description)) {
@@ -182,4 +193,14 @@ function validate(form: CapitalForm) {
   }
 
   return errors
+}
+
+export function capitalPayload(form: CapitalForm) {
+  return {
+    ...(form.account_id ? { account_id: Number(form.account_id) } : {}),
+    amount: Number(form.amount),
+    amount_unit: form.amount_unit,
+    description: form.description.trim(),
+    ...(form.reporting_exchange_rate ? { reporting_exchange_rate: Number(form.reporting_exchange_rate), reporting_exchange_rate_inversed: form.reporting_exchange_rate_inversed } : {}),
+  }
 }

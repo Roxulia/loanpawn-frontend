@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
 import { Badge, Button, Input, Select, Textarea } from '../../../components/atoms'
 import { Alert, LoadingState } from '../../../components/feedback'
-import { ActionBar, Card, FormField, FormGroup, SearchableSelect, SectionHeader } from '../../../components/molecules'
+import { EditIcon, TrashIcon } from '../../../components/icons/icon'
+import { ActionBar, Card, DataCard, FormField, FormGroup, SearchableSelect, SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { useTenantSession } from '../../../contexts/useTenantSession'
@@ -1100,8 +1101,8 @@ function TypeDataBlock({
       <DataTable
         actions={(allowUpdate || allowDelete) ? (item) => !isBuiltInType(item) && item.code ? (
           <div className="dashboard-table-actions">
-            {allowUpdate && onEdit && <Button onClick={() => onEdit(item)} variant="secondary">Edit</Button>}
-            {allowDelete && <Button onClick={() => onDelete(item)} variant="danger">Delete</Button>}
+            {allowUpdate && onEdit && <Button aria-label={`Edit ${item.name}`} className="ui-button--icon" onClick={() => onEdit(item)} title="Edit" variant="secondary"><EditIcon /></Button>}
+            {allowDelete && <Button aria-label={`Delete ${item.name}`} className="ui-button--icon" onClick={() => onDelete(item)} title="Delete" variant="danger"><TrashIcon /></Button>}
           </div>
         ) : null : undefined}
         columns={columns}
@@ -1113,6 +1114,7 @@ function TypeDataBlock({
         getItemTitle={(item) => item.name}
         items={items}
         pagination={pagination}
+        renderMobileCard={(item, actions) => <DefaultTypeMobileCard actions={actions} item={item} withDuration={withDuration} />}
         showEmptyStructure
       />
       {showForm && (
@@ -1138,6 +1140,19 @@ function TypeDataBlock({
       )}
     </section>
   )
+}
+
+function DefaultTypeMobileCard({ actions, item, withDuration }: { actions: ReactNode; item: DefaultTypeOption; withDuration: boolean }) {
+  const builtIn = isBuiltInType(item)
+  return <DataCard
+    actions={actions}
+    className="settings-type-mobile-card"
+    items={[
+      { key: 'Code', value: item.code ?? '—' },
+      ...(withDuration ? [{ key: 'Duration', value: `${getTypeDuration(item) ?? '—'} days` }] : []),
+    ]}
+    title={<div className="mobile-data-card__heading"><strong>{item.name}</strong><Badge tone={builtIn ? 'info' : 'success'}>{builtIn ? 'Built-in' : 'Custom'}</Badge></div>}
+  />
 }
 
 function hasEnabledFeature(

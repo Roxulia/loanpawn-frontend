@@ -792,7 +792,7 @@
   white-space: nowrap;
 }
 
-.ui-data-card > div:last-child {
+.ui-data-card__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
@@ -968,6 +968,19 @@
   gap: var(--space-4);
   min-width: 0;
   padding: var(--space-4);
+}
+
+.finance-history-mobile-card--button {
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.finance-history-mobile-card--button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .finance-history-mobile-card__header,
@@ -1270,6 +1283,23 @@
   padding: var(--space-4);
   position: fixed;
   z-index: 50;
+}
+body:has(.ui-modal-backdrop) .ui-alert[role="alert"] { left: 50%; max-width: min(34rem, calc(100vw - 2rem)); position: fixed; top: 1rem; transform: translateX(-50%); width: 100%; z-index: 70; }
+.reporting-rate-field__override { background: transparent; border: 1px solid var(--color-primary); border-radius: var(--radius-sm); color: var(--color-primary); cursor: pointer; font: inherit; font-weight: var(--font-weight-semibold); padding: var(--space-2) var(--space-3); }
+
+@media (max-width: 760px) {
+  .page { min-width: 0; overflow-x: clip; }
+  .ui-card, .ui-form-group, .subform-panel, .customer-management { min-width: 0; }
+  .ui-section-header, .ui-section-header__action, .table-toolbar, .filter-bar, .row-actions { align-items: stretch; min-width: 0; }
+  .ui-section-header__action > *, .row-actions > .ui-button { max-width: 100%; }
+  .ui-alert { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-2); overflow-wrap: anywhere; padding: var(--space-3); }
+  .reporting-rate-field, .reporting-rate-field--resolved { align-items: stretch; display: grid; gap: var(--space-2); overflow-wrap: anywhere; }
+  .reporting-rate-field__override { min-height: 44px; }
+  .capital-form-page--mobile .ui-form-group { grid-template-columns: 1fr; }
+  .capital-form-page--mobile .ui-action-bar { position: sticky; bottom: 0; background: var(--color-surface); padding: var(--space-3) 0; z-index: 10; }
+  .slip-collateral-add-actions { display: grid; grid-template-columns: 1fr; }
+  .redemption-mobile-summary-card__total { border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border)); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+  .redemption-mobile-summary-card__total strong { font-size: clamp(1.55rem, 8vw, 2.2rem); overflow-wrap: anywhere; }
 }
 
 .ui-modal {
@@ -2525,6 +2555,54 @@
   gap: var(--space-4);
 }
 
+.redemption-creation-flow,
+.redemption-creation-step,
+.redemption-creation-step__content {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.redemption-creation-step__header {
+  align-items: center;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.redemption-creation-step__number {
+  align-items: center;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  color: var(--color-on-primary);
+  display: inline-flex;
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-bold);
+  height: var(--size-control-height);
+  justify-content: center;
+  width: var(--size-control-height);
+}
+
+.redemption-creation-step--complete .redemption-creation-step__number {
+  background: var(--color-success);
+}
+
+.redemption-creation-step__header h2 {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-lg);
+}
+
+.redemption-creation-step__header p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-1);
+}
+
+.redemption-payment-form .redemption-caution {
+  margin-top: 0;
+}
+
 .redemption-mobile-summary-card {
   display: none;
 }
@@ -3715,7 +3793,7 @@
     padding: var(--space-3);
   }
 
-  .ui-data-card > div:last-child {
+  .ui-data-card__actions {
     justify-content: flex-start;
   }
 
@@ -4938,5 +5016,175 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 0.5rem;
+  }
+}
+
+@media (max-width: 39.9375rem) {
+  .redemption-creation-flow,
+  .redemption-creation-step,
+  .redemption-creation-step__content {
+    gap: var(--space-3);
+  }
+
+  .redemption-creation-step__header {
+    align-items: start;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .redemption-creation-step__header > .ui-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .redemption-payment-form .financial-amount-input--mobile {
+    grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 7.5rem);
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .redemption-payment-form .financial-amount-input--mobile > .ui-input,
+  .redemption-payment-form .financial-amount-input--mobile > .ui-select-combobox,
+  .redemption-payment-form .financial-amount-input--mobile .ui-select {
+    min-width: 0;
+  }
+
+  .redemption-payment-form .financial-amount-input--mobile .ui-select {
+    padding-inline: var(--space-2);
+  }
+
+  .redemption-payment-form .financial-amount-input--mobile .ui-select > span {
+    padding-right: var(--space-2);
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 39.9375rem) {
+  .currency-mobile-card,
+  .exchange-pair-mobile-card,
+  .settings-type-mobile-card,
+  .interest-history-mobile-card,
+  .capital-mobile-card {
+    border-color: var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .mobile-data-card__heading {
+    align-items: flex-start;
+    display: flex;
+    gap: var(--space-3);
+    justify-content: space-between;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .mobile-data-card__heading > strong {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-data-card__heading .ui-badge,
+  .mobile-data-card__eyebrow {
+    flex: 0 0 auto;
+  }
+
+  .mobile-data-card__eyebrow {
+    background: var(--color-surface-container);
+    border-radius: var(--radius-full);
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    padding: var(--space-1) var(--space-2);
+    text-transform: uppercase;
+  }
+
+  .currency-mobile-card .ui-key-value-list,
+  .exchange-pair-mobile-card .ui-key-value-list,
+  .settings-type-mobile-card .ui-key-value-list,
+  .interest-history-mobile-card .ui-key-value-list,
+  .capital-mobile-card .ui-key-value-list {
+    background: var(--color-background);
+    border-radius: var(--radius-md);
+    gap: 0;
+    padding-inline: var(--space-3);
+  }
+
+  .currency-mobile-card .ui-key-value-list__row,
+  .exchange-pair-mobile-card .ui-key-value-list__row,
+  .settings-type-mobile-card .ui-key-value-list__row,
+  .interest-history-mobile-card .ui-key-value-list__row,
+  .capital-mobile-card .ui-key-value-list__row {
+    align-items: baseline;
+    border-bottom: 1px solid var(--color-border-muted);
+    display: flex;
+    gap: var(--space-3);
+    justify-content: space-between;
+    padding-block: var(--space-2);
+  }
+
+  .currency-mobile-card .ui-key-value-list__row:last-child,
+  .exchange-pair-mobile-card .ui-key-value-list__row:last-child,
+  .settings-type-mobile-card .ui-key-value-list__row:last-child,
+  .interest-history-mobile-card .ui-key-value-list__row:last-child,
+  .capital-mobile-card .ui-key-value-list__row:last-child {
+    border-bottom: 0;
+  }
+
+  .currency-mobile-card .ui-key-value-list__value,
+  .exchange-pair-mobile-card .ui-key-value-list__value,
+  .settings-type-mobile-card .ui-key-value-list__value,
+  .interest-history-mobile-card .ui-key-value-list__value,
+  .capital-mobile-card .ui-key-value-list__value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+  }
+
+  .ui-data-card__actions,
+  .ui-data-card__actions .row-actions,
+  .ui-data-card__actions .dashboard-table-actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .ui-data-card__actions .ui-button {
+    min-height: var(--size-control-height);
+  }
+
+  .redemption-management-mobile-card {
+    border-color: var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+
+  .redemption-management-mobile-card > strong {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+  }
+
+  .redemption-management-mobile-card > span {
+    background: var(--color-background);
+    border-radius: var(--radius-md);
+    gap: 0;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .redemption-management-mobile-card > span > span {
+    padding-block: var(--space-1);
+  }
+
+  .redemption-management-mobile-card > span > span + span {
+    border-left: 1px solid var(--color-border-muted);
+    padding-left: var(--space-3);
+    text-align: right;
   }
 }

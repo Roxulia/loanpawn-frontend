@@ -7,7 +7,7 @@ import { CirclePlusIcon, EditIcon, TrashIcon } from '../../../components/icons/i
 import { Card, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
-import { usePermissions } from '../../auth'
+import { ResourceUsageBadge, usePermissions } from '../../auth'
 import { getUserRoleName } from '../staffFormat'
 import { staffService } from '../services/staffService'
 
@@ -96,11 +96,10 @@ export function StaffListPage() {
         title="Staff"
         subtitle="Manage tenant user accounts and their permissions."
         action={
-          canCreate ? (
-            <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.staffCreate)} variant="primary">
-              Add Staff
-            </Button>
-          ) : null
+          <div className="row-actions">
+            <ResourceUsageBadge resource="staff" />
+            {canCreate ? <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.staffCreate)} variant="primary">Add Staff</Button> : null}
+          </div>
         }
       />
 

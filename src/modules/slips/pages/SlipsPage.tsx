@@ -23,7 +23,7 @@ import {
 import { ConfirmDialog, DataTable, ModalForm, type DataTableColumn } from '../../../components/organisms'
 import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
-import { usePermissions } from '../../auth'
+import { ResourceUsageBadge, usePermissions } from '../../auth'
 import { customerService } from '../../customers/services/customerService'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
 import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
@@ -378,6 +378,7 @@ export function SlipsPage() {
           subtitle="Create pawn loan contracts and manage active slip records from the desktop workflow."
         />
         <div className="ops-metrics" aria-label={t('Loan slip workspace summary')}>
+          <div className="ops-metric"><span>Monthly usage</span><strong><ResourceUsageBadge resource="slips" /></strong></div>
           <div className="ops-metric">
             <span>Registry total</span>
             <strong>{formatNumber(total)}</strong>
@@ -433,12 +434,6 @@ export function SlipsPage() {
           <Card
             title="Collateral Details"
             description={`${normalItemCount} normal, ${jewelleryItemCount} jewellery`}
-            action={(
-              <div className="row-actions ops-card-actions">
-                <Button onClick={() => setItems((current) => [...current, makeItem('Normal')])} variant="secondary">Add Normal Item</Button>
-                <Button onClick={() => setItems((current) => [...current, makeItem('Jewellery')])} variant="secondary">Add Jewellery Item</Button>
-              </div>
-            )}
           >
             <div className="workflow-stack">
               {formErrors.items && <Alert message={formErrors.items} title="Collateral required" tone="warning" />}
@@ -563,6 +558,10 @@ export function SlipsPage() {
                   )}
                 </section>
               ))}
+              <div className="row-actions ops-card-actions slip-collateral-add-actions">
+                <Button onClick={() => setItems((current) => [...current, makeItem('Normal')])} variant="secondary">Add Normal Item</Button>
+                <Button onClick={() => setItems((current) => [...current, makeItem('Jewellery')])} variant="secondary">Add Jewellery Item</Button>
+              </div>
             </div>
           </Card>
 

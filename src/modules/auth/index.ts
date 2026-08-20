@@ -11,3 +11,4 @@ export {
 } from './permissionCodes'
 export { usePermissions } from './usePermissions'
 export { useFeatures } from './useFeatures'
+export { ResourceUsageBadge } from './ResourceUsageBadge'

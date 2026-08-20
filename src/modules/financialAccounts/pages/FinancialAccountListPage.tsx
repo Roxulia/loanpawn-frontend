@@ -7,6 +7,7 @@ import { ChevronRightIcon, CirclePlusIcon, EditIcon, TrashIcon } from '../../../
 import { Card, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
 import { useFeatures, usePermissions } from '../../auth'
+import { ResourceUsageBadge } from '../../auth'
 import { financialAccountService } from '../financialAccountService'
 import type { FinancialAccount, FinancialAccountPage } from '../types'
 
@@ -31,7 +32,7 @@ export function FinancialAccountListPage() {
   ]
 
   return <section className="page">
-    <SectionHeader title="Financial Accounts" subtitle="Manage cash, bank, and online payment balances." action={<div className="row-actions">{hasEnabledFeature('account_transferable') && hasPermission('transfer_financial_account') && <Button onClick={() => navigate(routePaths.financialAccountTransfer)} variant="secondary">Transfer</Button>}{hasPermission('create_financial_account') && <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.financialAccountCreate)} variant="primary">Add Account</Button>}</div>} />
+    <SectionHeader title="Financial Accounts" subtitle="Manage cash, bank, and online payment balances." action={<div className="row-actions"><ResourceUsageBadge resource="accounts" />{hasEnabledFeature('account_transferable') && hasPermission('transfer_financial_account') && <Button onClick={() => navigate(routePaths.financialAccountTransfer)} variant="secondary">Transfer</Button>}{hasPermission('create_financial_account') && <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.financialAccountCreate)} variant="primary">Add Account</Button>}</div>} />
     <Card title="Accounts" description={`${page.total} financial account${page.total === 1 ? '' : 's'}`}>
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Account action failed" tone="danger" />}{notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Accounts updated" tone="success" />}
       <TableToolbar actions={<Button onClick={() => void load()}>Refresh</Button>} search={<SearchField id="financial-account-search" label="Search accounts" placeholder="Code, name, or account number" value={search} onChange={(event) => { setSearch(event.target.value); setPageNumber(1) }} />} />

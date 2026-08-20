@@ -182,17 +182,20 @@ function renderForm(
   form: ExpenseForm,
   errors: FinanceFormErrors<ExpenseForm>,
   updateField: (field: keyof ExpenseForm, value: string | boolean | File | null) => void,
+  context: { mode: 'create' | 'edit' },
 ) {
-  return <ExpenseFormFields errors={errors} form={form} updateField={updateField} />
+  return <ExpenseFormFields errors={errors} form={form} isEditing={context.mode === 'edit'} updateField={updateField} />
 }
 
 function ExpenseFormFields({
   errors,
   form,
+  isEditing = false,
   updateField,
 }: {
   errors: FinanceFormErrors<ExpenseForm>
   form: ExpenseForm
+  isEditing?: boolean
   updateField: (field: keyof ExpenseForm, value: string | boolean | File | null) => void
 }) {
   const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeOption[]>([])
@@ -227,7 +230,8 @@ function ExpenseFormFields({
   return (
     <FormGroup columns={2}>
       <FormField id="expense-account" label="Payment Account">
-        <FinancialAccountSelect id="expense-account" onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
+        <FinancialAccountSelect id="expense-account" locked={isEditing} onChange={(accountId) => updateField('account_id', accountId)} value={form.account_id} />
+        {isEditing ? <span className="ui-form-field__hint">The account used by a posted expense cannot be changed.</span> : null}
       </FormField>
       <ReportingExchangeRateField accountId={form.account_id} inversed={form.reporting_exchange_rate_inversed} manualRate={form.reporting_exchange_rate} onInversedChange={(inversed) => updateField('reporting_exchange_rate_inversed', inversed)} onManualRateChange={(rate) => updateField('reporting_exchange_rate', rate)} />
       <FormField error={errors.amount} id="expense-amount" label="Amount">

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Input } from '../atoms'
 
 type SearchableSelectProps<TOption> = {
+  disabled?: boolean
   emptyMessage?: string
   error?: string | null
   getOptionDescription?: (option: TOption) => string
@@ -19,6 +20,7 @@ type SearchableSelectProps<TOption> = {
 }
 
 export function SearchableSelect<TOption>({
+  disabled = false,
   emptyMessage = 'No options found.',
   error = null,
   getOptionDescription,
@@ -57,6 +59,7 @@ export function SearchableSelect<TOption>({
   }, [])
 
   function updateQuery(nextQuery: string) {
+    if (disabled) return
     setQuery(nextQuery)
     setIsOpen(true)
     setActiveIndex(-1)
@@ -65,6 +68,7 @@ export function SearchableSelect<TOption>({
   }
 
   function choose(option: TOption) {
+    if (disabled) return
     onChange(getOptionValue(option))
     setQuery('')
     setIsOpen(false)
@@ -79,10 +83,11 @@ export function SearchableSelect<TOption>({
         aria-controls={menuId}
         aria-expanded={isOpen}
         autoComplete="off"
+        disabled={disabled}
         hasError={hasError}
         id={id}
         onChange={(event) => updateQuery(event.target.value)}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => { if (!disabled) setIsOpen(true) }}
         onKeyDown={(event) => {
           if (event.key === 'Escape') { setIsOpen(false); return }
           if (event.key === 'ArrowDown') { event.preventDefault(); setIsOpen(true); setActiveIndex((index) => Math.min(index + 1, visibleOptions.length - 1)); return }
@@ -94,7 +99,7 @@ export function SearchableSelect<TOption>({
         type="search"
         value={selected ? getOptionLabel(selected) : query}
       />
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="ui-searchable-select__menu" id={menuId} role="listbox">
           {isLoading ? <span className="ui-searchable-select__status">{loadingMessage}</span>
             : error ? <span className="ui-searchable-select__status ui-searchable-select__status--error">{error}</span>

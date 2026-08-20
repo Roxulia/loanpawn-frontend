@@ -27,6 +27,8 @@ export const routePaths = {
   financialAccountDetail: (accountCode: string) => `/financial-accounts/${accountCode}`,
   financialAccountEdit: (accountCode: string) => `/financial-accounts/${accountCode}/edit`,
   capitals: '/capitals',
+  capitalCreate: '/capitals/create',
+  capitalEdit: (capitalCode: string) => `/capitals/${encodeURIComponent(capitalCode)}/edit`,
   expenses: '/expenses',
   expenseCreate: '/expenses/create',
   expenseEdit: (expenseCode: string) => `/expenses/${encodeURIComponent(expenseCode)}/edit`,
