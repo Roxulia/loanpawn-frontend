@@ -6,6 +6,7 @@ import {
   type MessageResponse,
   type ValidationErrors,
 } from '../../dataobjects/common/api'
+import { compatibilityStore } from '../../modules/appCompatibility/compatibilityStore'
 
 const defaultBaseUrl = 'https://loanpawn.1morebit.tech/api'
 const csrfCookiePath = '/sanctum/csrf-cookie'
@@ -69,6 +70,8 @@ export class ApiClient {
   }
 
   private async request<TData>(path: string, options: RequestOptions): Promise<TData> {
+    this.ensureWriteAllowed(path, options)
+
     if (this.requiresCsrf(options)) {
       await this.ensureCsrfCookie()
     }
@@ -90,6 +93,8 @@ export class ApiClient {
   }
 
   private async requestMessage(path: string, options: RequestOptions): Promise<MessageResponse> {
+    this.ensureWriteAllowed(path, options)
+
     if (this.requiresCsrf(options)) {
       await this.ensureCsrfCookie()
     }
@@ -133,6 +138,7 @@ export class ApiClient {
 
   private buildHeaders(options: RequestOptions) {
     const headers = AxiosHeaders.from(options.headers)
+    headers.set('X-LonePawn-App-Version', __APP_VERSION__)
 
     if (options.token) {
       headers.set('Authorization', `Bearer ${options.token}`)
@@ -153,6 +159,24 @@ export class ApiClient {
     const method = options.method?.toUpperCase() ?? 'GET'
 
     return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && options.withCredentials !== false
+  }
+
+  private ensureWriteAllowed(path: string, options: RequestOptions) {
+    const method = options.method?.toUpperCase() ?? 'GET'
+    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+    const isAuthRequest = [
+      '/tenant/login/public-spa',
+      '/tenant/login/subdomain-spa',
+      '/tenant/sso/consume',
+      '/tenant/logout',
+    ].includes(path)
+
+    if (isMutation && !isAuthRequest && compatibilityStore.getSnapshot().status !== 'supported') {
+      throw new ApiError('Changes are disabled until the app version is supported.', {
+        data: { code: 'APP_READ_ONLY' },
+        statusCode: 426,
+      })
+    }
   }
 
   private originUrl(path: string) {
@@ -191,6 +215,7 @@ export class ApiClient {
       const data = error.response?.data
 
       if (this.isApiEnvelope(data)) {
+        this.syncUnsupportedVersion(data)
         return this.errorFromEnvelope(data)
       }
 
@@ -217,6 +242,20 @@ export class ApiClient {
       data: envelope.data,
       errors: this.readValidationErrors(data),
       statusCode: envelope.statusCode,
+    })
+  }
+
+  private syncUnsupportedVersion(envelope: ApiEnvelope<unknown>) {
+    const data = envelope.data as ApiErrorData | null | undefined
+
+    if (envelope.statusCode !== 426 || data?.code !== 'UNSUPPORTED_FRONTEND_VERSION') return
+
+    compatibilityStore.setState({
+      installedVersion: __APP_VERSION__,
+      minimumSupportedVersion: typeof data.minimum_supported_version === 'string'
+        ? data.minimum_supported_version
+        : null,
+      status: 'unsupported',
     })
   }
 

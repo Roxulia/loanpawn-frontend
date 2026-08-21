@@ -6,6 +6,7 @@ import { usePermissions } from '../../modules/auth/usePermissions'
 import { useNotifications } from '../../modules/notifications/useNotifications'
 import type { ReportingCurrencyNotificationStatus, TenantNotification } from '../../modules/notifications/types'
 import { BellIcon } from '../icons/icon'
+import { useAppCompatibility } from '../../modules/appCompatibility'
 
 type NotificationDropdownProps = {
   error: string | null
@@ -31,6 +32,7 @@ export function NotificationMenu() {
   const navigate = useNavigate()
   const { locale, t } = useUiLocale()
   const { hasPermission } = usePermissions()
+  const { isReadOnly } = useAppCompatibility()
   const { notifications, unreadCount, isLoading, error, refresh, markRead, markAllRead } = useNotifications()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -56,7 +58,7 @@ export function NotificationMenu() {
 
   async function openNotification(notification: TenantNotification) {
     try {
-      await markRead(notification.id)
+      if (!isReadOnly) await markRead(notification.id)
     } finally {
       setIsOpen(false)
       const canProvideRates = hasPermission('update_currency') && hasPermission('create_exchange_rate')

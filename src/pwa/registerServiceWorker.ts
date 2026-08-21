@@ -1,7 +1,9 @@
 import { registerSW } from 'virtual:pwa-register'
 
+let updateServiceWorker: ((reloadPage?: boolean) => Promise<void>) | null = null
+
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  registerSW({
+  updateServiceWorker = registerSW({
     immediate: true,
 
     onRegisteredSW(_swUrl, registration) {
@@ -37,4 +39,14 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       console.error('PWA service worker registration failed', error)
     },
   })
+}
+
+export async function refreshToLatestAppVersion() {
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.getRegistration()
+    await registration?.update()
+  }
+
+  await updateServiceWorker?.(true)
+  window.location.reload()
 }

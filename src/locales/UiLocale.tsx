@@ -13,6 +13,15 @@ type TranslateParams = Record<string, string | number>
 
 const mmTranslations: Record<string, string> = {
   Notifications: 'အသိပေးချက်များ',
+  'App update required': 'အက်ပ်ကို update ပြုလုပ်ရန် လိုအပ်သည်',
+  'Checking app version': 'အက်ပ်ဗားရှင်းကို စစ်ဆေးနေသည်',
+  'Read-only mode': 'ဖတ်ရှုရန်သာ အသုံးပြုနိုင်သော အခြေအနေ',
+  'Installed version': 'အသုံးပြုနေသောဗားရှင်း',
+  'Minimum supported version': 'အနည်းဆုံး ပံ့ပိုးထားသောဗားရှင်း',
+  'Changes are disabled until the app version is confirmed.': 'အက်ပ်ဗားရှင်း အတည်ပြုပြီးသည်အထိ ပြောင်းလဲမှုများ ပြုလုပ်၍မရပါ။',
+  'The server cannot confirm this app version. You can view data, but changes are disabled.': 'ဆာဗာမှ အက်ပ်ဗားရှင်းကို အတည်မပြုနိုင်ပါ။ အချက်အလက်များကို ကြည့်ရှုနိုင်သော်လည်း ပြောင်းလဲမှုများ ပြုလုပ်၍မရပါ။',
+  'Refresh App': 'အက်ပ်ကို Refresh လုပ်ရန်',
+  Retry: 'ပြန်လည်ကြိုးစားရန်',
   'Mark all as read': 'အားလုံးကို ဖတ်ပြီးအဖြစ် သတ်မှတ်ရန်',
   'Loading notifications...': 'အသိပေးချက်များ ဖွင့်နေသည်...',
   'Unable to load notifications.': 'အသိပေးချက်များကို ဖွင့်၍မရပါ။',
