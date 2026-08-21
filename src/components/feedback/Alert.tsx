@@ -23,10 +23,10 @@ export function Alert({ action, message, onDismiss, title, tone = 'info' }: Aler
   const { t } = useUiLocale()
 
   useEffect(() => {
-    if (!onDismiss || (tone !== 'success' && tone !== 'info')) return
+    if (!onDismiss) return
     const timeout = window.setTimeout(onDismiss, 5000)
     return () => window.clearTimeout(timeout)
-  }, [message, onDismiss, tone])
+  }, [message, onDismiss])
 
   return (
     <section className={`ui-alert ui-alert--${tone}`} role={tone === 'danger' ? 'alert' : 'status'}>
