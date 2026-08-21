@@ -7,6 +7,17 @@ import { useNotifications } from '../../modules/notifications/useNotifications'
 import type { ReportingCurrencyNotificationStatus, TenantNotification } from '../../modules/notifications/types'
 import { BellIcon } from '../icons/icon'
 
+type NotificationDropdownProps = {
+  error: string | null
+  isLoading: boolean
+  locale: 'en' | 'mm'
+  notifications: TenantNotification[]
+  onMarkAllRead: () => void
+  onOpenNotification: (notification: TenantNotification) => void
+  t: (value: string) => string
+  unreadCount: number
+}
+
 const statusTitles: Record<ReportingCurrencyNotificationStatus, string> = {
   queued: 'Reporting currency recalculation queued',
   processing: 'Reporting currency recalculation started',
@@ -70,37 +81,82 @@ export function NotificationMenu() {
         {unreadCount > 0 && <span className="topbar-notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
       </button>
       {isOpen && (
-        <div className="notification-dropdown" role="menu">
-          <div className="notification-dropdown__header">
-            <strong>{t('Notifications')}</strong>
-            {unreadCount > 0 && <button onClick={() => void markAllRead()} type="button">{t('Mark all as read')}</button>}
-          </div>
-          <div className="notification-dropdown__body">
-            {isLoading && notifications.length === 0 && <p className="notification-dropdown__state">{t('Loading notifications...')}</p>}
-            {error && notifications.length === 0 && <p className="notification-dropdown__state notification-dropdown__state--error">{t('Unable to load notifications.')}</p>}
-            {!isLoading && !error && notifications.length === 0 && <p className="notification-dropdown__state">{t('No notifications yet.')}</p>}
-            {notifications.map((notification) => (
-              <button
-                className={notification.read_at ? 'notification-item' : 'notification-item is-unread'}
-                key={notification.id}
-                onClick={() => void openNotification(notification)}
-                role="menuitem"
-                type="button"
-              >
-                <span className={`notification-item__status notification-item__status--${notification.status}`} aria-hidden="true" />
-                <span className="notification-item__content">
-                  <strong>{t(statusTitles[notification.status])}</strong>
-                  <span>{notification.data.previous_currency.code} &rarr; {notification.data.requested_currency.code}</span>
-                  {notification.status === 'waiting_for_rates' && notification.data.missing_rate_count > 0 && (
-                    <span>{notification.data.missing_rate_count} {t('missing rate dates')}</span>
-                  )}
-                  <time dateTime={notification.created_at}>{formatNotificationTime(notification.created_at, locale)}</time>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <>
+          <DesktopNotificationDropdown
+            error={error}
+            isLoading={isLoading}
+            locale={locale}
+            notifications={notifications}
+            onMarkAllRead={() => void markAllRead()}
+            onOpenNotification={(notification) => void openNotification(notification)}
+            t={t}
+            unreadCount={unreadCount}
+          />
+          <MobileNotificationDropdown
+            error={error}
+            isLoading={isLoading}
+            locale={locale}
+            notifications={notifications}
+            onMarkAllRead={() => void markAllRead()}
+            onOpenNotification={(notification) => void openNotification(notification)}
+            t={t}
+            unreadCount={unreadCount}
+          />
+        </>
       )}
+    </div>
+  )
+}
+
+function DesktopNotificationDropdown(props: NotificationDropdownProps) {
+  return <NotificationDropdown className="notification-dropdown--desktop" {...props} />
+}
+
+function MobileNotificationDropdown(props: NotificationDropdownProps) {
+  return <NotificationDropdown className="notification-dropdown--mobile" {...props} />
+}
+
+function NotificationDropdown({
+  className,
+  error,
+  isLoading,
+  locale,
+  notifications,
+  onMarkAllRead,
+  onOpenNotification,
+  t,
+  unreadCount,
+}: NotificationDropdownProps & { className: string }) {
+  return (
+    <div className={`notification-dropdown ${className}`} role="menu">
+      <div className="notification-dropdown__header">
+        <strong>{t('Notifications')}</strong>
+        {unreadCount > 0 && <button onClick={onMarkAllRead} type="button">{t('Mark all as read')}</button>}
+      </div>
+      <div className="notification-dropdown__body">
+        {isLoading && notifications.length === 0 && <p className="notification-dropdown__state">{t('Loading notifications...')}</p>}
+        {error && notifications.length === 0 && <p className="notification-dropdown__state notification-dropdown__state--error">{t('Unable to load notifications.')}</p>}
+        {!isLoading && !error && notifications.length === 0 && <p className="notification-dropdown__state">{t('No notifications yet.')}</p>}
+        {notifications.map((notification) => (
+          <button
+            className={notification.read_at ? 'notification-item' : 'notification-item is-unread'}
+            key={notification.id}
+            onClick={() => onOpenNotification(notification)}
+            role="menuitem"
+            type="button"
+          >
+            <span className={`notification-item__status notification-item__status--${notification.status}`} aria-hidden="true" />
+            <span className="notification-item__content">
+              <strong>{t(statusTitles[notification.status])}</strong>
+              <span>{notification.data.previous_currency.code} &rarr; {notification.data.requested_currency.code}</span>
+              {notification.status === 'waiting_for_rates' && notification.data.missing_rate_count > 0 && (
+                <span>{notification.data.missing_rate_count} {t('missing rate dates')}</span>
+              )}
+              <time dateTime={notification.created_at}>{formatNotificationTime(notification.created_at, locale)}</time>
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

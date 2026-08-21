@@ -1178,6 +1178,10 @@
   font-size: var(--font-size-sm);
 }
 
+.ui-alert__action {
+  flex: 0 0 auto;
+}
+
 .ui-alert--success {
   background: color-mix(in srgb, var(--color-success) 8%, var(--color-surface));
   border-color: color-mix(in srgb, var(--color-success) 28%, var(--color-border));
@@ -1300,6 +1304,11 @@ body:has(.ui-modal-backdrop) .ui-alert[role="alert"] { left: 50%; max-width: min
   .slip-collateral-add-actions { display: grid; grid-template-columns: 1fr; }
   .redemption-mobile-summary-card__total { border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border)); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 12%, transparent); }
   .redemption-mobile-summary-card__total strong { font-size: clamp(1.55rem, 8vw, 2.2rem); overflow-wrap: anywhere; }
+}
+
+@media (max-width: 39.9375rem) {
+  .ui-alert__action { display: grid; gap: var(--space-2); grid-column: 2 / -1; width: 100%; }
+  .ui-alert__action > .ui-button { width: 100%; }
 }
 
 .ui-modal {

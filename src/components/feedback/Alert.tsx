@@ -35,7 +35,7 @@ export function Alert({ action, message, onDismiss, title, tone = 'info' }: Aler
         {title && <strong className="ui-alert__title">{t(title)}</strong>}
         <p className="ui-alert__message">{t(message)}</p>
       </div>
-      {action}
+      {action && <div className="ui-alert__action">{action}</div>}
       {onDismiss && (
         <Button aria-label="Dismiss notification" onClick={onDismiss} variant="ghost">
           x
