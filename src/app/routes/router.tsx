@@ -21,7 +21,7 @@ import { ExpenseCreatePage, ExpenseEditPage, ExpensesPage } from '../../modules/
 import { InterestPaymentsPage } from '../../modules/interest'
 import { moduleRegistry } from '../../modules/moduleRegistry'
 import { RedemptionsPage } from '../../modules/redemptions'
-import { SettingsPage, TemplateEditorPage } from '../../modules/settings'
+import { DefaultDataSettingsPage, FinanceSettingsPage, PersonalSettingsPage, TenantSettingsPage, TemplateEditorPage } from '../../modules/settings'
 import { SlipDetailPage, SlipsPage } from '../../modules/slips'
 import { StaffCreatePage, StaffDetailPage, StaffEditPage, StaffListPage } from '../../modules/staff'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
       { path: routePaths.staff, element: featureGate('tenant_user_management', 'Staff', <PermissionRoute permission="list_user"><StaffListPage /></PermissionRoute>) },
       { path: routePaths.staffCreate, element: featureGate('tenant_user_management', 'Staff', <PermissionRoute permission="create_user"><StaffCreatePage /></PermissionRoute>) },
       { path: '/staff/:staffId', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute permission="list_user"><StaffDetailPage /></PermissionRoute>) },
-      { path: '/staff/:staffId/edit', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute any={['update_user_admin', 'update_user_all', 'update_user_own']}><StaffEditPage /></PermissionRoute>) },
+      { path: '/staff/:staffId/edit', element: featureGate('tenant_user_management', 'Staff', <PermissionRoute any={['update_user_roles', 'update_user_info', 'update_user_self', 'update_admin_user']}><StaffEditPage /></PermissionRoute>) },
       { path: routePaths.accounting, element: featureGate('accounting_management', 'Accounting', <PermissionRoute permission="list_accounting"><AccountingPage /></PermissionRoute>) },
       { path: routePaths.currencies, element: featureGate('currency_management', 'Currency Management', <PermissionRoute permission="list_currency"><CurrencyManagementPage /></PermissionRoute>) },
       { path: routePaths.exchangePairs, element: featureGates(['currency_management', 'exchange_pair_management'], 'Exchange Pair Management', <PermissionRoute permission="list_exchange_pair"><ExchangePairManagementPage /></PermissionRoute>) },
@@ -90,8 +90,13 @@ export const router = createBrowserRouter([
       { path: '/slips/:slipNo', element: featureGate('loan_contract_management', 'Loan Slips', <PermissionRoute permission="list_loan_contract"><SlipDetailPage /></PermissionRoute>) },
       { path: routePaths.interest, element: featureGate('interest_payment_management', 'Interest Payments', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><InterestPaymentsPage /></PermissionRoute>) },
       { path: routePaths.redemptions, element: featureGate('redemption_management', 'Redemptions', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><RedemptionsPage /></PermissionRoute>) },
-      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'list_currency', 'update_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><SettingsPage /></PermissionRoute> },
-      { path: routePaths.templateEditor, element: featureGate('slip_document_layout_management', 'Template editor', <PermissionRoute permission="manage_slip_document"><TemplateEditorPage /></PermissionRoute>) },
+      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><Navigate to={routePaths.settingsPersonal} replace /></PermissionRoute> },
+      { path: routePaths.settingsPersonal, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><PersonalSettingsPage /></PermissionRoute> },
+      { path: routePaths.settingsTenant, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact']}><TenantSettingsPage /></PermissionRoute> },
+      { path: routePaths.settingsFinance, element: <PermissionRoute any={['list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type']}><FinanceSettingsPage /></PermissionRoute> },
+      { path: routePaths.settingsDefaultData, element: <PermissionRoute any={['list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><DefaultDataSettingsPage /></PermissionRoute> },
+      { path: routePaths.settingsDocuments, element: featureGate('slip_document_layout_management', 'Template editor', <PermissionRoute permission="manage_slip_document"><TemplateEditorPage /></PermissionRoute>) },
+      { path: routePaths.templateEditor, element: <Navigate to={routePaths.settingsDocuments} replace /> },
       ...moduleRegistry.filter((module) => !['customers', 'collateral', 'staff', 'accounting', 'capitals', 'expenses', 'debts', 'slips', 'interest', 'redemptions', 'settings'].includes(module.id)).map((module) => ({
         path: module.routeSegment,
         element: <PermissionRoute any={module.modulePermissions}><ModulePage module={module} /></PermissionRoute>,

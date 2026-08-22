@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router'
+import { NavLink, useLocation } from 'react-router'
 import { routePaths } from '../../app/routes/paths'
 import { useFeatures, usePermissions, type PermissionCode } from '../../modules/auth'
 import { useUiLocale } from '../../locales/UiLocale'
@@ -27,6 +27,14 @@ type NavigationItem = {
   label: string
   to: string
   icon: IconName
+  permissions?: PermissionCode[]
+  features?: string[]
+  children?: NavigationChildItem[]
+}
+
+type NavigationChildItem = {
+  label: string
+  to: string
   permissions?: PermissionCode[]
   features?: string[]
 }
@@ -69,8 +77,20 @@ const navigationGroups: NavigationGroup[] = [
   {
     label: 'Administration',
     items: [
-      { label: 'Staff', to: routePaths.staff, icon: 'staff', permissions: ['list_user', 'create_user', 'update_user_admin', 'update_user_all', 'update_user_own', 'delete_user'] },
-        { label: 'Settings', to: routePaths.settings, icon: 'settings', permissions: ['manage_slip_document', 'manage_tenant_timezone', 'list_currency', 'update_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
+      { label: 'Staff', to: routePaths.staff, icon: 'staff', permissions: ['list_user', 'create_user', 'update_user_roles', 'update_user_info', 'update_user_self', 'assign_permission', 'delete_user', 'delete_admin_user'] },
+      {
+        label: 'Settings',
+        to: routePaths.settings,
+        icon: 'settings',
+        permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'],
+        children: [
+          { label: 'Personal', to: routePaths.settingsPersonal, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
+          { label: 'Tenant', to: routePaths.settingsTenant, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact'] },
+          { label: 'Finance', to: routePaths.settingsFinance, permissions: ['list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type'] },
+          { label: 'Default Data', to: routePaths.settingsDefaultData, permissions: ['list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
+          { label: 'Documents', to: routePaths.settingsDocuments, permissions: ['manage_slip_document'], features: ['slip_document_layout_management'] },
+        ],
+      },
     ],
   },
 ]
@@ -78,11 +98,17 @@ const navigationGroups: NavigationGroup[] = [
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { hasAnyPermission } = usePermissions()
   const { hasAllEnabledFeatures } = useFeatures()
+  const location = useLocation()
   const { t } = useUiLocale()
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => (!item.permissions || hasAnyPermission(item.permissions)) && (!item.features || hasAllEnabledFeatures(item.features))),
+      items: group.items
+        .filter((item) => (!item.permissions || hasAnyPermission(item.permissions)) && (!item.features || hasAllEnabledFeatures(item.features)))
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((child) => (!child.permissions || hasAnyPermission(child.permissions)) && (!child.features || hasAllEnabledFeatures(child.features))),
+        })),
     }))
     .filter((group) => group.items.length > 0)
 
@@ -101,12 +127,18 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <div className="nav-group" key={group.label}>
               <span className="nav-group-label">{t(group.label)}</span>
               <div className="nav-list">
-                {group.items.map((item) => (
-                  <NavLink key={item.to} to={item.to} onClick={onNavigate} title={t(item.label)}>
-                    <SidebarIcon name={item.icon} />
-                    <span>{t(item.label)}</span>
-                  </NavLink>
-                ))}
+                {group.items.map((item) => {
+                  const isSectionActive = location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)
+                  return <div className="nav-item-with-children" key={item.to}>
+                    <NavLink className={isSectionActive ? 'nav-parent-link nav-parent-link--active' : 'nav-parent-link'} to={item.to} onClick={onNavigate} title={t(item.label)}>
+                      <SidebarIcon name={item.icon} />
+                      <span>{t(item.label)}</span>
+                    </NavLink>
+                    {isSectionActive && item.children && item.children.length > 0 && <div className="nav-child-list">
+                      {item.children.map((child) => <NavLink className={({ isActive }) => isActive ? 'nav-child-link active' : 'nav-child-link'} key={child.to} to={child.to} onClick={onNavigate}>{t(child.label)}</NavLink>)}
+                    </div>}
+                  </div>
+                })}
               </div>
             </div>
           ))}

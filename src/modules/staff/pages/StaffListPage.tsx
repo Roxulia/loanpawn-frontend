@@ -8,16 +8,17 @@ import { Card, SearchField, SectionHeader, TableToolbar } from '../../../compone
 import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
 import type { TenantUser } from '../../../dataobjects/tenant/auth'
 import { ResourceUsageBadge, usePermissions } from '../../auth'
+import { StaffMobileCard } from '../components/StaffMobileCard'
 import { getUserRoleName } from '../staffFormat'
 import { staffService } from '../services/staffService'
 
 export function StaffListPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { hasPermission } = usePermissions()
+  const { currentUser, hasPermission } = usePermissions()
   const canCreate = hasPermission('create_user')
   const canDelete = hasPermission('delete_user')
-  const canUpdate = hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const canUpdate = hasPermission('update_user_info')
   const canDeleteAdmin = hasPermission('delete_admin_user')
   const canUpdateAdmin = hasPermission('update_admin_user')
   const [users, setUsers] = useState<TenantUser[]>([])
@@ -98,7 +99,15 @@ export function StaffListPage() {
         action={
           <div className="row-actions">
             <ResourceUsageBadge resource="staff" />
-            {canCreate ? <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.staffCreate)} variant="primary">Add Staff</Button> : null}
+            <Button
+              disabled={!canCreate}
+              leftIcon={<CirclePlusIcon />}
+              onClick={() => navigate(routePaths.staffCreate)}
+              title={canCreate ? 'Add Staff' : 'You do not have permission to create staff accounts.'}
+              variant="primary"
+            >
+              Add Staff
+            </Button>
           </div>
         }
       />
@@ -126,32 +135,43 @@ export function StaffListPage() {
           />
 
           <DataTable
-            actions={(user) => (
-              <div className="row-actions">
-                {(isAdminUser(user) ? canUpdateAdmin : canUpdate) && (
+            actions={(user) => {
+              const isOwner = isOwnerUser(user)
+              const isSelf = currentUser?.code === user.code
+              const canEditUser = isOwner
+                ? isSelf
+                : isSelf
+                  ? hasPermission('update_user_self')
+                  : isAdminUser(user)
+                  ? canUpdateAdmin
+                  : canUpdate
+              const canDeactivateUser = !isSelf && !isOwner && (isAdminUser(user) ? canDeleteAdmin : canDelete)
+
+              return (
+                <div className="row-actions">
                   <Button
                     aria-label={`Edit ${user.name}`}
                     className="ui-button--icon"
+                    disabled={!canEditUser}
                     onClick={() => navigate(routePaths.staffEdit(user.code))}
-                    title="Edit staff"
+                    title={canEditUser ? 'Edit staff' : 'You do not have permission to edit this staff account.'}
                     variant="secondary"
                   >
                     <EditIcon />
                   </Button>
-                )}
-                {(isAdminUser(user) ? canDeleteAdmin : canDelete) && (
                   <Button
                     aria-label={`Deactivate ${user.name}`}
                     className="ui-button--icon"
+                    disabled={!canDeactivateUser}
                     onClick={() => setUserToDelete(user)}
-                    title="Deactivate staff"
+                    title={isOwner ? 'Owner accounts cannot be deactivated.' : canDeactivateUser ? 'Deactivate staff' : 'You do not have permission to deactivate this staff account.'}
                     variant="danger"
                   >
                     <TrashIcon />
                   </Button>
-                )}
-              </div>
-            )}
+                </div>
+              )
+            }}
             columns={columns}
             emptyDescription="Create the first staff account."
             emptyTitle="No staff accounts"
@@ -160,6 +180,13 @@ export function StaffListPage() {
             isLoading={isLoading}
             items={filteredUsers}
             onRowClick={(user) => navigate(routePaths.staffDetail(user.code))}
+            renderMobileCard={(user, actions) => (
+              <StaffMobileCard
+                actions={actions}
+                onView={() => navigate(routePaths.staffDetail(user.code))}
+                user={user}
+              />
+            )}
           />
         </div>
       </Card>
@@ -187,4 +214,8 @@ function getRouteNotice(state: unknown) {
 
 function isAdminUser(user: TenantUser) {
   return getUserRoleName(user).toLowerCase() === 'admin'
+}
+
+function isOwnerUser(user: TenantUser) {
+  return getUserRoleName(user).toLowerCase() === 'owner'
 }

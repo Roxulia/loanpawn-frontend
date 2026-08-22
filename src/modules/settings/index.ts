@@ -1,3 +1,7 @@
 export const settingsModuleId = 'settings'
 export { SettingsPage } from './pages/SettingsPage'
+export { PersonalSettingsPage } from './pages/PersonalSettingsPage'
+export { TenantSettingsPage } from './pages/TenantSettingsPage'
+export { FinanceSettingsPage } from './pages/FinanceSettingsPage'
+export { DefaultDataSettingsPage } from './pages/DefaultDataSettingsPage'
 export { TemplateEditorPage } from './pages/TemplateEditorPage'

@@ -15,7 +15,6 @@ export type StaffPayload = {
   nrc_township: string
   phone: string
   role_id?: number | null
-  status?: string | null
   update_key?: number
 }
 

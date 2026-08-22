@@ -53,16 +53,19 @@ export function validateStaffForm(form: StaffFormState) {
   return errors
 }
 
-export function formToStaffPayload(form: StaffFormState) {
-  return {
+export function formToStaffPayload(form: StaffFormState, options: { includeRole?: boolean } = {}) {
+  const payload = {
     address: emptyToNull(form.address),
     email: form.email.trim(),
     name: form.name.trim(),
     ...nrcValueToPayloadFields(form.nrc),
     phone: form.phone.trim(),
-    role_id: Number(form.role_id),
     update_key: form.update_key,
   }
+
+  return options.includeRole === false
+    ? payload
+    : { ...payload, role_id: Number(form.role_id) }
 }
 
 function emptyToNull(value: string) {

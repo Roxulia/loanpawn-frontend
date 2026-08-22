@@ -120,6 +120,25 @@ export type SettingsResponse = {
   tenant_setting: TenantSettings
 }
 
+export type TenantSettingsBootstrap = Partial<SettingsResponse> & {
+  timezone?: TimezoneSetting
+  timezone_options?: string[]
+}
+
+export type FinanceSettingsBootstrap = {
+  currency_preferences?: CurrencyPreferences
+  currency_options?: Currency[]
+  accounting_schedule?: AccountingDaySchedule
+  financial_account_types?: DefaultTypeListPage
+}
+
+export type DefaultDataSettingsBootstrap = {
+  interest_types?: DefaultTypeListPage
+  expense_types?: DefaultTypeListPage
+  material_types?: DefaultTypeListPage
+  item_category_types?: DefaultTypeListPage
+}
+
 export type ChangeLanguagePayload = {
   updateKey: number
   preferLang: UiLocale
@@ -147,6 +166,17 @@ function defaultTypeListPath(path: string, params: { page?: number; perPage?: nu
 }
 
 export const settingsService = {
+  getTenantBootstrap() {
+    return apiClient.get<TenantSettingsBootstrap>('/tenant/settings/tenant')
+  },
+
+  getFinanceBootstrap() {
+    return apiClient.get<FinanceSettingsBootstrap>('/tenant/settings/finance')
+  },
+
+  getDefaultDataBootstrap() {
+    return apiClient.get<DefaultDataSettingsBootstrap>('/tenant/settings/default-data')
+  },
   getSettings() {
     return apiClient.get<SettingsResponse>('/tenant/settings')
   },
@@ -161,6 +191,10 @@ export const settingsService = {
 
   updateContact(payload: ContactSettings) {
     return apiClient.put<ContactSettings>('/tenant/settings/contact', payload)
+  },
+
+  getContact() {
+    return apiClient.get<ContactSettings>('/tenant/settings/contact')
   },
 
   updateDefaultUserPassword(payload: { default_tenant_user_password: string; update_key?: number }) {

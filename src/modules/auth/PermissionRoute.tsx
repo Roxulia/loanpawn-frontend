@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import { routePaths } from '../../app/routes/paths'
-import { Card } from '../../components/molecules'
 import { useTenantSession } from '../../contexts/useTenantSession'
+import { UnauthorizedPage } from '../../pages/UnauthorizedPage'
 import type { PermissionCode } from './permissionCodes'
 import { usePermissions } from './usePermissions'
 
@@ -30,13 +30,7 @@ export function PermissionRoute({
       : false
 
   if (!allowed) {
-    return (
-      <section className="page">
-        <Card title="Access denied" description="Your account does not have permission to open this workspace.">
-          <div className="status-pill">Permission required</div>
-        </Card>
-      </section>
-    )
+    return <UnauthorizedPage />
   }
 
   return children

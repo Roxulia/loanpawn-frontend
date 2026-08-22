@@ -14,6 +14,8 @@ type StaffFormProps = {
   onReset: () => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   operationAlert?: ReactNode
+  isRoleOptionDisabled?: (role: TenantRoleOption) => boolean
+  roleDisabled?: boolean
   roleOptions: TenantRoleOption[]
   value: StaffFormState
 }
@@ -28,6 +30,8 @@ export function StaffForm({
   onReset,
   onSubmit,
   operationAlert,
+  isRoleOptionDisabled,
+  roleDisabled = false,
   roleOptions,
   value,
 }: StaffFormProps) {
@@ -52,7 +56,7 @@ export function StaffForm({
           </FormField>
           <FormField error={errors.role_id} id="staff-role" label="Role">
             <Select
-              disabled={disabled || isRoleUnavailable}
+              disabled={disabled || roleDisabled || isRoleUnavailable}
               hasError={Boolean(errors.role_id)}
               id="staff-role"
               onChange={(event) => onChange('role_id', event.target.value)}
@@ -60,7 +64,7 @@ export function StaffForm({
             >
               <option value="">{isLoadingRoles ? 'Loading roles...' : 'Select role'}</option>
               {roleOptions.map((role) => (
-                <option key={role.role_id} value={role.role_id}>
+                <option disabled={isRoleOptionDisabled?.(role)} key={role.role_id} value={role.role_id}>
                   {role.role_name}
                 </option>
               ))}

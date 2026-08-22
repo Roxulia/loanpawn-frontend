@@ -39,5 +39,10 @@ export const routePaths = {
   staffDetail: (staffId: number | string) => `/staff/${staffId}`,
   staffEdit: (staffId: number | string) => `/staff/${staffId}/edit`,
   settings: '/settings',
+  settingsPersonal: '/settings/personal',
+  settingsTenant: '/settings/tenant',
+  settingsFinance: '/settings/finance',
+  settingsDefaultData: '/settings/default-data',
+  settingsDocuments: '/settings/documents',
   templateEditor: '/settings/template-editor',
 } as const

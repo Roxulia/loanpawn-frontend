@@ -15,14 +15,22 @@ export function StaffDetailPage() {
   const navigate = useNavigate()
   const { staffId } = useParams()
   const staffCode = staffId?.trim() ?? ''
-  const { hasPermission } = usePermissions()
-  const canEditStaff = hasPermission('update_user_admin') || hasPermission('update_user_all')
+  const { currentUser, hasPermission } = usePermissions()
+  const canEditStaff = hasPermission('update_user_info')
   const canEditAdmin = hasPermission('update_admin_user')
   const [staffUser, setStaffUser] = useState<TenantUser | null>(null)
   const [selectedPermissions, setSelectedPermissions] = useState<PermissionCode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const canEdit = staffUser && getUserRoleName(staffUser).toLowerCase() === 'admin' ? canEditAdmin : canEditStaff
+  const targetRoleName = staffUser ? getUserRoleName(staffUser).toLowerCase() : ''
+  const isSelf = currentUser?.code === staffUser?.code
+  const canEdit = targetRoleName === 'owner'
+    ? isSelf
+    : isSelf
+      ? hasPermission('update_user_self')
+      : targetRoleName === 'admin'
+      ? canEditAdmin
+      : canEditStaff
 
   const loadStaffUser = useCallback(async (code: string) => {
     setIsLoading(true)
@@ -61,11 +69,14 @@ export function StaffDetailPage() {
         title="Staff Detail"
         subtitle="Review account details and permission access."
         action={
-          canEdit ? (
-            <Button onClick={() => navigate(routePaths.staffEdit(staffCode))} variant="primary">
-              Edit
-            </Button>
-          ) : null
+          <Button
+            disabled={!canEdit}
+            onClick={() => navigate(routePaths.staffEdit(staffCode))}
+            title={canEdit ? 'Edit staff' : 'You do not have permission to edit this staff account.'}
+            variant="primary"
+          >
+            Edit
+          </Button>
         }
         titlePrefix={<Link className="ui-text-link" to={routePaths.staff}>Go back</Link>}
       />

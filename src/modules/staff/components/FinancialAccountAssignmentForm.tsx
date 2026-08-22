@@ -42,9 +42,9 @@ export function FinancialAccountAssignmentForm({ accounts, disabled = false, isL
           <FinancialAccountAssignmentMobile accounts={visibleAccounts} disabled={disabled || readOnly || isSaving} onToggle={onToggle} selected={selected} />
         </>
       )}
-      {!readOnly && onSave && (
+      {onSave && (
         <ActionBar>
-          <Button disabled={disabled || isLoading} isLoading={isSaving} onClick={onSave} variant="primary">
+          <Button disabled={disabled || isLoading || readOnly} isLoading={isSaving} onClick={onSave} variant="primary">
             {t('Save Account Access')}
           </Button>
         </ActionBar>

@@ -112,7 +112,7 @@ export const moduleRegistry: ModuleDefinition[] = [
     serverModule: 'TenantModule',
     description: 'Tenant staff accounts, roles, and permissions.',
     listPermission: 'list_user',
-    modulePermissions: ['list_user', 'create_user', 'update_user_admin', 'update_user_all', 'update_user_own', 'delete_user'],
+    modulePermissions: ['list_user', 'create_user', 'update_user_roles', 'update_user_info', 'update_user_self', 'assign_permission', 'delete_user', 'delete_admin_user'],
   },
   {
     id: 'settings',

@@ -7,6 +7,7 @@ import { SectionHeader } from '../../../components/molecules'
 import { ConfirmDialog } from '../../../components/organisms'
 import { useTenantSession } from '../../../contexts/useTenantSession'
 import type { TenantRoleOption } from '../../../dataobjects/tenant/staff'
+import { UnauthorizedPage } from '../../../pages/UnauthorizedPage'
 import { permissionCodes, type PermissionCode } from '../../auth'
 import { PermissionToggleForm } from '../components/PermissionToggleForm'
 import { FinancialAccountAssignmentForm } from '../components/FinancialAccountAssignmentForm'
@@ -34,28 +35,34 @@ export function StaffEditPage() {
   const isAdminTarget = targetRoleName.toLowerCase() === 'admin'
   const isOwnerTarget = targetRoleName.toLowerCase() === 'owner'
   const isSelfTarget = (currentUser?.code ?? session?.user.code) === staffCode
-  const canEditTarget = isAdminTarget
-    ? hasPermission('update_admin_user')
-    : hasPermission('update_user_admin') || hasPermission('update_user_all')
-  const canManagePermissions = isAdminTarget
-    ? hasPermission('assign_admin_permissions')
-    : hasPermission('update_user_admin')
-  const canResetPassword = isAdminTarget
-    ? hasPermission('update_admin_user')
-    : hasPermission('update_user_admin') || hasPermission('update_user_all')
-  const canManageFinancialAccounts = hasPermission('manage_financial_account_assignments') && !isSelfTarget && !isOwnerTarget
+  const canEditOwnProfile = isSelfTarget && hasPermission('update_user_self')
+  const canEditRegularStaff = hasPermission('update_user_info')
+  const canEditAdmin = hasPermission('update_admin_user')
+  const hasPotentialEditAccess = canEditOwnProfile || canEditRegularStaff || canEditAdmin
+  const canEditTarget = isOwnerTarget
+    ? isSelfTarget
+    : isSelfTarget
+      ? canEditOwnProfile
+      : isAdminTarget
+      ? hasPermission('update_admin_user')
+      : canEditRegularStaff
+  const canManageRole = !isSelfTarget && !isOwnerTarget && canEditTarget && hasPermission('update_user_roles')
+  const canManagePermissions = !isSelfTarget && !isOwnerTarget && canEditTarget && hasPermission('assign_permission')
+  const canResetPassword = canEditTarget
+  const canManageFinancialAccounts = !isSelfTarget && !isOwnerTarget && canEditTarget && hasPermission('manage_financial_account_assignments')
   const [form, setForm] = useState<StaffFormState>(emptyStaffForm)
   const [initialForm, setInitialForm] = useState<StaffFormState>(emptyStaffForm)
   const [errors, setErrors] = useState<StaffFormErrors>({})
   const [roleOptions, setRoleOptions] = useState<TenantRoleOption[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<PermissionCode[]>([])
+  const [initialPermissions, setInitialPermissions] = useState<PermissionCode[]>([])
   const [financialAccounts, setFinancialAccounts] = useState<FinancialAccount[]>([])
   const [selectedFinancialAccountIds, setSelectedFinancialAccountIds] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingRoles, setIsLoadingRoles] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isSavingPermissions, setIsSavingPermissions] = useState(false)
-  const [isLoadingFinancialAccounts, setIsLoadingFinancialAccounts] = useState(true)
+  const [isLoadingFinancialAccounts, setIsLoadingFinancialAccounts] = useState(false)
   const [isSavingFinancialAccounts, setIsSavingFinancialAccounts] = useState(false)
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
@@ -76,8 +83,14 @@ export function StaffEditPage() {
       setForm(nextFormWithRole)
       setInitialForm(nextFormWithRole)
       setTargetRoleName(getUserRoleName(response))
-      setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
+      const loadedPermissions = (response.permissions ?? []) as PermissionCode[]
+      setSelectedPermissions(loadedPermissions)
+      setInitialPermissions(loadedPermissions)
       setSelectedFinancialAccountIds((response.financial_accounts ?? []).map((account) => account.id))
+      setFinancialAccounts((current) => {
+        const knownIds = new Set(current.map(({ id }) => id))
+        return [...current, ...(response.financial_accounts ?? []).filter(({ id }) => !knownIds.has(id)) as FinancialAccount[]]
+      })
     } catch (loadError) {
       setPageError(loadError instanceof Error ? loadError.message : 'Unable to load staff account.')
     } finally {
@@ -119,20 +132,28 @@ export function StaffEditPage() {
   }, [])
 
   useEffect(() => {
+    if (!hasPotentialEditAccess) {
+      return
+    }
+
     const loadTimer = window.setTimeout(() => {
       void loadRoleOptions()
     }, 0)
 
     return () => window.clearTimeout(loadTimer)
-  }, [loadRoleOptions])
+  }, [hasPotentialEditAccess, loadRoleOptions])
 
   useEffect(() => {
+    if (!canManageFinancialAccounts) {
+      return
+    }
+
     const loadTimer = window.setTimeout(() => { void loadFinancialAccounts() }, 0)
     return () => window.clearTimeout(loadTimer)
-  }, [loadFinancialAccounts])
+  }, [canManageFinancialAccounts, loadFinancialAccounts])
 
   useEffect(() => {
-    if (!staffCode) {
+    if (!staffCode || !hasPotentialEditAccess) {
       return
     }
 
@@ -141,10 +162,14 @@ export function StaffEditPage() {
     }, 0)
 
     return () => window.clearTimeout(loadTimer)
-  }, [loadStaffUser, staffCode])
+  }, [hasPotentialEditAccess, loadStaffUser, staffCode])
 
   if (!staffCode) {
     return <Navigate to={routePaths.staff} replace />
+  }
+
+  if (!hasPotentialEditAccess || (!isLoading && !canEditTarget)) {
+    return <UnauthorizedPage />
   }
 
   function updateFormField<K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) {
@@ -158,14 +183,6 @@ export function StaffEditPage() {
     setPageError(null)
   }
 
-  function handlePermissionToggle(permission: PermissionCode) {
-    setSelectedPermissions((current) =>
-      current.includes(permission)
-        ? current.filter((currentPermission) => currentPermission !== permission)
-        : [...current, permission],
-    )
-  }
-
   function handleFinancialAccountToggle(accountId: number) {
     setSelectedFinancialAccountIds((current) => current.includes(accountId) ? current.filter((id) => id !== accountId) : [...current, accountId])
   }
@@ -174,7 +191,7 @@ export function StaffEditPage() {
     event.preventDefault()
 
     if (!canEditTarget) {
-      setPageError('You do not have permission to update this Admin account.')
+      setPageError('You do not have permission to update this staff account.')
       return
     }
 
@@ -189,7 +206,7 @@ export function StaffEditPage() {
     setPageError(null)
 
     try {
-      await staffService.updateUser(staffCode, formToStaffPayload(form))
+      await staffService.updateUser(staffCode, formToStaffPayload(form, { includeRole: canManageRole }))
       navigate(routePaths.staff, { state: { notice: 'Staff account updated.' } })
     } catch (saveError) {
       setPageError(saveError instanceof Error ? saveError.message : 'Unable to update staff account.')
@@ -207,7 +224,9 @@ export function StaffEditPage() {
       const selectedPermissionSet = new Set(selectedPermissions)
       const payload = Object.fromEntries(permissionCodes.map((permission) => [permission, selectedPermissionSet.has(permission)]))
       const response = await staffService.updatePermissions(staffCode, payload)
-      setSelectedPermissions((response.permissions ?? []) as PermissionCode[])
+      const savedPermissions = (response.permissions ?? []) as PermissionCode[]
+      setSelectedPermissions(savedPermissions)
+      setInitialPermissions(savedPermissions)
       setNotice('Permissions updated.')
     } catch (saveError) {
       setPageError(saveError instanceof Error ? saveError.message : 'Unable to update permissions.')
@@ -233,6 +252,8 @@ export function StaffEditPage() {
   }
 
   async function handleResetPasswordToDefault() {
+    if (!canResetPassword) return
+
     setIsResettingPassword(true)
     setPageError(null)
     setNotice(null)
@@ -262,11 +283,17 @@ export function StaffEditPage() {
       <SectionHeader
         title="Edit Staff"
         subtitle="Update account details and permission access."
-        action={canResetPassword ? (
-          <Button isLoading={isResettingPassword} onClick={() => setIsResetConfirmOpen(true)} variant="secondary">
+        action={(
+          <Button
+            disabled={isLoading || !canResetPassword}
+            isLoading={isResettingPassword}
+            onClick={() => setIsResetConfirmOpen(true)}
+            title={canResetPassword ? 'Reset password to default' : 'You do not have permission to reset this password.'}
+            variant="secondary"
+          >
             Reset password to default
           </Button>
-        ) : null}
+        )}
         titlePrefix={<Link className="ui-text-link" to={routePaths.staff}>Go back</Link>}
       />
 
@@ -282,19 +309,26 @@ export function StaffEditPage() {
             errors={errors}
             isLoadingRoles={isLoadingRoles}
             isSaving={isSaving}
+            isRoleOptionDisabled={(role) => {
+              if (String(role.role_id) === initialForm.role_id) return false
+              if (!canManageRole || role.role_name.toLowerCase() === 'owner') return true
+              return role.role_name.toLowerCase() === 'admin' ? !canEditAdmin : !canEditRegularStaff
+            }}
             mode="edit"
             onChange={updateFormField}
             onReset={handleReset}
             onSubmit={handleSubmit}
             roleOptions={roleOptions}
+            roleDisabled={!canManageRole}
             value={form}
           />
 
           <PermissionToggleForm
             disabled={!canManagePermissions}
+            initialValue={initialPermissions}
             isSaving={isSavingPermissions}
+            onChange={setSelectedPermissions}
             onSave={() => void handlePermissionSave()}
-            onToggle={handlePermissionToggle}
             value={selectedPermissions}
           />
 
@@ -306,7 +340,7 @@ export function StaffEditPage() {
             onSave={() => void handleFinancialAccountSave()}
             onToggle={handleFinancialAccountToggle}
             protectedReason={isOwnerTarget ? 'Owner account access is managed automatically and cannot be changed.' : isSelfTarget ? 'You cannot change your own financial account access.' : null}
-            readOnly={!hasPermission('manage_financial_account_assignments') || isOwnerTarget || isSelfTarget}
+            readOnly={!canManageFinancialAccounts}
             selectedAccountIds={selectedFinancialAccountIds}
           />
         </>
