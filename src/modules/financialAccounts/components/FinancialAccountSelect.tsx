@@ -26,6 +26,7 @@ export function FinancialAccountSelect({ hasError = false, id, locked = false, m
   const [accounts, setAccounts] = useState<FinancialAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [isEditingSearch, setIsEditingSearch] = useState(false)
 
   useEffect(() => {
     if (!canSelectAccount) {
@@ -72,12 +73,20 @@ export function FinancialAccountSelect({ hasError = false, id, locked = false, m
       return
     }
 
+    if (isEditingSearch) return
+
     const preferred = options.find((account) => account.currency.id === defaultCurrencyId && account.is_default)
       ?? options.find((account) => account.currency.id === defaultCurrencyId)
       ?? options.find((account) => account.is_default)
       ?? options[0]
     onChange(String(preferred.id))
-  }, [defaultCurrencyId, isLoading, locked, onChange, options, value])
+  }, [defaultCurrencyId, isEditingSearch, isLoading, locked, onChange, options, value])
+
+  function handleAccountChange(accountId: string) {
+    if (accountId) setIsEditingSearch(false)
+    else if (!locked) setIsEditingSearch(true)
+    onChange(accountId)
+  }
 
   if (!canSelectAccount) {
     return <div className="ui-form-field__hint" id={id}>{locked ? 'The account used by this posted transaction is locked.' : 'The active default account will be used.'}</div>
@@ -95,7 +104,8 @@ export function FinancialAccountSelect({ hasError = false, id, locked = false, m
       id={id}
       isLoading={isLoading}
       loadingMessage="Loading accounts..."
-      onChange={onChange}
+      onChange={handleAccountChange}
+      onSearchChange={() => setIsEditingSearch(true)}
       options={options}
       placeholder="Search financial accounts"
       value={value}
