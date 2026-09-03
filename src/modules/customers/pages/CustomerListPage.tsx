@@ -39,6 +39,7 @@ export function CustomerListPage() {
   const [total, setTotal] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [showUnknownCustomer, setShowUnknownCustomer] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +61,7 @@ export function CustomerListPage() {
     setError(null)
 
     try {
-      const pageData = await customerService.listCustomers({ page, perPage, search })
+      const pageData = await customerService.listCustomers({ page, perPage, search, showUnknownCustomer })
 
       setCustomers(pageData.items)
       setSummary(pageData.summary ?? null)
@@ -72,7 +73,7 @@ export function CustomerListPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [canList, debouncedSearchTerm])
+  }, [canList, debouncedSearchTerm, showUnknownCustomer])
 
   useEffect(() => {
     if (getRouteNotice(location.state)) {
@@ -88,6 +89,10 @@ export function CustomerListPage() {
 
     return () => window.clearTimeout(searchTimer)
   }, [searchTerm])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [showUnknownCustomer])
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -197,6 +202,12 @@ export function CustomerListPage() {
                 placeholder="Name, phone, email, or address"
                 value={searchTerm}
               />
+            ) : null}
+            {canList ? (
+              <label className="checkbox-line">
+                <input checked={showUnknownCustomer} onChange={(event) => setShowUnknownCustomer(event.target.checked)} type="checkbox" />
+                <span>Show Unknown Customer</span>
+              </label>
             ) : null}
             {canList ? (
               <button
