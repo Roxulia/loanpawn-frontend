@@ -108,6 +108,21 @@ export type CurrencyPreferences = {
   default_financial_unit: FinancialUnitCode | null
 }
 
+export type InterestProcessSettings = {
+  id: number
+  tenant_id: number
+  update_key: number
+  compounding_enabled: boolean
+  partial_principal_collection_enabled: boolean
+}
+
+export type LoanSlipCreationSettings = {
+  id: number
+  tenant_id: number
+  update_key: number
+  customer_info_required: boolean
+}
+
 export type SettingsPayload = {
   branding?: BrandingSettings
   contact?: ContactSettings
@@ -121,6 +136,7 @@ export type SettingsResponse = {
 }
 
 export type TenantSettingsBootstrap = Partial<SettingsResponse> & {
+  loan_slip_creation_settings?: LoanSlipCreationSettings
   timezone?: TimezoneSetting
   timezone_options?: string[]
 }
@@ -130,6 +146,7 @@ export type FinanceSettingsBootstrap = {
   currency_options?: Currency[]
   accounting_schedule?: AccountingDaySchedule
   financial_account_types?: DefaultTypeListPage
+  interest_process_settings?: InterestProcessSettings
 }
 
 export type DefaultDataSettingsBootstrap = {
@@ -206,6 +223,10 @@ export const settingsService = {
   updateTimezone(payload: { timezone: string; update_key: number }) { return apiClient.put<TimezoneSetting>('/tenant/settings/timezone', payload) },
   getCurrencyPreferences() { return apiClient.get<CurrencyPreferences>('/tenant/settings/currencies') },
   updateCurrencyPreferences(payload: { default_currency_id: number; reporting_currency_id: number; default_financial_unit: FinancialUnitCode | null; update_key: number }) { return apiClient.put<CurrencyPreferences>('/tenant/settings/currencies', payload) },
+  getInterestProcessSettings() { return apiClient.get<InterestProcessSettings>('/tenant/settings/interest-process') },
+  updateInterestProcessSettings(payload: { compounding_enabled: boolean; partial_principal_collection_enabled: boolean; update_key: number }) { return apiClient.put<InterestProcessSettings>('/tenant/settings/interest-process', payload) },
+  getLoanSlipCreationSettings() { return apiClient.get<LoanSlipCreationSettings>('/tenant/settings/loan-slip-creation') },
+  updateLoanSlipCreationSettings(payload: { customer_info_required: boolean; update_key: number }) { return apiClient.put<LoanSlipCreationSettings>('/tenant/settings/loan-slip-creation', payload) },
   abortReportingCurrencyChange(payload: { recalculation_id: number; update_key: number }) { return apiClient.post<CurrencyPreferences>('/tenant/settings/reporting-currency-recalculation/abort', payload) },
   getAccountingDaySchedule() { return apiClient.get<AccountingDaySchedule>('/tenant/accounting-days/schedule') },
   updateAccountingDaySchedule(days: AccountingDaySchedule['days']) { return apiClient.put<AccountingDaySchedule>('/tenant/accounting-days/schedule', { days }) },

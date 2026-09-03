@@ -14,7 +14,7 @@ import type { Currency } from '../../currency/types'
 import type { AccountingDayScheduleDay } from '../../../dataobjects/tenant/finance'
 import { useNotifications } from '../../notifications/useNotifications'
 import type { TenantNotification } from '../../notifications/types'
-import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
+import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type InterestProcessSettings, type LoanSlipCreationSettings, type TenantSettings } from '../services/settingsService'
 import { DashboardFinancialUnitSetting } from '../components/DashboardFinancialUnitSetting'
 
 type TypeForm = {
@@ -58,6 +58,11 @@ type TenantForm = {
   update_key: number
 }
 
+type LoanSlipCreationForm = {
+  customer_info_required: boolean
+  update_key: number
+}
+
 const emptyBranding: BrandingForm = {
   primary_color: '',
   secondary_color: '',
@@ -78,10 +83,21 @@ const emptyTenant: TenantForm = {
   update_key: 0,
 }
 
+const emptyLoanSlipCreation: LoanSlipCreationForm = {
+  customer_info_required: true,
+  update_key: 0,
+}
+
 const emptyCurrencyPreferences: Pick<CurrencyPreferences, 'default_currency_id' | 'reporting_currency_id' | 'default_financial_unit' | 'update_key'> = {
   default_currency_id: 0,
   reporting_currency_id: 0,
   default_financial_unit: null,
+  update_key: 0,
+}
+
+const emptyInterestProcessSettings: Pick<InterestProcessSettings, 'compounding_enabled' | 'partial_principal_collection_enabled' | 'update_key'> = {
+  compounding_enabled: false,
+  partial_principal_collection_enabled: false,
   update_key: 0,
 }
 
@@ -123,9 +139,13 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const [contact, setContact] = useState(emptyContact)
   const [tenantInitial, setTenantInitial] = useState(emptyTenant)
   const [tenant, setTenant] = useState(emptyTenant)
+  const [loanSlipCreationInitial, setLoanSlipCreationInitial] = useState(emptyLoanSlipCreation)
+  const [loanSlipCreation, setLoanSlipCreation] = useState(emptyLoanSlipCreation)
   const [currencyOptions, setCurrencyOptions] = useState<Currency[]>([])
   const [currencyPreferencesInitial, setCurrencyPreferencesInitial] = useState(emptyCurrencyPreferences)
   const [currencyPreferences, setCurrencyPreferences] = useState(emptyCurrencyPreferences)
+  const [interestProcessInitial, setInterestProcessInitial] = useState(emptyInterestProcessSettings)
+  const [interestProcess, setInterestProcess] = useState(emptyInterestProcessSettings)
   const [currencyRecalculation, setCurrencyRecalculation] = useState<CurrencyPreferences['reporting_currency_recalculation']>(null)
   const [interestTypes, setInterestTypes] = useState<DefaultTypeOption[]>([])
   const [expenseTypes, setExpenseTypes] = useState<DefaultTypeOption[]>([])
@@ -182,6 +202,8 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const canProvideHistoricalRates = canUpdateReportingCurrency && hasPermission('list_exchange_rate') && hasPermission('create_exchange_rate')
   const canManageAccountingSchedule = hasEnabledFeature(tenantResolution, 'automatic_open_close')
     && hasPermission('manage_accounting_day_schedule')
+  const canManageInterestProcess = hasEnabledFeature(tenantResolution, 'advanced_interest_process')
+    && hasPermission('manage_interest_process_settings')
   const [timezoneOptions, setTimezoneOptions] = useState<string[]>([])
   const [timezone, setTimezone] = useState('Asia/Yangon')
   const [timezoneInitial, setTimezoneInitial] = useState('Asia/Yangon')
@@ -196,7 +218,9 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const brandingChanged = useMemo(() => hasChanged(branding, brandingInitial), [branding, brandingInitial])
   const contactChanged = useMemo(() => hasChanged(contact, contactInitial), [contact, contactInitial])
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
+  const loanSlipCreationChanged = useMemo(() => hasChanged(loanSlipCreation, loanSlipCreationInitial), [loanSlipCreation, loanSlipCreationInitial])
   const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
+  const interestProcessChanged = useMemo(() => hasChanged(interestProcess, interestProcessInitial), [interestProcess, interestProcessInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
   const accountingScheduleChanged = useMemo(() => hasChanged(accountingSchedule, accountingScheduleInitial), [accountingSchedule, accountingScheduleInitial])
   const currencyRecalculationNotification = useMemo(() => {
@@ -224,6 +248,7 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
         const nextBranding = normalizeBranding(response.branding)
         const nextContact = normalizeContact(response.contact)
         const nextTenant = normalizeTenant(response.tenant_setting)
+        const nextLoanSlipCreation = normalizeLoanSlipCreationSettings(response.loan_slip_creation_settings)
 
         setBrandingInitial(nextBranding)
         setBranding(nextBranding)
@@ -231,6 +256,8 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
         setContact(nextContact)
         setTenantInitial(nextTenant)
         setTenant(nextTenant)
+        setLoanSlipCreationInitial(nextLoanSlipCreation)
+        setLoanSlipCreation(nextLoanSlipCreation)
         if (response.timezone) {
           setTimezone(response.timezone.value || 'Asia/Yangon')
           setTimezoneInitial(response.timezone.value || 'Asia/Yangon')
@@ -255,6 +282,11 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
           setAccountingSchedule(days)
         }
         if (response.financial_account_types) setTypePageData('financialAccount', response.financial_account_types, 1)
+        if (response.interest_process_settings) {
+          const nextInterestProcess = normalizeInterestProcessSettings(response.interest_process_settings)
+          setInterestProcessInitial(nextInterestProcess)
+          setInterestProcess(nextInterestProcess)
+        }
       }
 
       if (section === 'default-data') {
@@ -365,6 +397,19 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
     }, 'Accounting day schedule saved successfully.')
   }
 
+  async function saveInterestProcessSettings() {
+    await saveSection('interest-process', async () => {
+      const response = await settingsService.updateInterestProcessSettings({
+        compounding_enabled: interestProcess.compounding_enabled,
+        partial_principal_collection_enabled: interestProcess.partial_principal_collection_enabled,
+        update_key: interestProcess.update_key,
+      })
+      const nextSettings = normalizeInterestProcessSettings(response)
+      setInterestProcessInitial(nextSettings)
+      setInterestProcess(nextSettings)
+    }, 'Interest process settings saved successfully.')
+  }
+
   function updateAccountingScheduleDay(weekday: number, changes: Partial<AccountingDayScheduleDay>) {
     setAccountingSchedule((current) => current.map((day) => day.weekday === weekday ? { ...day, ...changes } : day))
     setAccountingScheduleErrors((current) => {
@@ -399,6 +444,18 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
       setTenantInitial(nextTenant)
       setTenant(nextTenant)
     })
+  }
+
+  async function saveLoanSlipCreationSettings() {
+    await saveSection('loan-slip-creation', async () => {
+      const response = await settingsService.updateLoanSlipCreationSettings({
+        customer_info_required: loanSlipCreation.customer_info_required,
+        update_key: loanSlipCreation.update_key,
+      })
+      const nextSettings = normalizeLoanSlipCreationSettings(response)
+      setLoanSlipCreationInitial(nextSettings)
+      setLoanSlipCreation(nextSettings)
+    }, 'Loan slip creation settings saved successfully.')
   }
 
   async function saveUserLanguage() {
@@ -888,6 +945,23 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
           </ActionBar>}
         </Card>}
 
+        {section === 'finance' && canManageInterestProcess && <Card title="Interest Process Settings" description="Control compounding and partial principal collection for loan slips.">
+          <FormGroup columns={2}>
+            <label className="accounting-schedule__toggle">
+              <input checked={interestProcess.compounding_enabled} onChange={(event) => setInterestProcess({ ...interestProcess, compounding_enabled: event.target.checked })} type="checkbox" />
+              <span>Enable slip interest compounding</span>
+            </label>
+            <label className="accounting-schedule__toggle">
+              <input checked={interestProcess.partial_principal_collection_enabled} onChange={(event) => setInterestProcess({ ...interestProcess, partial_principal_collection_enabled: event.target.checked })} type="checkbox" />
+              <span>Enable partial principal collection</span>
+            </label>
+          </FormGroup>
+          <ActionBar>
+            <Button disabled={!interestProcessChanged || savingSection === 'interest-process'} onClick={() => setInterestProcess(interestProcessInitial)} variant="secondary">Cancel</Button>
+            <Button disabled={!interestProcessChanged} isLoading={savingSection === 'interest-process'} onClick={() => void saveInterestProcessSettings()} variant="primary">Save Settings</Button>
+          </ActionBar>
+        </Card>}
+
         {section === 'tenant' && canManageTimezone && <Card title="Business Timezone" description="Controls exchange-rate opening days and correction windows.">
           <FormField id="settings-timezone" label="Timezone">
             <SearchableSelect id="settings-timezone" options={timezoneOptions} value={timezone} onChange={setTimezone} getOptionLabel={(option) => option} getOptionValue={(option) => option} placeholder="Search timezones" />
@@ -910,6 +984,16 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
           <ActionBar>
             <Button disabled={!tenantChanged || savingSection === 'tenant'} onClick={() => setTenant(tenantInitial)} variant="secondary">Cancel</Button>
             <Button disabled={!tenantChanged} isLoading={savingSection === 'tenant'} onClick={() => void saveTenant()} variant="primary">Save</Button>
+          </ActionBar>
+        </Card>}
+        {section === 'tenant' && canViewGeneralSettings && <Card title="Loan Slip Creation" description="Controls customer capture during loan slip creation.">
+          <label className="accounting-schedule__toggle">
+            <input checked={loanSlipCreation.customer_info_required} onChange={(event) => setLoanSlipCreation({ ...loanSlipCreation, customer_info_required: event.target.checked })} type="checkbox" />
+            <span>Require customer info</span>
+          </label>
+          <ActionBar>
+            <Button disabled={!loanSlipCreationChanged || savingSection === 'loan-slip-creation'} onClick={() => setLoanSlipCreation(loanSlipCreationInitial)} variant="secondary">Cancel</Button>
+            <Button disabled={!loanSlipCreationChanged} isLoading={savingSection === 'loan-slip-creation'} onClick={() => void saveLoanSlipCreationSettings()} variant="primary">Save Settings</Button>
           </ActionBar>
         </Card>}
         {section === 'finance' && canManageAccountingSchedule && <Card title="Automatic Accounting Day Schedule" description={`Times use ${accountingScheduleTimezone}. The scheduler processes due actions every 15 minutes.`}>
@@ -1210,6 +1294,13 @@ function normalizeTenant(value?: TenantSettings | null) {
   }
 }
 
+function normalizeLoanSlipCreationSettings(value?: LoanSlipCreationSettings | null) {
+  return {
+    customer_info_required: value?.customer_info_required ?? true,
+    update_key: value?.update_key ?? 0,
+  }
+}
+
 function normalizeCurrencyPreferences(value: CurrencyPreferences) {
   return {
     default_currency_id: value.default_currency_id,
@@ -1301,6 +1392,14 @@ function normalizeAccountingSchedule(days: AccountingDayScheduleDay[]) {
     const day = byWeekday.get(fallback.weekday)
     return day ? { ...fallback, ...day, open_time: day.open_time.slice(0, 5), close_time: day.close_time.slice(0, 5) } : { ...fallback }
   })
+}
+
+function normalizeInterestProcessSettings(settings: InterestProcessSettings) {
+  return {
+    compounding_enabled: Boolean(settings.compounding_enabled),
+    partial_principal_collection_enabled: Boolean(settings.partial_principal_collection_enabled),
+    update_key: settings.update_key ?? 0,
+  }
 }
 
 function toTypePageState(response: DefaultTypeListPage, fallbackPage: number) {

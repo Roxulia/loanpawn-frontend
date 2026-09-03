@@ -25,6 +25,7 @@ import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
 import { createIdempotencyKey } from '../../../services/http/idempotency'
 import { ResourceUsageBadge, usePermissions } from '../../auth'
 import { customerService } from '../../customers/services/customerService'
+import { settingsService } from '../../settings/services/settingsService'
 import { formatDate, formatMoney, getSlipCustomerName, getStatusTone } from '../slipFormat'
 import { slipService, type InterestType, type ItemCategoryType, type LoanContractSlip, type LoanContractSlipListPage, type MaterialType, type SlipCollateralPayload } from '../services/slipService'
 import { ExpenseImageInput } from '../../expenses/components/ExpenseImageInput'
@@ -88,6 +89,7 @@ export function SlipsPage() {
   const [materialTypes, setMaterialTypes] = useState<MaterialType[]>([])
   const [itemCategoryTypes, setItemCategoryTypes] = useState<ItemCategoryType[]>([])
   const [customer, setCustomer] = useState(emptyCustomer)
+  const [isCustomerInfoRequired, setIsCustomerInfoRequired] = useState(true)
   const [isCustomerPrefilling, setIsCustomerPrefilling] = useState(false)
   const [prefilledCustomerCode, setPrefilledCustomerCode] = useState('')
   const [loan, setLoan] = useState(emptyLoan)
@@ -171,6 +173,35 @@ export function SlipsPage() {
   }, [])
 
   useEffect(() => {
+    if (!canCreate) {
+      return
+    }
+
+    let isCurrent = true
+
+    void settingsService.getLoanSlipCreationSettings()
+      .then((response) => {
+        if (isCurrent) setIsCustomerInfoRequired(response.customer_info_required)
+      })
+      .catch(() => {
+        if (isCurrent) setIsCustomerInfoRequired(true)
+      })
+
+    return () => { isCurrent = false }
+  }, [canCreate])
+
+  useEffect(() => {
+    if (!isCustomerInfoRequired) {
+      setCustomer(emptyCustomer)
+      setPrefilledCustomerCode('')
+    }
+  }, [isCustomerInfoRequired])
+
+  useEffect(() => {
+    if (!isCustomerInfoRequired) {
+      return
+    }
+
     if (!requestedCustomerCode || requestedCustomerCode === prefilledCustomerCode) {
       return
     }
@@ -212,7 +243,7 @@ export function SlipsPage() {
       isCurrent = false
       window.clearTimeout(loadTimer)
     }
-  }, [prefilledCustomerCode, requestedCustomerCode])
+  }, [isCustomerInfoRequired, prefilledCustomerCode, requestedCustomerCode])
 
   useEffect(() => {
     if (activeTab === 'management') {
@@ -239,7 +270,7 @@ export function SlipsPage() {
       return
     }
 
-    const nextErrors = validateSlipForm(customer, loan, items, interestTypes)
+    const nextErrors = validateSlipForm(customer, loan, items, interestTypes, isCustomerInfoRequired)
     setFormErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) {
@@ -254,14 +285,14 @@ export function SlipsPage() {
       const response = await slipService.createSlip({
         ...(loan.account_id ? { account_id: Number(loan.account_id) } : {}),
         ...(loan.reporting_exchange_rate ? { reporting_exchange_rate: Number(loan.reporting_exchange_rate), reporting_exchange_rate_inversed: loan.reporting_exchange_rate_inversed } : {}),
-        customer: {
+        customer: isCustomerInfoRequired ? {
           name: customer.name.trim(),
           email: customer.email.trim() || undefined,
           ...optionalNrcPayload(customer.nrc),
           phone: customer.phone.trim() || undefined,
           address: customer.address.trim() || undefined,
           note: customer.note.trim() || undefined,
-        },
+        } : { name: '' },
         collateral_items: items.map(toPayloadItem),
         loan_amount: Number(loan.loan_amount),
         loan_amount_unit: loan.loan_amount_unit,
@@ -404,7 +435,7 @@ export function SlipsPage() {
 
       {activeTab === 'application' && (
         <form className="workflow-stack ops-contract-workspace" onSubmit={(event) => void handleCreate(event)}>
-          <Card title="Customer Details">
+          {isCustomerInfoRequired && <Card title="Customer Details">
             {isCustomerPrefilling ? (
               <LoadingState rows={2} />
             ) : (
@@ -429,7 +460,7 @@ export function SlipsPage() {
               </FormField>
               </FormGroup>
             )}
-          </Card>
+          </Card>}
 
           <Card
             title="Collateral Details"
@@ -763,15 +794,22 @@ function validateSlipForm(
   loan: typeof emptyLoan,
   items: ItemForm[],
   interestTypes: InterestType[],
+  customerInfoRequired: boolean,
 ) {
   const errors: Record<string, string> = {}
 
-  if (!customer.name.trim()) {
-    errors.customerName = 'Customer name is required.'
-  }
+  if (customerInfoRequired) {
+    if (!customer.name.trim()) {
+      errors.customerName = 'Customer name is required.'
+    }
 
-  if (!isEmptyNrcValue(customer.nrc) && !isCompleteNrcValue(customer.nrc)) {
-    errors.customerNrc = 'Complete NRC or leave it empty.'
+    if (!isEmptyNrcValue(customer.nrc) && !isCompleteNrcValue(customer.nrc)) {
+      errors.customerNrc = 'Complete NRC or leave it empty.'
+    }
+
+    if (isEmptyNrcValue(customer.nrc) && !customer.email.trim() && !customer.phone.trim()) {
+      errors.customerName = errors.customerName ?? 'One of NRC, email, or phone is required.'
+    }
   }
 
   if (items.length === 0) {
