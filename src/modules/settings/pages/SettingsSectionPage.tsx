@@ -14,7 +14,7 @@ import type { Currency } from '../../currency/types'
 import type { AccountingDayScheduleDay } from '../../../dataobjects/tenant/finance'
 import { useNotifications } from '../../notifications/useNotifications'
 import type { TenantNotification } from '../../notifications/types'
-import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type TenantSettings } from '../services/settingsService'
+import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type InterestProcessSettings, type TenantSettings } from '../services/settingsService'
 import { DashboardFinancialUnitSetting } from '../components/DashboardFinancialUnitSetting'
 
 type TypeForm = {
@@ -85,6 +85,12 @@ const emptyCurrencyPreferences: Pick<CurrencyPreferences, 'default_currency_id' 
   update_key: 0,
 }
 
+const emptyInterestProcessSettings: Pick<InterestProcessSettings, 'compounding_enabled' | 'partial_principal_collection_enabled' | 'update_key'> = {
+  compounding_enabled: false,
+  partial_principal_collection_enabled: false,
+  update_key: 0,
+}
+
 const emptyTypeForm: TypeForm = {
   name: '',
   code: '',
@@ -126,6 +132,8 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const [currencyOptions, setCurrencyOptions] = useState<Currency[]>([])
   const [currencyPreferencesInitial, setCurrencyPreferencesInitial] = useState(emptyCurrencyPreferences)
   const [currencyPreferences, setCurrencyPreferences] = useState(emptyCurrencyPreferences)
+  const [interestProcessInitial, setInterestProcessInitial] = useState(emptyInterestProcessSettings)
+  const [interestProcess, setInterestProcess] = useState(emptyInterestProcessSettings)
   const [currencyRecalculation, setCurrencyRecalculation] = useState<CurrencyPreferences['reporting_currency_recalculation']>(null)
   const [interestTypes, setInterestTypes] = useState<DefaultTypeOption[]>([])
   const [expenseTypes, setExpenseTypes] = useState<DefaultTypeOption[]>([])
@@ -182,6 +190,8 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const canProvideHistoricalRates = canUpdateReportingCurrency && hasPermission('list_exchange_rate') && hasPermission('create_exchange_rate')
   const canManageAccountingSchedule = hasEnabledFeature(tenantResolution, 'automatic_open_close')
     && hasPermission('manage_accounting_day_schedule')
+  const canManageInterestProcess = hasEnabledFeature(tenantResolution, 'advanced_interest_process')
+    && hasPermission('manage_interest_process_settings')
   const [timezoneOptions, setTimezoneOptions] = useState<string[]>([])
   const [timezone, setTimezone] = useState('Asia/Yangon')
   const [timezoneInitial, setTimezoneInitial] = useState('Asia/Yangon')
@@ -197,6 +207,7 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const contactChanged = useMemo(() => hasChanged(contact, contactInitial), [contact, contactInitial])
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
   const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
+  const interestProcessChanged = useMemo(() => hasChanged(interestProcess, interestProcessInitial), [interestProcess, interestProcessInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
   const accountingScheduleChanged = useMemo(() => hasChanged(accountingSchedule, accountingScheduleInitial), [accountingSchedule, accountingScheduleInitial])
   const currencyRecalculationNotification = useMemo(() => {
@@ -255,6 +266,11 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
           setAccountingSchedule(days)
         }
         if (response.financial_account_types) setTypePageData('financialAccount', response.financial_account_types, 1)
+        if (response.interest_process_settings) {
+          const nextInterestProcess = normalizeInterestProcessSettings(response.interest_process_settings)
+          setInterestProcessInitial(nextInterestProcess)
+          setInterestProcess(nextInterestProcess)
+        }
       }
 
       if (section === 'default-data') {
@@ -363,6 +379,19 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
       setAccountingSchedule(days)
       setAccountingScheduleErrors({})
     }, 'Accounting day schedule saved successfully.')
+  }
+
+  async function saveInterestProcessSettings() {
+    await saveSection('interest-process', async () => {
+      const response = await settingsService.updateInterestProcessSettings({
+        compounding_enabled: interestProcess.compounding_enabled,
+        partial_principal_collection_enabled: interestProcess.partial_principal_collection_enabled,
+        update_key: interestProcess.update_key,
+      })
+      const nextSettings = normalizeInterestProcessSettings(response)
+      setInterestProcessInitial(nextSettings)
+      setInterestProcess(nextSettings)
+    }, 'Interest process settings saved successfully.')
   }
 
   function updateAccountingScheduleDay(weekday: number, changes: Partial<AccountingDayScheduleDay>) {
@@ -888,6 +917,23 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
           </ActionBar>}
         </Card>}
 
+        {section === 'finance' && canManageInterestProcess && <Card title="Interest Process Settings" description="Control compounding and partial principal collection for loan slips.">
+          <FormGroup columns={2}>
+            <label className="accounting-schedule__toggle">
+              <input checked={interestProcess.compounding_enabled} onChange={(event) => setInterestProcess({ ...interestProcess, compounding_enabled: event.target.checked })} type="checkbox" />
+              <span>Enable slip interest compounding</span>
+            </label>
+            <label className="accounting-schedule__toggle">
+              <input checked={interestProcess.partial_principal_collection_enabled} onChange={(event) => setInterestProcess({ ...interestProcess, partial_principal_collection_enabled: event.target.checked })} type="checkbox" />
+              <span>Enable partial principal collection</span>
+            </label>
+          </FormGroup>
+          <ActionBar>
+            <Button disabled={!interestProcessChanged || savingSection === 'interest-process'} onClick={() => setInterestProcess(interestProcessInitial)} variant="secondary">Cancel</Button>
+            <Button disabled={!interestProcessChanged} isLoading={savingSection === 'interest-process'} onClick={() => void saveInterestProcessSettings()} variant="primary">Save Settings</Button>
+          </ActionBar>
+        </Card>}
+
         {section === 'tenant' && canManageTimezone && <Card title="Business Timezone" description="Controls exchange-rate opening days and correction windows.">
           <FormField id="settings-timezone" label="Timezone">
             <SearchableSelect id="settings-timezone" options={timezoneOptions} value={timezone} onChange={setTimezone} getOptionLabel={(option) => option} getOptionValue={(option) => option} placeholder="Search timezones" />
@@ -1301,6 +1347,14 @@ function normalizeAccountingSchedule(days: AccountingDayScheduleDay[]) {
     const day = byWeekday.get(fallback.weekday)
     return day ? { ...fallback, ...day, open_time: day.open_time.slice(0, 5), close_time: day.close_time.slice(0, 5) } : { ...fallback }
   })
+}
+
+function normalizeInterestProcessSettings(settings: InterestProcessSettings) {
+  return {
+    compounding_enabled: Boolean(settings.compounding_enabled),
+    partial_principal_collection_enabled: Boolean(settings.partial_principal_collection_enabled),
+    update_key: settings.update_key ?? 0,
+  }
 }
 
 function toTypePageState(response: DefaultTypeListPage, fallbackPage: number) {

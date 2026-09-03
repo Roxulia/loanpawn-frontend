@@ -83,6 +83,10 @@ export const permissionCodes = [
   'update_reporting_currency',
   'update_default_financial_unit',
   'manage_accounting_day_schedule',
+  'manage_interest_process_settings',
+  'manage_slip_compound_schedule',
+  'compound_slip_interest',
+  'collect_partial_principal',
   'dashboard'
 ] as const
 

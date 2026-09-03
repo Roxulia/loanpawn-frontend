@@ -64,6 +64,16 @@ export type LoanContractSlip = {
   notes?: string | null
   expiry_quota?: number
   expiry_quota_type?: string
+  compound_schedule_enabled?: boolean
+  compoundScheduleEnabled?: boolean
+  compound_every?: number | null
+  compoundEvery?: number | null
+  compound_every_type?: string | null
+  compoundEveryType?: string | null
+  next_compound_at?: string | null
+  nextCompoundAt?: string | null
+  last_compounded_at?: string | null
+  lastCompoundedAt?: string | null
   items?: SlipCollateralItem[]
 }
 
@@ -196,6 +206,18 @@ export const slipService = {
 
   deleteSlip(slipNo: string, auth?: TenantAuth) {
     return apiClient.deleteMessage(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}`, authOptions(auth))
+  },
+
+  updateCompoundSchedule(slipNo: string, payload: { slip_update_key: number; enabled: boolean; compound_every?: number | null; compound_every_type?: string | null; next_compound_at?: string | null }, auth?: TenantAuth) {
+    return apiClient.put<LoanContractSlip>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}/compound-schedule`, payload, authOptions(auth))
+  },
+
+  compoundInterest(slipNo: string, auth?: TenantAuth) {
+    return apiClient.post<{ slip: LoanContractSlip; compounded_interest: number }>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}/compound-interest`, {}, authOptions(auth))
+  },
+
+  collectPartialPrincipal(slipNo: string, payload: { slip_update_key: number; amount: number; amount_unit?: import('../../finance/financialUnits').FinancialUnitCode; accept_account_id?: number | null; reporting_exchange_rate?: number; reporting_exchange_rate_inversed?: boolean }, auth?: TenantAuth) {
+    return apiClient.post<{ slip: LoanContractSlip; collected_amount: number; remaining_principal: number }>(`/tenant/loan-contract-slips/${encodeURIComponent(slipNo)}/partial-principal`, payload, authOptions(auth))
   },
 
   previewSlipDocument(slipNo: string,paperType:string, auth?: TenantAuth) {
