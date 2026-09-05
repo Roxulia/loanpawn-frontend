@@ -1645,6 +1645,53 @@ body:has(.ui-modal-backdrop) .ui-alert[role="alert"] { left: 50%; max-width: min
   color: var(--color-on-primary);
 }
 
+.ui-data-table--clickable tbody tr {
+  cursor: pointer;
+}
+
+.settings-policy-toggle {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--space-4);
+  justify-content: space-between;
+  padding: var(--space-4);
+  text-align: left;
+  width: 100%;
+}
+
+.settings-policy-toggle--on {
+  border-color: var(--color-primary);
+}
+
+.settings-policy-toggle > span:first-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.settings-policy-toggle small {
+  color: var(--color-text-secondary);
+}
+
+.settings-policy-toggle__state {
+  background: var(--color-background);
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-semibold);
+  min-width: 3.5rem;
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+}
+
+.settings-policy-toggle--on .settings-policy-toggle__state {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+
 .ui-skeleton {
   animation: ui-pulse 1.2s ease-in-out infinite;
   background: var(--color-border);

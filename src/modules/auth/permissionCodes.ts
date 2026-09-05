@@ -61,6 +61,7 @@ export const permissionCodes = [
   'create_debt',
   'update_debt',
   'delete_debt',
+  'manage_debt_settings',
   'list_loan_contract',
   'create_loan_contract',
   'delete_loan_contract',

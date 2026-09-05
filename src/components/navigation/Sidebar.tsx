@@ -82,10 +82,10 @@ const navigationGroups: NavigationGroup[] = [
         label: 'Settings',
         to: routePaths.settings,
         icon: 'settings',
-        permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'],
+        permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'],
         children: [
-          { label: 'Personal', to: routePaths.settingsPersonal, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
-          { label: 'Tenant', to: routePaths.settingsTenant, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact'] },
+          { label: 'Personal', to: routePaths.settingsPersonal, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
+          { label: 'Tenant', to: routePaths.settingsTenant, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings'] },
           { label: 'Finance', to: routePaths.settingsFinance, permissions: ['list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type'] },
           { label: 'Default Data', to: routePaths.settingsDefaultData, permissions: ['list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
           { label: 'Documents', to: routePaths.settingsDocuments, permissions: ['manage_slip_document'], features: ['slip_document_layout_management'] },

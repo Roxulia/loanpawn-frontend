@@ -39,12 +39,17 @@ export function FinanceHistoryMobileCard({
 
       <footer className="finance-history-mobile-card__footer">
         <span className="finance-history-mobile-card__meta">{meta}</span>
-        {actions ? <div className="finance-history-mobile-card__actions">{actions}</div> : null}
+        {actions ? <div className="finance-history-mobile-card__actions" onClick={(event) => event.stopPropagation()}>{actions}</div> : null}
       </footer>
     </>
 
   if (onClick) {
-    return <button className="finance-history-mobile-card finance-history-mobile-card--button" onClick={onClick} type="button">{content}</button>
+    return <article className="finance-history-mobile-card finance-history-mobile-card--button" onClick={onClick} onKeyDown={(event) => {
+      if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault()
+        onClick()
+      }
+    }} role="link" tabIndex={0}>{content}</article>
   }
 
   return <article className="finance-history-mobile-card">{content}</article>

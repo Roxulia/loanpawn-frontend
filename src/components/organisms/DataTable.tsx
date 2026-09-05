@@ -61,7 +61,7 @@ export function DataTable<TItem>({
   }
 
   return (
-    <div className="ui-data-table">
+    <div className={onRowClick ? 'ui-data-table ui-data-table--clickable' : 'ui-data-table'}>
       <div className="ui-data-table__scroll">
         <table>
           <thead>
@@ -83,6 +83,13 @@ export function DataTable<TItem>({
               <tr
                 key={getItemId(item)}
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
+                onKeyDown={onRowClick ? (event) => {
+                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault()
+                    onRowClick(item)
+                  }
+                } : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
               >
                 {columns.map((column) => (
                   <td key={column.key}>{column.render(item)}</td>

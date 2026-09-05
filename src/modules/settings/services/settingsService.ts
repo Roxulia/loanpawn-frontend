@@ -82,6 +82,11 @@ export type TenantSettings = {
   default_tenant_user_password?: string | null
 }
 
+export type DebtPaymentPolicy = {
+  allow_partial_payments: boolean
+  update_key: number
+}
+
 export type TimezoneSetting = { id: number; key: string; value: string; update_key: number }
 
 export type CurrencyPreferences = {
@@ -137,6 +142,7 @@ export type SettingsResponse = {
 
 export type TenantSettingsBootstrap = Partial<SettingsResponse> & {
   loan_slip_creation_settings?: LoanSlipCreationSettings
+  debt_payment_policy?: DebtPaymentPolicy
   timezone?: TimezoneSetting
   timezone_options?: string[]
 }
@@ -216,6 +222,10 @@ export const settingsService = {
 
   updateDefaultUserPassword(payload: { default_tenant_user_password: string; update_key?: number }) {
     return apiClient.put<TenantSettings>('/tenant/settings/default-user-password', payload)
+  },
+
+  updateDebtPaymentPolicy(payload: DebtPaymentPolicy) {
+    return apiClient.put<DebtPaymentPolicy>('/tenant/settings/debt-payment-policy', payload)
   },
 
   getTimezone() { return apiClient.get<TimezoneSetting>('/tenant/settings/timezone') },

@@ -209,7 +209,19 @@ export const tenantResourceService = {
   },
 
   payDebt(debtCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}/paid`, payload, authOptions(auth))
+    return apiClient.post<import('../../dataobjects/tenant/finance').DebtPaymentResult>(`/tenant/debts/${encodeURIComponent(debtCode)}/paid`, payload, authOptions(auth))
+  },
+
+  getDebt(debtCode: string, auth?: TenantAuth) {
+    return apiClient.get<import('../../dataobjects/tenant/finance').TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}`, authOptions(auth))
+  },
+
+  calculateDebtInterest(debtCode: string, auth?: TenantAuth) {
+    return apiClient.get<import('../../dataobjects/tenant/finance').DebtInterestCalculation>(`/tenant/debts/${encodeURIComponent(debtCode)}/interest`, authOptions(auth))
+  },
+
+  listDebtPayments(debtCode: string, auth?: TenantAuth) {
+    return apiClient.get<import('../../dataobjects/tenant/finance').DebtPaymentHistoryItem[]>(`/tenant/debts/${encodeURIComponent(debtCode)}/payments`, authOptions(auth))
   },
 
   showBrandingSlipLayouts(auth?: TenantAuth) {

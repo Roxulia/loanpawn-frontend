@@ -34,6 +34,8 @@ export const routePaths = {
   expenseEdit: (expenseCode: string) => `/expenses/${encodeURIComponent(expenseCode)}/edit`,
   debts: '/debts',
   debtCreate: '/debts/create',
+  debtDetail: (debtCode: string) => `/debts/${encodeURIComponent(debtCode)}`,
+  debtPayment: (debtCode: string) => `/debts?tab=payment&debt_code=${encodeURIComponent(debtCode)}`,
   staff: '/staff',
   staffCreate: '/staff/create',
   staffDetail: (staffId: number | string) => `/staff/${staffId}`,

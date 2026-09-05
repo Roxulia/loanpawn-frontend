@@ -197,6 +197,20 @@ export type TenantDebt = {
   customerCode?: string | null
   customerName?: string | null
   amount: string
+  apply_interest?: boolean
+  applyInterest?: boolean
+  principal_balance?: string
+  principalBalance?: string
+  interest_rate?: string | null
+  interestRate?: string | null
+  interest_type_id?: number | null
+  interestTypeId?: number | null
+  interest_type_name?: string | null
+  interestTypeName?: string | null
+  outstanding_interest?: string
+  outstandingInterest?: string
+  total_outstanding?: string
+  totalOutstanding?: string
   description: string
   tag?: string | null
   is_paid: boolean
@@ -208,6 +222,62 @@ export type TenantDebt = {
   created_by?: number | null
   created_at?: string | null
   updated_at?: string | null
+}
+
+export type DebtInterestAccrual = {
+  id: number
+  update_key: number
+  principal_amount: number
+  interest_amount: number
+  paid_amount: number
+  outstanding_amount: number
+  start_period_at?: string | null
+  end_period_at?: string | null
+  is_paid: boolean
+}
+
+export type DebtInterestCalculation = {
+  debt_code: string
+  debt_update_key: number
+  account_id?: number | null
+  current_date: string
+  original_principal: string
+  principal_balance: string
+  outstanding_interest: string
+  total_outstanding: string
+  apply_interest: boolean
+  interest_rate?: string | null
+  interest_type_id?: number | null
+  interest_type_name?: string | null
+  allow_partial_payments: boolean
+  interest_breakdown: DebtInterestAccrual[]
+}
+
+export type DebtPaymentHistoryItem = {
+  id: number
+  code: string
+  allocation_order: 'interest_first' | 'principal_first'
+  payment_amount: number
+  principal_paid: number
+  interest_paid: number
+  change_amount: number
+  accept_account_id?: number | null
+  payment_at?: string | null
+}
+
+export type DebtPaymentResult = {
+  status: string
+  debt_code: string
+  allocation_order: 'interest_first' | 'principal_first'
+  payment_amount: number
+  principal_paid: number
+  interest_paid: number
+  change_amount: number
+  remaining_principal: number
+  remaining_interest: number
+  is_paid: boolean
+  update_key: number
+  accept_account_id?: number | null
 }
 
 export type DashboardTimeFilter = 'this_day' | 'this_week' | 'this_month' | 'custom'

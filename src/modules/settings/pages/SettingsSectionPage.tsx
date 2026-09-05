@@ -14,7 +14,7 @@ import type { Currency } from '../../currency/types'
 import type { AccountingDayScheduleDay } from '../../../dataobjects/tenant/finance'
 import { useNotifications } from '../../notifications/useNotifications'
 import type { TenantNotification } from '../../notifications/types'
-import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences, type DefaultTypeListPage, type DefaultTypeOption, type InterestProcessSettings, type LoanSlipCreationSettings, type TenantSettings } from '../services/settingsService'
+import { settingsService, type BrandingSettings, type ChangeLanguageResponse, type ContactSettings, type CurrencyPreferences,type DebtPaymentPolicy, type DefaultTypeListPage, type DefaultTypeOption, type InterestProcessSettings, type LoanSlipCreationSettings, type TenantSettings } from '../services/settingsService'
 import { DashboardFinancialUnitSetting } from '../components/DashboardFinancialUnitSetting'
 
 type TypeForm = {
@@ -87,6 +87,10 @@ const emptyLoanSlipCreation: LoanSlipCreationForm = {
   customer_info_required: true,
   update_key: 0,
 }
+const emptyDebtPaymentPolicy: DebtPaymentPolicy = {
+  allow_partial_payments: false,
+  update_key: 0,
+}
 
 const emptyCurrencyPreferences: Pick<CurrencyPreferences, 'default_currency_id' | 'reporting_currency_id' | 'default_financial_unit' | 'update_key'> = {
   default_currency_id: 0,
@@ -141,6 +145,8 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const [tenant, setTenant] = useState(emptyTenant)
   const [loanSlipCreationInitial, setLoanSlipCreationInitial] = useState(emptyLoanSlipCreation)
   const [loanSlipCreation, setLoanSlipCreation] = useState(emptyLoanSlipCreation)
+  const [debtPaymentPolicyInitial, setDebtPaymentPolicyInitial] = useState(emptyDebtPaymentPolicy)
+  const [debtPaymentPolicy, setDebtPaymentPolicy] = useState(emptyDebtPaymentPolicy)
   const [currencyOptions, setCurrencyOptions] = useState<Currency[]>([])
   const [currencyPreferencesInitial, setCurrencyPreferencesInitial] = useState(emptyCurrencyPreferences)
   const [currencyPreferences, setCurrencyPreferences] = useState(emptyCurrencyPreferences)
@@ -174,6 +180,7 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const { hasPermission } = usePermissions()
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
   const canViewGeneralSettings = hasPermission('manage_slip_document')
+  const canManageDebtSettings = hasPermission('manage_debt_settings')
   const canManageContact = hasPermission('manage_tenant_contact')
   const canViewMaterialTypes = hasPermission('list_material_type')
   const canViewInterestTypes = hasPermission('list_interest_type')
@@ -219,6 +226,7 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const contactChanged = useMemo(() => hasChanged(contact, contactInitial), [contact, contactInitial])
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
   const loanSlipCreationChanged = useMemo(() => hasChanged(loanSlipCreation, loanSlipCreationInitial), [loanSlipCreation, loanSlipCreationInitial])
+  const debtPaymentPolicyChanged = useMemo(() => hasChanged(debtPaymentPolicy, debtPaymentPolicyInitial), [debtPaymentPolicy, debtPaymentPolicyInitial])
   const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
   const interestProcessChanged = useMemo(() => hasChanged(interestProcess, interestProcessInitial), [interestProcess, interestProcessInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
@@ -258,6 +266,9 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
         setTenant(nextTenant)
         setLoanSlipCreationInitial(nextLoanSlipCreation)
         setLoanSlipCreation(nextLoanSlipCreation)
+        const nextDebtPaymentPolicy = response.debt_payment_policy ?? emptyDebtPaymentPolicy
+        setDebtPaymentPolicyInitial(nextDebtPaymentPolicy)
+        setDebtPaymentPolicy(nextDebtPaymentPolicy)
         if (response.timezone) {
           setTimezone(response.timezone.value || 'Asia/Yangon')
           setTimezoneInitial(response.timezone.value || 'Asia/Yangon')
@@ -456,6 +467,27 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
       setLoanSlipCreationInitial(nextSettings)
       setLoanSlipCreation(nextSettings)
     }, 'Loan slip creation settings saved successfully.')
+  }
+  async function saveDebtPaymentPolicy() {
+    await saveSection('debt-payment-policy', async () => {
+      const response = await settingsService.updateDebtPaymentPolicy(debtPaymentPolicy)
+      setDebtPaymentPolicyInitial(response)
+      setDebtPaymentPolicy(response)
+      if (tenantResolution.status === 'resolved') {
+        const items = tenantResolution.tenant.tenant_setting?.items ?? []
+        const nextItem = { key: 'allow_partial_debt_payments', value: response.allow_partial_payments ? 'true' : 'false', category: 'debt', updateKey: response.update_key }
+        setTenantResolution({
+          ...tenantResolution,
+          tenant: {
+            ...tenantResolution.tenant,
+            tenant_setting: {
+              ...tenantResolution.tenant.tenant_setting,
+              items: [...items.filter((item) => item.key !== nextItem.key), nextItem],
+            },
+          },
+        })
+      }
+    }, 'Debt payment policy saved successfully.')
   }
 
   async function saveUserLanguage() {
@@ -994,6 +1026,21 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
           <ActionBar>
             <Button disabled={!loanSlipCreationChanged || savingSection === 'loan-slip-creation'} onClick={() => setLoanSlipCreation(loanSlipCreationInitial)} variant="secondary">Cancel</Button>
             <Button disabled={!loanSlipCreationChanged} isLoading={savingSection === 'loan-slip-creation'} onClick={() => void saveLoanSlipCreationSettings()} variant="primary">Save Settings</Button>
+          </ActionBar>
+        </Card>}
+        {section === 'tenant' && canManageDebtSettings && <Card title="Debt Payment Settings" description="Choose whether staff may record less than the full outstanding debt balance.">
+          <button
+            aria-pressed={debtPaymentPolicy.allow_partial_payments}
+            className={debtPaymentPolicy.allow_partial_payments ? 'settings-policy-toggle settings-policy-toggle--on' : 'settings-policy-toggle settings-policy-toggle--off'}
+            onClick={() => setDebtPaymentPolicy({ ...debtPaymentPolicy, allow_partial_payments: !debtPaymentPolicy.allow_partial_payments })}
+            type="button"
+          >
+            <span><strong>Allow partial debt payments</strong><small>When Off, every payment must settle the complete outstanding balance.</small></span>
+            <span className="settings-policy-toggle__state">{debtPaymentPolicy.allow_partial_payments ? 'On' : 'Off'}</span>
+          </button>
+          <ActionBar>
+            <Button disabled={!debtPaymentPolicyChanged || savingSection === 'debt-payment-policy'} onClick={() => setDebtPaymentPolicy(debtPaymentPolicyInitial)} variant="secondary">Cancel</Button>
+            <Button disabled={!debtPaymentPolicyChanged} isLoading={savingSection === 'debt-payment-policy'} onClick={() => void saveDebtPaymentPolicy()} variant="primary">Save</Button>
           </ActionBar>
         </Card>}
         {section === 'finance' && canManageAccountingSchedule && <Card title="Automatic Accounting Day Schedule" description={`Times use ${accountingScheduleTimezone}. The scheduler processes due actions every 15 minutes.`}>

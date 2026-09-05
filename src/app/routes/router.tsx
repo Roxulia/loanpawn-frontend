@@ -16,7 +16,7 @@ import { FinancialAccountCreatePage, FinancialAccountDetailPage, FinancialAccoun
 import { CapitalCreatePage, CapitalEditPage, CapitalsPage } from '../../modules/capitals'
 import { CollateralDetailPage, CollateralListPage } from '../../modules/collateral'
 import { CustomerCreatePage, CustomerDetailPage, CustomerEditPage, CustomerListPage } from '../../modules/customers'
-import { DebtCreatePage, DebtsPage } from '../../modules/debts'
+import { DebtCreatePage, DebtDetailPage, DebtsPage } from '../../modules/debts'
 import { ExpenseCreatePage, ExpenseEditPage, ExpensesPage } from '../../modules/expenses'
 import { InterestPaymentsPage } from '../../modules/interest'
 import { moduleRegistry } from '../../modules/moduleRegistry'
@@ -86,6 +86,7 @@ export const router = createBrowserRouter([
       { path: '/expenses/:expenseCode/edit', element: featureGate('expense_management', 'Expenses', <PermissionRoute permission="update_expense"><ExpenseEditPage /></PermissionRoute>) },
       { path: routePaths.debts, element: featureGate('debt_management', 'Debts', <PermissionRoute any={['list_debt', 'create_debt', 'update_debt', 'delete_debt']}><DebtsPage /></PermissionRoute>) },
       { path: routePaths.debtCreate, element: featureGate('debt_management', 'Debts', <PermissionRoute permission="create_debt"><DebtCreatePage /></PermissionRoute>) },
+      { path: '/debts/:debtCode', element: featureGate('debt_management', 'Debts', <PermissionRoute permission="list_debt"><DebtDetailPage /></PermissionRoute>) },
       { path: routePaths.slips, element: featureGate('loan_contract_management', 'Loan Slips', <PermissionRoute any={['list_loan_contract', 'create_loan_contract', 'delete_loan_contract']}><SlipsPage /></PermissionRoute>) },
       { path: '/slips/:slipNo', element: featureGate('loan_contract_management', 'Loan Slips', <PermissionRoute permission="list_loan_contract"><SlipDetailPage /></PermissionRoute>) },
       { path: routePaths.interest, element: featureGate('interest_payment_management', 'Interest Payments', <PermissionRoute any={['list_loan_contract', 'create_loan_contract']}><InterestPaymentsPage /></PermissionRoute>) },
@@ -94,6 +95,10 @@ export const router = createBrowserRouter([
       { path: routePaths.settingsPersonal, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'manage_interest_process_settings', 'list_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><PersonalSettingsPage /></PermissionRoute> },
       { path: routePaths.settingsTenant, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact']}><TenantSettingsPage /></PermissionRoute> },
       { path: routePaths.settingsFinance, element: <PermissionRoute any={['list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'manage_interest_process_settings', 'list_financial_account_type']}><FinanceSettingsPage /></PermissionRoute> },
+      { path: routePaths.settings, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><Navigate to={routePaths.settingsPersonal} replace /></PermissionRoute> },
+      { path: routePaths.settingsPersonal, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_currency', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><PersonalSettingsPage /></PermissionRoute> },
+      { path: routePaths.settingsTenant, element: <PermissionRoute any={['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings']}><TenantSettingsPage /></PermissionRoute> },
+      { path: routePaths.settingsFinance, element: <PermissionRoute any={['list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type']}><FinanceSettingsPage /></PermissionRoute> },
       { path: routePaths.settingsDefaultData, element: <PermissionRoute any={['list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type']}><DefaultDataSettingsPage /></PermissionRoute> },
       { path: routePaths.settingsDocuments, element: featureGate('slip_document_layout_management', 'Template editor', <PermissionRoute permission="manage_slip_document"><TemplateEditorPage /></PermissionRoute>) },
       { path: routePaths.templateEditor, element: <Navigate to={routePaths.settingsDocuments} replace /> },

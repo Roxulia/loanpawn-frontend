@@ -415,6 +415,84 @@ p {
   color: var(--color-danger);
 }
 
+.debt-interest-fields,
+.debt-interest-workflow__content {
+  display: grid;
+  gap: 1rem;
+}
+
+.debt-interest-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.debt-create-fields {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.debt-create-fields--mobile {
+  display: none;
+}
+
+.debt-create-section--reference .ui-form-field:has(textarea) {
+  grid-column: 1 / -1;
+}
+
+.debt-detail-summary--mobile {
+  display: none;
+}
+
+.debt-detail-page .ui-card + .ui-card {
+  margin-top: var(--space-4);
+}
+
+.debt-interest-toggle {
+  align-items: center;
+  display: flex;
+  gap: .6rem;
+}
+
+.debt-interest-accruals--mobile {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .debt-create-fields--desktop {
+    display: none;
+  }
+
+  .debt-create-fields--mobile {
+    display: grid;
+  }
+  .debt-detail-summary--desktop {
+    display: none;
+  }
+
+  .debt-detail-summary--mobile {
+    display: block;
+  }
+  .debt-interest-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-interest-accruals--desktop {
+    display: none;
+  }
+
+  .debt-interest-accruals--mobile {
+    display: grid;
+    gap: .75rem;
+  }
+
+  .debt-interest-accruals--mobile article {
+    border: 1px solid var(--color-border, #d8dee8);
+    border-radius: .75rem;
+    display: grid;
+    gap: .35rem;
+    padding: .85rem;
+  }
+}
+
 .topbar {
   align-items: center;
   background: rgb(246 249 255 / 92%);

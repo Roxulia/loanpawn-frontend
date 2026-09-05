@@ -46,12 +46,13 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
   createPath?: string
   mobileCreatePath?: string
   editPath?: (item: TItem) => string
+  detailPath?: (item: TItem) => string
   mobileEditPath?: (item: TItem) => string
   hideUpdateAction?: boolean
   onDelete?: (item: TItem) => Promise<unknown>
   renderItemActions?: (item: TItem, helpers: { removeItem: (item: TItem) => void; reload: () => Promise<void>; updateItem: (item: TItem) => void }) => ReactNode
   renderItemActionsPermission?: PermissionCode
-  renderMobileCard?: (item: TItem, actions: ReactNode) => ReactNode
+  renderMobileCard?: (item: TItem, actions: ReactNode, onClick?: () => void) => ReactNode
 }
 
 const perPage = 10
@@ -337,6 +338,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
             getItemTitle={config.getItemTitle}
             isLoading={isLoading}
             items={filteredItems}
+            onRowClick={config.detailPath ? (item) => navigate(config.detailPath?.(item) ?? '') : undefined}
             pagination={canList ? {
               currentPage,
               lastPage,
@@ -344,7 +346,11 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
               onPrevious: () => setCurrentPage((page) => page - 1),
               total,
             } : undefined}
-            renderMobileCard={config.renderMobileCard}
+            renderMobileCard={config.renderMobileCard ? (item, actions) => config.renderMobileCard?.(
+              item,
+              actions,
+              config.detailPath ? () => navigate(config.detailPath?.(item) ?? '') : undefined,
+            ) : undefined}
             showEmptyStructure={!canList}
           />
         </div>
