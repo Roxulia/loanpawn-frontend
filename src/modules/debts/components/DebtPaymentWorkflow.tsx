@@ -11,12 +11,14 @@ import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateF
 import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
 import { formatDate } from '../../finance/financeFormat'
 import type { FinancialUnitCode } from '../../finance/financialUnits'
+import { formatTenantDateTime } from '../../../utils/localDateTime'
 
 const accrualColumns: Array<DataTableColumn<DebtInterestAccrual>> = [
-  { header: 'Period', key: 'period', render: (row) => `${formatDate(row.start_period_at)} - ${formatDate(row.end_period_at)}` },
+  { header: 'Period', key: 'period', render: (row) => `${formatTenantDateTime(row.start_period_at, row.period_timezone)} - ${formatTenantDateTime(row.end_period_at, row.period_timezone)}` },
   { header: 'Principal', key: 'principal', render: (row) => row.principal_amount },
   { header: 'Interest', key: 'interest', render: (row) => row.interest_amount },
   { header: 'Paid', key: 'paid', render: (row) => row.paid_amount },
+  { header: 'Compounded', key: 'compounded', render: (row) => row.compounded_amount },
   { header: 'Outstanding', key: 'outstanding', render: (row) => row.outstanding_amount },
 ]
 
@@ -118,7 +120,7 @@ export function DebtPaymentWorkflow({ initialDebtCode = '' }: { initialDebtCode?
           { key: 'Interest', value: calculation.apply_interest ? `${calculation.interest_rate}% ${calculation.interest_type_name ?? ''}` : 'Not applied' },
         ]} />
         <div className="debt-interest-accruals--desktop"><DataTable columns={accrualColumns} emptyDescription="This debt has no interest accruals." emptyTitle="No accrued interest" getItemId={(row) => row.id} getItemTitle={(row) => `Accrual ${row.id}`} items={calculation.interest_breakdown} /></div>
-        <div className="debt-interest-accruals--mobile">{calculation.interest_breakdown.map((row) => <article key={row.id}><strong>{formatDate(row.start_period_at)} - {formatDate(row.end_period_at)}</strong><span>Outstanding: {row.outstanding_amount}</span></article>)}</div>
+        <div className="debt-interest-accruals--mobile">{calculation.interest_breakdown.map((row) => <article key={row.id}><strong>{formatTenantDateTime(row.start_period_at, row.period_timezone)} - {formatTenantDateTime(row.end_period_at, row.period_timezone)}</strong><span>Compounded: {row.compounded_amount}</span><span>Outstanding: {row.outstanding_amount}</span></article>)}</div>
       </Card>
       {Number(calculation.total_outstanding) > 0 && <Card title={calculation.allow_partial_payments ? 'Record Partial or Full Payment' : 'Record Payment'}>
         <form className="ui-form" onSubmit={(event) => void pay(event)}>

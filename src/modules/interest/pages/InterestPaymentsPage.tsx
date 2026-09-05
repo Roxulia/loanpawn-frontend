@@ -13,6 +13,7 @@ import { financialAmountToBase, type FinancialUnitCode } from '../../finance/fin
 import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
 import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
 import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
+import { formatTenantDateTime } from '../../../utils/localDateTime'
 
 const perPage = 10
 
@@ -180,14 +181,14 @@ export function InterestPaymentsPage() {
   }
 
   const columns: Array<DataTableColumn<InterestBreakdownRow>> = [
-    { header: 'Start Date', key: 'start', render: (row) => formatDate(row.start_period_at) },
-    { header: 'End Date', key: 'end', render: (row) => formatDate(row.end_period_at) },
+    { header: 'Start Date', key: 'start', render: (row) => formatTenantDateTime(row.start_period_at, row.period_timezone) },
+    { header: 'End Date', key: 'end', render: (row) => formatTenantDateTime(row.end_period_at, row.period_timezone) },
     { header: 'Interest Amount', key: 'amount', render: (row) => <AccountCurrencyAmount accountId={calculation?.account_id ?? calculation?.accountId} amount={getInterestAmount(row)} /> },
   ]
 
   const historyColumns: Array<DataTableColumn<InterestPaymentHistoryItem>> = [
     { header: 'Slip No', key: 'slip', render: (row) => <strong>{row.slip_no ?? '-'}</strong> },
-    { header: 'Period', key: 'period', render: (row) => `${formatDate(row.start_period_at)} - ${formatDate(row.end_period_at)}` },
+    { header: 'Period', key: 'period', render: (row) => `${formatTenantDateTime(row.start_period_at, row.period_timezone)} - ${formatTenantDateTime(row.end_period_at, row.period_timezone)}` },
     { header: 'Interest', key: 'interest', render: (row) => <AccountCurrencyAmount accountId={row.created_account_id ?? row.createdAccountId} amount={row.interest_amount} /> },
     { header: 'Paid Amount', key: 'paid', render: (row) => <AccountCurrencyAmount accountId={row.accept_account_id ?? row.acceptAccountId} amount={row.payment_amount} fallbackAccountId={row.created_account_id ?? row.createdAccountId} /> },
     { header: 'Change', key: 'change', render: (row) => <AccountCurrencyAmount accountId={row.accept_account_id ?? row.acceptAccountId} amount={row.change_amount} fallbackAccountId={row.created_account_id ?? row.createdAccountId} /> },
@@ -250,7 +251,7 @@ export function InterestPaymentsPage() {
                     emptyDescription="No unpaid interest is due for this slip."
                     emptyTitle="No interest due"
                     getItemId={(row) => row.id}
-                    getItemTitle={(row) => `${formatDate(row.start_period_at)} to ${formatDate(row.end_period_at)}`}
+                    getItemTitle={(row) => `${formatTenantDateTime(row.start_period_at, row.period_timezone)} to ${formatTenantDateTime(row.end_period_at, row.period_timezone)}`}
                     items={rows}
                   />
                 </div>
@@ -348,7 +349,7 @@ function InterestHistoryMobileCard({ item }: { item: InterestPaymentHistoryItem 
   const acceptAccountId = item.accept_account_id ?? item.acceptAccountId
   return <FinanceHistoryMobileCard
     amount={<AccountCurrencyAmount accountId={acceptAccountId} amount={item.payment_amount} fallbackAccountId={createdAccountId} />}
-    eyebrow={`${formatDate(item.start_period_at)} – ${formatDate(item.end_period_at)}`}
+    eyebrow={`${formatTenantDateTime(item.start_period_at, item.period_timezone)} – ${formatTenantDateTime(item.end_period_at, item.period_timezone)}`}
     meta={formatDate(item.payment_at)}
     status="Paid"
     statusTone="active"
@@ -414,12 +415,12 @@ function InterestAccrualMobileDetail({
           <div className="interest-accrual-mobile-row__period">
             <div>
               <span>Start Date</span>
-              <strong>{formatDate(row.start_period_at)}</strong>
+              <strong>{formatTenantDateTime(row.start_period_at, row.period_timezone)}</strong>
             </div>
             <ArrowRightIcon />
             <div>
               <span>End Date</span>
-              <strong>{formatDate(row.end_period_at)}</strong>
+              <strong>{formatTenantDateTime(row.end_period_at, row.period_timezone)}</strong>
             </div>
           </div>
         </article>

@@ -45,3 +45,19 @@ export function formatLocalDateTime(value: string | null | undefined) {
 
   return `${formatLocalDate(value)} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+
+export function formatTenantDateTime(value: string | null | undefined, timeZone?: string | null) {
+  const date = parseDateValue(value)
+  if (!date) return value || '-'
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hourCycle: 'h23', timeZone: timeZone || 'Asia/Yangon',
+    }).formatToParts(date)
+    const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ''
+    return `${get('day')}/${get('month')}/${get('year')} ${get('hour')}:${get('minute')}:${get('second')}`
+  } catch {
+    return formatLocalDateTime(value)
+  }
+}

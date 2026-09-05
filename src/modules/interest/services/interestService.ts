@@ -14,6 +14,7 @@ export type InterestBreakdownRow = {
   update_key?: number
   start_period_at?: string | null
   end_period_at?: string | null
+  period_timezone?: string | null
   interest_amount: number
 }
 
@@ -31,6 +32,7 @@ export type InterestPaymentPayload = {
     interest_amount: number
     start_period_at?: string | null
     end_period_at?: string | null
+    period_timezone?: string | null
   }>
 }
 
@@ -56,6 +58,7 @@ export type InterestPaymentHistoryItem = {
   slip_no?: string | null
   start_period_at?: string | null
   end_period_at?: string | null
+  period_timezone?: string | null
   interest_amount: number
   payment_amount: number
   change_amount: number

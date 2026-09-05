@@ -442,6 +442,10 @@ p {
   display: none;
 }
 
+.debt-compounding--mobile {
+  display: none;
+}
+
 .debt-detail-page .ui-card + .ui-card {
   margin-top: var(--space-4);
 }
@@ -469,6 +473,14 @@ p {
   }
 
   .debt-detail-summary--mobile {
+    display: block;
+  }
+
+  .debt-compounding--desktop {
+    display: none;
+  }
+
+  .debt-compounding--mobile {
     display: block;
   }
   .debt-interest-fields {

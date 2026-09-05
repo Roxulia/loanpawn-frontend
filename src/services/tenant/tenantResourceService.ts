@@ -224,6 +224,14 @@ export const tenantResourceService = {
     return apiClient.get<import('../../dataobjects/tenant/finance').DebtPaymentHistoryItem[]>(`/tenant/debts/${encodeURIComponent(debtCode)}/payments`, authOptions(auth))
   },
 
+  updateDebtCompoundSchedule(debtCode: string, payload: { debt_update_key: number; enabled: boolean; compound_every?: number | null; compound_every_type?: string | null; next_compound_at?: string | null }, auth?: TenantAuth) {
+    return apiClient.put<import('../../dataobjects/tenant/finance').TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}/compound-schedule`, payload, authOptions(auth))
+  },
+
+  compoundDebtInterest(debtCode: string, auth?: TenantAuth) {
+    return apiClient.post<{ debt: import('../../dataobjects/tenant/finance').TenantDebt; compounded_interest: number }>(`/tenant/debts/${encodeURIComponent(debtCode)}/compound-interest`, {}, authOptions(auth))
+  },
+
   showBrandingSlipLayouts(auth?: TenantAuth) {
     return apiClient.get<TenantBrandingSlipLayouts>('/tenant/branding/slip-layouts', authOptions(auth))
   },

@@ -207,6 +207,16 @@ export type TenantDebt = {
   interestTypeId?: number | null
   interest_type_name?: string | null
   interestTypeName?: string | null
+  compound_schedule_enabled?: boolean
+  compoundScheduleEnabled?: boolean
+  compound_every?: number | null
+  compoundEvery?: number | null
+  compound_every_type?: string | null
+  compoundEveryType?: string | null
+  next_compound_at?: string | null
+  nextCompoundAt?: string | null
+  last_compounded_at?: string | null
+  lastCompoundedAt?: string | null
   outstanding_interest?: string
   outstandingInterest?: string
   total_outstanding?: string
@@ -230,6 +240,9 @@ export type DebtInterestAccrual = {
   principal_amount: number
   interest_amount: number
   paid_amount: number
+  compounded_amount: number
+  compounded_at?: string | null
+  period_timezone?: string | null
   outstanding_amount: number
   start_period_at?: string | null
   end_period_at?: string | null
@@ -250,6 +263,7 @@ export type DebtInterestCalculation = {
   interest_type_id?: number | null
   interest_type_name?: string | null
   allow_partial_payments: boolean
+  compounding_enabled: boolean
   interest_breakdown: DebtInterestAccrual[]
 }
 
