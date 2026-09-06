@@ -89,7 +89,7 @@ export function SlipsPage() {
   const [materialTypes, setMaterialTypes] = useState<MaterialType[]>([])
   const [itemCategoryTypes, setItemCategoryTypes] = useState<ItemCategoryType[]>([])
   const [customer, setCustomer] = useState(emptyCustomer)
-  const [isCustomerInfoRequired, setIsCustomerInfoRequired] = useState(true)
+  const [isCustomerInfoRequired, setIsCustomerInfoRequired] = useState<boolean | null>(null)
   const [isCustomerPrefilling, setIsCustomerPrefilling] = useState(false)
   const [prefilledCustomerCode, setPrefilledCustomerCode] = useState('')
   const [loan, setLoan] = useState(emptyLoan)
@@ -111,6 +111,8 @@ export function SlipsPage() {
   const [paperType, setPaperType] = useState('A4')
   const [shouldPrintAfterCreate, setShouldPrintAfterCreate] = useState(false)
   const createIdempotencyKeyRef = useRef<string | null>(null)
+  const customerInfoRequired = isCustomerInfoRequired ?? true
+  const isLoanSlipCreationSettingsLoading = canCreate && isCustomerInfoRequired === null
 
   const filteredSlips = useMemo(() => {
     const search = searchTerm.trim().toLowerCase()
@@ -181,7 +183,14 @@ export function SlipsPage() {
 
     void settingsService.getLoanSlipCreationSettings()
       .then((response) => {
-        if (isCurrent) setIsCustomerInfoRequired(response.customer_info_required)
+        if (isCurrent) {
+          setIsCustomerInfoRequired(response.customer_info_required)
+
+          if (!response.customer_info_required) {
+            setCustomer(emptyCustomer)
+            setPrefilledCustomerCode('')
+          }
+        }
       })
       .catch(() => {
         if (isCurrent) setIsCustomerInfoRequired(true)
@@ -191,14 +200,7 @@ export function SlipsPage() {
   }, [canCreate])
 
   useEffect(() => {
-    if (!isCustomerInfoRequired) {
-      setCustomer(emptyCustomer)
-      setPrefilledCustomerCode('')
-    }
-  }, [isCustomerInfoRequired])
-
-  useEffect(() => {
-    if (!isCustomerInfoRequired) {
+    if (isCustomerInfoRequired !== true) {
       return
     }
 
@@ -266,11 +268,15 @@ export function SlipsPage() {
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
+    if (isLoanSlipCreationSettingsLoading) {
+      return
+    }
+
     if (createIdempotencyKeyRef.current !== null) {
       return
     }
 
-    const nextErrors = validateSlipForm(customer, loan, items, interestTypes, isCustomerInfoRequired)
+    const nextErrors = validateSlipForm(customer, loan, items, interestTypes, customerInfoRequired)
     setFormErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) {
@@ -285,7 +291,7 @@ export function SlipsPage() {
       const response = await slipService.createSlip({
         ...(loan.account_id ? { account_id: Number(loan.account_id) } : {}),
         ...(loan.reporting_exchange_rate ? { reporting_exchange_rate: Number(loan.reporting_exchange_rate), reporting_exchange_rate_inversed: loan.reporting_exchange_rate_inversed } : {}),
-        customer: isCustomerInfoRequired ? {
+        customer: customerInfoRequired ? {
           name: customer.name.trim(),
           email: customer.email.trim() || undefined,
           ...optionalNrcPayload(customer.nrc),
@@ -433,9 +439,15 @@ export function SlipsPage() {
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Loan slip action failed" tone="danger" />}
       {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Loan slip updated" tone="success" />}
 
-      {activeTab === 'application' && (
+      {activeTab === 'application' && isLoanSlipCreationSettingsLoading && (
+        <Card>
+          <LoadingState rows={6} variant="control" />
+        </Card>
+      )}
+
+      {activeTab === 'application' && !isLoanSlipCreationSettingsLoading && (
         <form className="workflow-stack ops-contract-workspace" onSubmit={(event) => void handleCreate(event)}>
-          {isCustomerInfoRequired && <Card title="Customer Details">
+          {customerInfoRequired && <Card title="Customer Details">
             {isCustomerPrefilling ? (
               <LoadingState rows={2} />
             ) : (
@@ -635,7 +647,7 @@ export function SlipsPage() {
                 <span><LocalizedText text="Print after saving" /></span>
               </label>
               <Button onClick={resetForm} variant="secondary">Reset</Button>
-              <Button disabled={!canCreate} isLoading={isCreating} type="submit" variant="primary">Create Slip</Button>
+              <Button disabled={!canCreate || isCustomerInfoRequired === null} isLoading={isCreating} type="submit" variant="primary">Create Slip</Button>
             </ActionBar>
           </Card>
         </form>
