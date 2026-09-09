@@ -13,6 +13,9 @@ type CustomerFormProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   operationAlert?: ReactNode
   value: CustomerFormState
+  formTitle?: string
+  formDescription?: string
+  submitLabel?: string
 }
 
 export function CustomerForm({
@@ -25,11 +28,14 @@ export function CustomerForm({
   onSubmit,
   operationAlert,
   value,
+  formTitle,
+  formDescription,
+  submitLabel,
 }: CustomerFormProps) {
   return (
     <Card
-      title={mode === 'create' ? 'Customer details' : 'Edit customer details'}
-      description="Keep customer identity and contact data accurate for loan slip workflows."
+      title={formTitle ?? (mode === 'create' ? 'Customer details' : 'Edit customer details')}
+      description={formDescription ?? 'Keep customer identity and contact data accurate for loan slip workflows.'}
     >
       {operationAlert}
       <form className="ui-form" onSubmit={onSubmit}>
@@ -90,7 +96,7 @@ export function CustomerForm({
             {cancelLabel}
           </Button>
           <Button isLoading={isSaving} type="submit" variant="primary">
-            {mode === 'create' ? 'Create Customer' : 'Save Changes'}
+            {submitLabel ?? (mode === 'create' ? 'Create Customer' : 'Save Changes')}
           </Button>
         </ActionBar>
       </form>

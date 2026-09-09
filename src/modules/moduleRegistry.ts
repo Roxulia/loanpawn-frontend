@@ -105,6 +105,16 @@ export const moduleRegistry: ModuleDefinition[] = [
     modulePermissions: ['list_debt', 'create_debt', 'update_debt', 'delete_debt'],
   },
   {
+    id: 'business-loans', label: 'Business Loans', routeSegment: 'business-loans', apiBasePath: '/tenant/business-loans', serverModule: 'TenantModule',
+    description: 'Lender funding, liability balances, interest expense, and repayments.', listPermission: 'list_business_loan',
+    modulePermissions: ['list_business_loan', 'create_business_loan', 'update_business_loan', 'delete_business_loan'],
+  },
+  {
+    id: 'lenders', label: 'Lenders', routeSegment: 'lenders', apiBasePath: '/tenant/lenders', serverModule: 'TenantModule',
+    description: 'Shared lender identities and their business loan history.', listPermission: 'list_lender',
+    modulePermissions: ['list_lender', 'create_lender', 'update_lender', 'delete_lender'],
+  },
+  {
     id: 'staff',
     label: 'Staff',
     routeSegment: 'staff',

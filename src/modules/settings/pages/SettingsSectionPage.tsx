@@ -147,6 +147,8 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const [loanSlipCreation, setLoanSlipCreation] = useState(emptyLoanSlipCreation)
   const [debtPaymentPolicyInitial, setDebtPaymentPolicyInitial] = useState(emptyDebtPaymentPolicy)
   const [debtPaymentPolicy, setDebtPaymentPolicy] = useState(emptyDebtPaymentPolicy)
+  const [businessLoanPaymentPolicyInitial, setBusinessLoanPaymentPolicyInitial] = useState(emptyDebtPaymentPolicy)
+  const [businessLoanPaymentPolicy, setBusinessLoanPaymentPolicy] = useState(emptyDebtPaymentPolicy)
   const [currencyOptions, setCurrencyOptions] = useState<Currency[]>([])
   const [currencyPreferencesInitial, setCurrencyPreferencesInitial] = useState(emptyCurrencyPreferences)
   const [currencyPreferences, setCurrencyPreferences] = useState(emptyCurrencyPreferences)
@@ -181,6 +183,7 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const canManageMasterData = hasEnabledFeature(tenantResolution, 'master_data_management')
   const canViewGeneralSettings = hasPermission('manage_slip_document')
   const canManageDebtSettings = hasPermission('manage_debt_settings')
+  const canManageBusinessLoanSettings = hasEnabledFeature(tenantResolution, 'business_loan_management') && hasPermission('update_business_loan')
   const canManageContact = hasPermission('manage_tenant_contact')
   const canViewMaterialTypes = hasPermission('list_material_type')
   const canViewInterestTypes = hasPermission('list_interest_type')
@@ -227,6 +230,7 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
   const tenantChanged = useMemo(() => hasChanged(tenant, tenantInitial), [tenant, tenantInitial])
   const loanSlipCreationChanged = useMemo(() => hasChanged(loanSlipCreation, loanSlipCreationInitial), [loanSlipCreation, loanSlipCreationInitial])
   const debtPaymentPolicyChanged = useMemo(() => hasChanged(debtPaymentPolicy, debtPaymentPolicyInitial), [debtPaymentPolicy, debtPaymentPolicyInitial])
+  const businessLoanPaymentPolicyChanged = useMemo(() => hasChanged(businessLoanPaymentPolicy, businessLoanPaymentPolicyInitial), [businessLoanPaymentPolicy, businessLoanPaymentPolicyInitial])
   const currencyPreferencesChanged = useMemo(() => hasChanged(currencyPreferences, currencyPreferencesInitial), [currencyPreferences, currencyPreferencesInitial])
   const interestProcessChanged = useMemo(() => hasChanged(interestProcess, interestProcessInitial), [interestProcess, interestProcessInitial])
   const userLanguageChanged = selectedLanguage !== currentLanguage
@@ -269,6 +273,9 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
         const nextDebtPaymentPolicy = response.debt_payment_policy ?? emptyDebtPaymentPolicy
         setDebtPaymentPolicyInitial(nextDebtPaymentPolicy)
         setDebtPaymentPolicy(nextDebtPaymentPolicy)
+        const nextBusinessLoanPaymentPolicy = response.business_loan_payment_policy ?? emptyDebtPaymentPolicy
+        setBusinessLoanPaymentPolicyInitial(nextBusinessLoanPaymentPolicy)
+        setBusinessLoanPaymentPolicy(nextBusinessLoanPaymentPolicy)
         if (response.timezone) {
           setTimezone(response.timezone.value || 'Asia/Yangon')
           setTimezoneInitial(response.timezone.value || 'Asia/Yangon')
@@ -488,6 +495,14 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
         })
       }
     }, 'Debt payment policy saved successfully.')
+  }
+
+  async function saveBusinessLoanPaymentPolicy() {
+    await saveSection('business-loan-payment-policy', async () => {
+      const response = await settingsService.updateBusinessLoanPaymentPolicy(businessLoanPaymentPolicy)
+      setBusinessLoanPaymentPolicyInitial(response)
+      setBusinessLoanPaymentPolicy(response)
+    }, 'Business Loan payment policy saved successfully.')
   }
 
   async function saveUserLanguage() {
@@ -1042,6 +1057,13 @@ export function SettingsSectionPage({ section = 'personal' }: { section?: Settin
             <Button disabled={!debtPaymentPolicyChanged || savingSection === 'debt-payment-policy'} onClick={() => setDebtPaymentPolicy(debtPaymentPolicyInitial)} variant="secondary">Cancel</Button>
             <Button disabled={!debtPaymentPolicyChanged} isLoading={savingSection === 'debt-payment-policy'} onClick={() => void saveDebtPaymentPolicy()} variant="primary">Save</Button>
           </ActionBar>
+        </Card>}
+        {section === 'tenant' && canManageBusinessLoanSettings && <Card title="Business Loan Payment Settings" description="Choose whether staff may make partial lender repayments.">
+          <button aria-pressed={businessLoanPaymentPolicy.allow_partial_payments} className={businessLoanPaymentPolicy.allow_partial_payments ? 'settings-policy-toggle settings-policy-toggle--on' : 'settings-policy-toggle settings-policy-toggle--off'} onClick={() => setBusinessLoanPaymentPolicy({ ...businessLoanPaymentPolicy, allow_partial_payments: !businessLoanPaymentPolicy.allow_partial_payments })} type="button">
+            <span><strong>Allow partial Business Loan payments</strong><small>When Off, every payment must settle the complete outstanding balance.</small></span>
+            <span className="settings-policy-toggle__state">{businessLoanPaymentPolicy.allow_partial_payments ? 'On' : 'Off'}</span>
+          </button>
+          <ActionBar><Button disabled={!businessLoanPaymentPolicyChanged || savingSection === 'business-loan-payment-policy'} onClick={() => setBusinessLoanPaymentPolicy(businessLoanPaymentPolicyInitial)} variant="secondary">Cancel</Button><Button disabled={!businessLoanPaymentPolicyChanged} isLoading={savingSection === 'business-loan-payment-policy'} onClick={() => void saveBusinessLoanPaymentPolicy()} variant="primary">Save</Button></ActionBar>
         </Card>}
         {section === 'finance' && canManageAccountingSchedule && <Card title="Automatic Accounting Day Schedule" description={`Times use ${accountingScheduleTimezone}. The scheduler processes due actions every 15 minutes.`}>
           <div className="accounting-schedule accounting-schedule--desktop" role="group" aria-label="Weekly accounting schedule">

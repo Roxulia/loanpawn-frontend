@@ -1957,3 +1957,35 @@ p {
     width: 100%;
   }
 }
+/* Responsive Business Loan and Lender module layouts */
+.business-loan-form--mobile,
+.business-loan-list--mobile,
+.business-loan-detail--mobile,
+.business-loan-compounding--mobile,
+.lender-list--mobile,
+.lender-detail--mobile { display: none; }
+
+.business-loan-mobile-card,
+.lender-mobile-card,
+.business-loan-payment-history article { border: 1px solid var(--color-border, #dfe3e8); border-radius: 12px; padding: 1rem; }
+.business-loan-mobile-card button,
+.lender-mobile-card { display: grid; gap: .35rem; width: 100%; text-align: left; background: transparent; color: inherit; border: 0; }
+.business-loan-list--mobile,
+.lender-list--mobile,
+.business-loan-payment-history { gap: .75rem; }
+.business-loan-payment-layout { display: grid; gap: 1rem; }
+
+@media (max-width: 767px) {
+  .business-loan-form--desktop,
+  .business-loan-list--desktop,
+  .business-loan-detail--desktop,
+  .business-loan-compounding--desktop,
+  .lender-list--desktop,
+  .lender-detail--desktop { display: none; }
+  .business-loan-form--mobile,
+  .business-loan-list--mobile,
+  .business-loan-detail--mobile,
+  .business-loan-compounding--mobile,
+  .lender-list--mobile,
+  .lender-detail--mobile { display: grid; }
+}

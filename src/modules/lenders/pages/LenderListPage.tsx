@@ -1,0 +1,18 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { routePaths } from '../../../app/routes/paths'
+import { Badge, Button, Input } from '../../../components/atoms'
+import { Alert, LoadingState } from '../../../components/feedback'
+import { Card, FormField, SectionHeader } from '../../../components/molecules'
+import { DataTable, type DataTableColumn } from '../../../components/organisms'
+import { usePermissions } from '../../auth'
+import { lenderService, type TenantLender } from '../services/lenderService'
+
+export function LenderListPage() {
+  const navigate = useNavigate(); const { hasPermission } = usePermissions(); const [items, setItems] = useState<TenantLender[]>([]); const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null)
+  const load = useCallback(async () => { setLoading(true); try { const result = await lenderService.list({ perPage: 100, search }); setItems(result.data) } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load lenders.') } finally { setLoading(false) } }, [search])
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 250); return () => window.clearTimeout(timer) }, [load])
+  async function remove(item: TenantLender) { if (!window.confirm(`Delete lender "${item.name}"?`)) return; try { await lenderService.delete(item.code); await load() } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to delete lender.') } }
+  const columns: Array<DataTableColumn<TenantLender>> = [{ header: 'Code', key: 'code', render: (row) => <strong>{row.code}</strong> }, { header: 'Name', key: 'name', render: (row) => row.name }, { header: 'Phone', key: 'phone', render: (row) => row.phone || '-' }, { header: 'Active loans', key: 'loans', render: (row) => <Badge tone="info">{row.active_loans ?? row.activeLoans ?? 0}</Badge> }, { header: 'Outstanding', key: 'outstanding', render: (row) => row.outstanding_principal ?? row.outstandingPrincipal ?? '0.00' }, { header: 'Actions', key: 'actions', render: (row) => <div className="row-actions"><Button onClick={() => navigate(routePaths.lenderDetail(row.code))} variant="ghost">View</Button>{hasPermission('update_lender') && <Button onClick={() => navigate(routePaths.lenderEdit(row.code))} variant="secondary">Edit</Button>}{hasPermission('delete_lender') && <Button onClick={() => void remove(row)} variant="danger">Delete</Button>}</div> }]
+  return <section className="page lender-list-page"><SectionHeader title="Lenders" subtitle="Manage people and organizations that fund business loans." action={hasPermission('create_lender') ? <Button onClick={() => navigate(routePaths.lenderCreate)}>Add Lender</Button> : null} />{error && <Alert message={error} onDismiss={() => setError(null)} title="Lender action failed" tone="danger" />}<Card title="Lender records"><FormField id="lender-search" label="Search"><Input id="lender-search" onChange={(event) => setSearch(event.target.value)} value={search} /></FormField>{loading ? <LoadingState rows={5} /> : <><div className="lender-list--desktop"><DataTable columns={columns} emptyDescription="Create a lender to begin." emptyTitle="No lenders" getItemId={(row) => row.id} getItemTitle={(row) => row.name} items={items} /></div><div className="lender-list--mobile">{items.map((item) => <button className="lender-mobile-card" key={item.id} onClick={() => navigate(routePaths.lenderDetail(item.code))} type="button"><strong>{item.name}</strong><span>{item.code}</span><span>{item.phone || 'No phone'}</span></button>)}</div></>}</Card></section>
+}

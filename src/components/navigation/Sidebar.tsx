@@ -20,6 +20,8 @@ type IconName =
   | 'capitals'
   | 'expenses'
   | 'debts'
+  | 'businessLoans'
+  | 'lenders'
   | 'staff'
   | 'settings'
 
@@ -72,6 +74,8 @@ const navigationGroups: NavigationGroup[] = [
       { label: 'Capital Management', to: routePaths.capitals, icon: 'capitals', permissions: ['list_capital', 'create_capital', 'update_capital', 'delete_capital'] },
       { label: 'Expenses', to: routePaths.expenses, icon: 'expenses', permissions: ['list_expense', 'create_expense', 'update_expense', 'delete_expense'] },
       { label: 'Debts', to: routePaths.debts, icon: 'debts', permissions: ['list_debt', 'create_debt', 'update_debt', 'delete_debt'] },
+      { label: 'Business Loans', to: routePaths.businessLoans, icon: 'businessLoans', permissions: ['list_business_loan', 'create_business_loan', 'update_business_loan', 'delete_business_loan'], features: ['business_loan_management'] },
+      { label: 'Lenders', to: routePaths.lenders, icon: 'lenders', permissions: ['list_lender', 'create_lender', 'update_lender', 'delete_lender'], features: ['lender_management'] },
     ],
   },
   {
@@ -82,10 +86,10 @@ const navigationGroups: NavigationGroup[] = [
         label: 'Settings',
         to: routePaths.settings,
         icon: 'settings',
-        permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'],
+        permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'update_business_loan', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'],
         children: [
-          { label: 'Personal', to: routePaths.settingsPersonal, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
-          { label: 'Tenant', to: routePaths.settingsTenant, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings'] },
+          { label: 'Personal', to: routePaths.settingsPersonal, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'update_business_loan', 'list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type', 'list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
+          { label: 'Tenant', to: routePaths.settingsTenant, permissions: ['manage_slip_document', 'manage_tenant_timezone', 'manage_tenant_contact', 'manage_debt_settings', 'update_business_loan'] },
           { label: 'Finance', to: routePaths.settingsFinance, permissions: ['list_currency', 'update_default_currency', 'update_reporting_currency', 'update_default_financial_unit', 'manage_accounting_day_schedule', 'list_financial_account_type'] },
           { label: 'Default Data', to: routePaths.settingsDefaultData, permissions: ['list_material_type', 'list_interest_type', 'list_item_category_type', 'list_expense_type'] },
           { label: 'Documents', to: routePaths.settingsDocuments, permissions: ['manage_slip_document'], features: ['slip_document_layout_management'] },
@@ -166,6 +170,8 @@ function SidebarIcon({ name }: { name: IconName }) {
     capitals: ['M12 2v20', 'M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6', 'M19 9l3-3-3-3', 'M22 6h-7'],
     expenses: ['M3 6h18', 'M8 6V4h8v2', 'M6 6l1 15h10l1-15', 'M10 11v5', 'M14 11v5'],
     debts: ['M4 4h16v16H4V4Z', 'M8 8h8', 'M8 12h8', 'M8 16h4'],
+    businessLoans: ['M3 7h18v13H3V7Z', 'M7 7V4h10v3', 'M8 12h8', 'M12 9v6'],
+    lenders: ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M17 8h5', 'M19.5 5.5v5'],
     staff: ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M19 8v6', 'M22 11h-6'],
     settings: ['M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z', 'M19.4 15a1.8 1.8 0 0 0 .36 2l.07.07a2 2 0 0 1-2.83 2.83l-.07-.07a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1 1.63V21a2 2 0 0 1-4 0v-.1a1.8 1.8 0 0 0-1-1.63 1.8 1.8 0 0 0-2 .36l-.07.07a2 2 0 0 1-2.83-2.83l.07-.07a1.8 1.8 0 0 0 .36-2 1.8 1.8 0 0 0-1.63-1H3a2 2 0 0 1 0-4h.1a1.8 1.8 0 0 0 1.63-1 1.8 1.8 0 0 0-.36-2l-.07-.07A2 2 0 0 1 7.13 3.9l.07.07a1.8 1.8 0 0 0 2 .36A1.8 1.8 0 0 0 10.2 2.7V2a2 2 0 0 1 4 0v.1a1.8 1.8 0 0 0 1 1.63 1.8 1.8 0 0 0 2-.36l.07-.07a2 2 0 0 1 2.83 2.83l-.07.07a1.8 1.8 0 0 0-.36 2 1.8 1.8 0 0 0 1.63 1H21a2 2 0 0 1 0 4h-.1a1.8 1.8 0 0 0-1.5 1Z'],
   }

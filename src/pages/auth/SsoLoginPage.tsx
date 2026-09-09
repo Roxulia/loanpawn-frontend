@@ -82,6 +82,8 @@ function resolveLandingPath(tenant: TenantDetail) {
     ['expense_management', routePaths.expenses],
     ['capital_management', routePaths.capitals],
     ['debt_management', routePaths.debts],
+    ['business_loan_management', routePaths.businessLoans],
+    ['lender_management', routePaths.lenders],
     ['customer_management', routePaths.customers],
     ['collateral_management', routePaths.collateral],
     ['loan_contract_management', routePaths.slips],

@@ -143,6 +143,7 @@ export type SettingsResponse = {
 export type TenantSettingsBootstrap = Partial<SettingsResponse> & {
   loan_slip_creation_settings?: LoanSlipCreationSettings
   debt_payment_policy?: DebtPaymentPolicy
+  business_loan_payment_policy?: DebtPaymentPolicy
   timezone?: TimezoneSetting
   timezone_options?: string[]
 }
@@ -226,6 +227,10 @@ export const settingsService = {
 
   updateDebtPaymentPolicy(payload: DebtPaymentPolicy) {
     return apiClient.put<DebtPaymentPolicy>('/tenant/settings/debt-payment-policy', payload)
+  },
+
+  updateBusinessLoanPaymentPolicy(payload: DebtPaymentPolicy) {
+    return apiClient.put<DebtPaymentPolicy>('/tenant/settings/business-loan-payment-policy', payload)
   },
 
   getTimezone() { return apiClient.get<TimezoneSetting>('/tenant/settings/timezone') },
