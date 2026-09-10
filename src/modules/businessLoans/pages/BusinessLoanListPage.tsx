@@ -1,21 +1,106 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { routePaths } from '../../../app/routes/paths'
-import { Badge, Button, Input } from '../../../components/atoms'
-import { Alert, LoadingState } from '../../../components/feedback'
-import { Card, FormField, SectionHeader } from '../../../components/molecules'
-import { DataTable, type DataTableColumn } from '../../../components/organisms'
+import { Badge, Button } from '../../../components/atoms'
+import { Alert } from '../../../components/feedback'
+import { CirclePlusIcon, EditIcon, TrashIcon } from '../../../components/icons/icon'
+import { Card, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
+import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
 import { usePermissions } from '../../auth'
 import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
+import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
 import { formatDate } from '../../finance/financeFormat'
 import { businessLoanService, type BusinessLoan } from '../services/businessLoanService'
 
+const perPage = 10
+
 export function BusinessLoanListPage() {
-  const navigate = useNavigate(); const { hasPermission } = usePermissions(); const [items, setItems] = useState<BusinessLoan[]>([]); const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async () => { setLoading(true); try { const result = await businessLoanService.list({ perPage: 100, search }); setItems(result.data) } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load business loans.') } finally { setLoading(false) } }, [search])
-  useEffect(() => { const timer = window.setTimeout(() => void load(), 250); return () => window.clearTimeout(timer) }, [load])
-  async function remove(item: BusinessLoan) { if (!window.confirm(`Delete business loan "${item.code}"?`)) return; try { await businessLoanService.delete(item.code); await load() } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to delete business loan.') } }
-  const actions = (row: BusinessLoan) => <div className="row-actions"><Button onClick={() => navigate(routePaths.businessLoanDetail(row.code))} variant="ghost">View</Button>{!row.is_paid && hasPermission('update_business_loan') && <Button onClick={() => navigate(routePaths.businessLoanPayment(row.code))} variant="secondary">Pay</Button>}{hasPermission('update_business_loan') && <Button onClick={() => navigate(routePaths.businessLoanEdit(row.code))} variant="secondary">Edit</Button>}{hasPermission('delete_business_loan') && <Button onClick={() => void remove(row)} variant="danger">Delete</Button>}</div>
-  const columns: Array<DataTableColumn<BusinessLoan>> = [{ header: 'Loan', key: 'code', render: (row) => <strong>{row.code}</strong> }, { header: 'Lender', key: 'lender', render: (row) => row.lender_name }, { header: 'Outstanding', key: 'amount', render: (row) => <AccountCurrencyAmount accountId={row.receipt_account_id} amount={row.total_outstanding} /> }, { header: 'Interest', key: 'interest', render: (row) => row.apply_interest ? `${row.interest_rate}% ${row.interest_type_name ?? ''}` : '-' }, { header: 'Status', key: 'status', render: (row) => <Badge tone={row.is_paid ? 'success' : 'warning'}>{row.is_paid ? 'Settled' : 'Active'}</Badge> }, { header: 'Created', key: 'created', render: (row) => formatDate(row.created_at) }, { header: 'Actions', key: 'actions', render: actions }]
-  return <section className="page business-loan-list-page"><SectionHeader title="Business Loans" subtitle="Track lender funding, interest expense, and repayments." action={hasPermission('create_business_loan') ? <Button onClick={() => navigate(routePaths.businessLoanCreate)}>Create Business Loan</Button> : null} />{error && <Alert message={error} onDismiss={() => setError(null)} title="Business loan action failed" tone="danger" />}<Card title="Business Loan Records"><FormField id="business-loan-search" label="Search"><Input id="business-loan-search" onChange={(event) => setSearch(event.target.value)} value={search} /></FormField>{loading ? <LoadingState rows={5} /> : <><div className="business-loan-list--desktop"><DataTable columns={columns} emptyDescription="Create a business loan to record lender funding." emptyTitle="No business loans" getItemId={(row) => row.id} getItemTitle={(row) => row.code} items={items} /></div><div className="business-loan-list--mobile">{items.map((item) => <article className="business-loan-mobile-card" key={item.id}><button onClick={() => navigate(routePaths.businessLoanDetail(item.code))} type="button"><strong>{item.code}</strong><span>{item.lender_name}</span><span>{item.total_outstanding}</span></button>{actions(item)}</article>)}</div></>}</Card></section>
+  const navigate = useNavigate()
+  const { hasPermission } = usePermissions()
+  const canCreate = hasPermission('create_business_loan')
+  const canUpdate = hasPermission('update_business_loan')
+  const canDelete = hasPermission('delete_business_loan')
+  const [items, setItems] = useState<BusinessLoan[]>([])
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [lastPage, setLastPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [loanToDelete, setLoanToDelete] = useState<BusinessLoan | null>(null)
+
+  const load = useCallback(async (page: number) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await businessLoanService.list({ page, perPage, search: debouncedSearch })
+      setItems(result.data)
+      setCurrentPage(result.current_page)
+      setLastPage(result.last_page)
+      setTotal(result.total)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to load business loans.')
+    } finally {
+      setLoading(false)
+    }
+  }, [debouncedSearch])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { setCurrentPage(1); setDebouncedSearch(search.trim()) }, 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(currentPage), 0)
+    return () => window.clearTimeout(timer)
+  }, [currentPage, load])
+
+  async function remove() {
+    if (!loanToDelete) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await businessLoanService.delete(loanToDelete.code)
+      setNotice('Business loan deleted successfully.')
+      setLoanToDelete(null)
+      await load(items.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to delete business loan.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  function actions(row: BusinessLoan) {
+    return <div className="business-loan-row-actions">
+      {!row.is_paid && canUpdate && <Button aria-label={`Record payment for ${row.code}`} className="ui-button--icon" onClick={() => navigate(routePaths.businessLoanPayment(row.code))} title="Record payment" variant="primary">$</Button>}
+      {canUpdate && <Button aria-label={`Edit ${row.code}`} className="ui-button--icon" onClick={() => navigate(routePaths.businessLoanEdit(row.code))} title="Edit business loan" variant="secondary"><EditIcon /></Button>}
+      {canDelete && <Button aria-label={`Delete ${row.code}`} className="ui-button--icon" onClick={() => setLoanToDelete(row)} title="Delete business loan" variant="danger"><TrashIcon /></Button>}
+    </div>
+  }
+
+  const columns: Array<DataTableColumn<BusinessLoan>> = [
+    { header: 'Loan', key: 'code', render: (row) => <strong>{row.code}</strong> },
+    { header: 'Lender', key: 'lender', render: (row) => row.lender_name },
+    { header: 'Outstanding', key: 'amount', render: (row) => <strong><AccountCurrencyAmount accountId={row.receipt_account_id} amount={row.total_outstanding} /></strong> },
+    { header: 'Interest', key: 'interest', render: (row) => row.apply_interest ? `${row.interest_rate}% ${row.interest_type_name ?? ''}` : '-' },
+    { header: 'Status', key: 'status', render: (row) => <Badge tone={row.is_paid ? 'success' : 'warning'}>{row.is_paid ? 'Settled' : 'Active'}</Badge> },
+    { header: 'Created', key: 'created', render: (row) => formatDate(row.created_at) },
+  ]
+
+  return <section className="page business-loan-registry-page">
+    <SectionHeader title="Business Loans" subtitle="Track lender funding, interest expense, and repayments." action={canCreate ? <Button variant='primary' leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.businessLoanCreate)}>Create Business Loan</Button> : null} />
+    <Card title="Business loan records" description={`${total} total business loan${total === 1 ? '' : 's'}`} action={<Badge tone="info">Finance</Badge>}>
+      <div className="business-loan-registry">
+        {error && <Alert message={error} onDismiss={() => setError(null)} title="Business loan action failed" tone="danger" />}
+        {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Business loan updated" tone="success" />}
+        <TableToolbar actions={<Button onClick={() => void load(currentPage)} variant="secondary">Refresh</Button>} search={<SearchField id="business-loan-search" label="Filter business loans" onChange={(event) => setSearch(event.target.value)} placeholder="Loan code, lender, status, tag, or amount" value={search} />} />
+        <DataTable actions={actions} columns={columns} emptyAction={canCreate ? <Button variant='primary' leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.businessLoanCreate)}>Create Business Loan</Button> : null} emptyDescription={debouncedSearch ? 'No business loans match this search.' : 'Create a business loan to record lender funding.'} emptyTitle={debouncedSearch ? 'No matching loans' : 'No business loans'} getItemId={(row) => row.id} getItemTitle={(row) => row.code} isLoading={loading} items={items} onRowClick={(row) => navigate(routePaths.businessLoanDetail(row.code))} pagination={{ currentPage, lastPage, onNext: () => setCurrentPage((page) => page + 1), onPrevious: () => setCurrentPage((page) => page - 1), total }} renderMobileCard={(row, rowActions) => <FinanceHistoryMobileCard actions={rowActions} amount={<AccountCurrencyAmount accountId={row.receipt_account_id} amount={row.total_outstanding} />} eyebrow={row.code} meta={<>{row.lender_name} · {formatDate(row.created_at)}</>} onClick={() => navigate(routePaths.businessLoanDetail(row.code))} status={row.is_paid ? 'Settled' : 'Active'} statusTone={row.is_paid ? 'active' : 'due'} title={row.description} />} />
+      </div>
+    </Card>
+    <ConfirmDialog confirmLabel="Delete Business Loan" isLoading={deleting} isOpen={Boolean(loanToDelete)} message={`Delete business loan ${loanToDelete?.code ?? ''}? This action cannot be undone.`} onCancel={() => setLoanToDelete(null)} onConfirm={() => void remove()} title="Confirm business loan deletion" />
+  </section>
 }
