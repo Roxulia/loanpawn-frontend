@@ -1,134 +1,171 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
-import { routePaths } from '../../../app/routes/paths'
-import { Button } from '../../../components/atoms'
-import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
-import { ChevronRightIcon, CirclePlusIcon, ClockIcon, EditIcon, LocationPinIcon, RefreshIcon, TrashIcon } from '../../../components/icons/icon'
-import { SearchField } from '../../../components/molecules'
-import { ConfirmDialog } from '../../../components/organisms'
-import { formatLocalDate } from '../../../utils/localDateTime'
-import { usePermissions } from '../../auth'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { routePaths } from "../../../app/routes/paths";
+import { Button } from "../../../components/atoms";
+import { Alert, EmptyState, LoadingState } from "../../../components/feedback";
+import {
+  ChevronRightIcon,
+  CirclePlusIcon,
+  ClockIcon,
+  EditIcon,
+  LocationPinIcon,
+  RefreshIcon,
+  TrashIcon,
+} from "../../../components/icons/icon";
+import { SearchField } from "../../../components/molecules";
+import { ConfirmDialog } from "../../../components/organisms";
+import { formatLocalDate } from "../../../utils/localDateTime";
+import { usePermissions } from "../../auth";
 import {
   customerService,
   type TenantCustomer,
   type TenantCustomerLastActivity,
   type TenantCustomerListPage,
   type TenantCustomerListSummary,
-} from '../services/customerService'
-import { getTrustScore } from '../customerFormat'
+} from "../services/customerService";
+import { getTrustScore } from "../customerFormat";
 
-const perPage = 10
+const perPage = 10;
 type CustomerNotice = {
-  message: string
-  title: string
-}
+  message: string;
+  title: string;
+};
 
 export function CustomerListPage() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { hasPermission } = usePermissions()
-  const canList = hasPermission('list_customer')
-  const canCreate = hasPermission('create_customer')
-  const canUpdate = hasPermission('update_customer')
-  const canDelete = hasPermission('delete_customer')
-  const canUseRowActions = canUpdate || canDelete
-  const [customers, setCustomers] = useState<TenantCustomer[]>([])
-  const [summary, setSummary] = useState<TenantCustomerListSummary | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
-  const [showUnknownCustomer, setShowUnknownCustomer] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<CustomerNotice | null>(() => getRouteNotice(location.state))
-  const [customerToDelete, setCustomerToDelete] = useState<TenantCustomer | null>(null)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { hasPermission } = usePermissions();
+  const canList = hasPermission("list_customer");
+  const canCreate = hasPermission("create_customer");
+  const canUpdate = hasPermission("update_customer");
+  const canDelete = hasPermission("delete_customer");
+  const canUseRowActions = canUpdate || canDelete;
+  const [customers, setCustomers] = useState<TenantCustomer[]>([]);
+  const [summary, setSummary] = useState<TenantCustomerListSummary | null>(
+    null,
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [showUnknownCustomer, setShowUnknownCustomer] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<CustomerNotice | null>(() =>
+    getRouteNotice(location.state),
+  );
+  const [customerToDelete, setCustomerToDelete] =
+    useState<TenantCustomer | null>(null);
 
-  const loadCustomers = useCallback(async (page: number, search = debouncedSearchTerm) => {
-    if (!canList) {
-      setCustomers([])
-      setSummary(null)
-      setCurrentPage(1)
-      setLastPage(1)
-      setTotal(0)
-      setIsLoading(false)
-      return
-    }
+  const loadCustomers = useCallback(
+    async (page: number, search = debouncedSearchTerm) => {
+      if (!canList) {
+        setCustomers([]);
+        setSummary(null);
+        setCurrentPage(1);
+        setLastPage(1);
+        setTotal(0);
+        setIsLoading(false);
+        return;
+      }
 
-    setIsLoading(true)
-    setError(null)
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const pageData = await customerService.listCustomers({ page, perPage, search, showUnknownCustomer })
+      try {
+        const pageData = await customerService.listCustomers({
+          page,
+          perPage,
+          search,
+          showUnknownCustomer,
+        });
 
-      setCustomers(pageData.items)
-      setSummary(pageData.summary ?? null)
-      setCurrentPage(getPageValue(pageData, 'currentPage', 'current_page', 1))
-      setLastPage(getPageValue(pageData, 'lastPage', 'last_page', 1))
-      setTotal(pageData.total)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load customers.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [canList, debouncedSearchTerm, showUnknownCustomer])
+        setCustomers(pageData.items);
+        setSummary(pageData.summary ?? null);
+        setCurrentPage(
+          getPageValue(pageData, "currentPage", "current_page", 1),
+        );
+        setLastPage(getPageValue(pageData, "lastPage", "last_page", 1));
+        setTotal(pageData.total);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load customers.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [canList, debouncedSearchTerm, showUnknownCustomer],
+  );
 
   useEffect(() => {
     if (getRouteNotice(location.state)) {
-      navigate(location.pathname, { replace: true, state: null })
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location, navigate])
+  }, [location, navigate]);
 
   useEffect(() => {
     const searchTimer = window.setTimeout(() => {
-      setCurrentPage(1)
-      setDebouncedSearchTerm(searchTerm.trim())
-    }, 300)
+      setCurrentPage(1);
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
 
-    return () => window.clearTimeout(searchTimer)
-  }, [searchTerm])
+    return () => window.clearTimeout(searchTimer);
+  }, [searchTerm]);
 
   useEffect(() => {
-    setCurrentPage(1)
-  }, [showUnknownCustomer])
+    setCurrentPage(1);
+  }, [showUnknownCustomer]);
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
-      void loadCustomers(currentPage, debouncedSearchTerm)
-    }, 0)
+      void loadCustomers(currentPage, debouncedSearchTerm);
+    }, 0);
 
-    return () => window.clearTimeout(loadTimer)
-  }, [currentPage, debouncedSearchTerm, loadCustomers])
+    return () => window.clearTimeout(loadTimer);
+  }, [currentPage, debouncedSearchTerm, loadCustomers]);
 
-  const pageNumbers = useMemo(() => getVisiblePageNumbers(currentPage, lastPage), [currentPage, lastPage])
-  const showingFrom = total === 0 ? 0 : ((currentPage - 1) * perPage) + 1
-  const showingTo = Math.min(currentPage * perPage, total)
+  const pageNumbers = useMemo(
+    () => getVisiblePageNumbers(currentPage, lastPage),
+    [currentPage, lastPage],
+  );
+  const showingFrom = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
+  const showingTo = Math.min(currentPage * perPage, total);
 
   async function handleDelete() {
     if (!customerToDelete) {
-      return
+      return;
     }
 
-    setIsDeleting(true)
-    setError(null)
+    setIsDeleting(true);
+    setError(null);
 
     try {
-      await customerService.deleteCustomer(customerToDelete.code)
+      await customerService.deleteCustomer(customerToDelete.code);
       setNotice({
-        message: 'Customer deleted successfully.',
-        title: 'Customer deleted',
-      })
-      setCustomerToDelete(null)
+        message: "Customer deleted successfully.",
+        title: "Customer deleted",
+      });
+      setCustomerToDelete(null);
 
-      const nextPage = customers.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage
-      setCurrentPage(nextPage)
-      await loadCustomers(nextPage)
+      const nextPage =
+        customers.length === 1 && currentPage > 1
+          ? currentPage - 1
+          : currentPage;
+      setCurrentPage(nextPage);
+      await loadCustomers(nextPage);
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete customer.')
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to delete customer.",
+      );
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -138,7 +175,10 @@ export function CustomerListPage() {
         <div>
           <span className="eyebrow">Customers / Registry</span>
           <h1>Customers</h1>
-          <p>Search, review, and maintain trusted customer records for pawn operations.</p>
+          <p>
+            Search, review, and maintain trusted customer records for pawn
+            operations.
+          </p>
         </div>
         {canCreate ? (
           <Button
@@ -157,31 +197,48 @@ export function CustomerListPage() {
           accent="teal"
           label="Total Clients"
           meta="Customer registry"
-          value={formatNumber(getSummaryValue(summary, 'totalClients', 'total_clients', total))}
+          value={formatNumber(
+            getSummaryValue(summary, "totalClients", "total_clients", total),
+          )}
         />
         <CustomerMetricCard
           accent="blue"
           label="Avg. Trust Score"
           meta="High Quality"
-          value={formatDecimal(getSummaryValue(summary, 'averageTrustScore', 'average_trust_score', 0))}
+          value={formatDecimal(
+            getSummaryValue(
+              summary,
+              "averageTrustScore",
+              "average_trust_score",
+              0,
+            ),
+          )}
         />
         <CustomerMetricCard
           accent="teal"
           label="Active Pawn Loans"
           meta="Active"
-          value={formatNumber(getSummaryValue(summary, 'activePawnLoans', 'active_pawn_loans', 0))}
+          value={formatNumber(
+            getSummaryValue(summary, "activePawnLoans", "active_pawn_loans", 0),
+          )}
         />
         <CustomerMetricCard
           accent="red"
           label="Risk Flagged"
           meta="Review Required"
-          value={formatNumber(getSummaryValue(summary, 'riskFlagged', 'risk_flagged', 0))}
+          value={formatNumber(
+            getSummaryValue(summary, "riskFlagged", "risk_flagged", 0),
+          )}
         />
       </div>
 
       {canCreate ? (
         <div className="customer-serene-page__create">
-          <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.customerCreate)} variant="primary">
+          <Button
+            leftIcon={<CirclePlusIcon />}
+            onClick={() => navigate(routePaths.customerCreate)}
+            variant="primary"
+          >
             Add Customer
           </Button>
         </div>
@@ -191,7 +248,9 @@ export function CustomerListPage() {
         <div className="customer-serene-table__toolbar">
           <div>
             <h2>Customer records</h2>
-            <p>{formatNumber(total)} total customer{total === 1 ? '' : 's'}</p>
+            <p>
+              {formatNumber(total)} total customer{total === 1 ? "" : "s"}
+            </p>
           </div>
           <div className="customer-serene-table__controls">
             {canList ? (
@@ -205,7 +264,13 @@ export function CustomerListPage() {
             ) : null}
             {canList ? (
               <label className="checkbox-line">
-                <input checked={showUnknownCustomer} onChange={(event) => setShowUnknownCustomer(event.target.checked)} type="checkbox" />
+                <input
+                  checked={showUnknownCustomer}
+                  onChange={(event) =>
+                    setShowUnknownCustomer(event.target.checked)
+                  }
+                  type="checkbox"
+                />
                 <span>Show Unknown Customer</span>
               </label>
             ) : null}
@@ -221,7 +286,11 @@ export function CustomerListPage() {
               </button>
             ) : null}
             {canList ? (
-              <Button className="customer-serene-refresh-text" onClick={() => void loadCustomers(currentPage)} variant="secondary">
+              <Button
+                className="customer-serene-refresh-text"
+                onClick={() => void loadCustomers(currentPage)}
+                variant="secondary"
+              >
                 Refresh
               </Button>
             ) : null}
@@ -229,20 +298,52 @@ export function CustomerListPage() {
         </div>
 
         <div className="customer-serene-table__body">
-          {error && <Alert message={error} onDismiss={() => setError(null)} title="Customer action failed" tone="danger" />}
-          {notice && <Alert message={notice.message} onDismiss={() => setNotice(null)} title={notice.title} tone="success" />}
+          {error && (
+            <Alert
+              message={error}
+              onDismiss={() => setError(null)}
+              title="Customer action failed"
+              tone="danger"
+            />
+          )}
+          {notice && (
+            <Alert
+              message={notice.message}
+              onDismiss={() => setNotice(null)}
+              title={notice.title}
+              tone="success"
+            />
+          )}
 
           {isLoading ? (
             <LoadingState rows={5} />
           ) : customers.length === 0 ? (
             <EmptyState
-              action={canCreate ? (
-                <Button leftIcon={<CirclePlusIcon />} onClick={() => navigate(routePaths.customerCreate)} variant="primary">
-                  Add Customer
-                </Button>
-              ) : null}
-              description={canList ? (debouncedSearchTerm ? 'No customers match this search.' : 'Create the first customer record.') : 'Your account can create customers, but cannot view customer records.'}
-              title={canList ? (searchTerm ? 'No matching customers' : 'No customers yet') : 'Customer records hidden'}
+              action={
+                canCreate ? (
+                  <Button
+                    leftIcon={<CirclePlusIcon />}
+                    onClick={() => navigate(routePaths.customerCreate)}
+                    variant="primary"
+                  >
+                    Add Customer
+                  </Button>
+                ) : null
+              }
+              description={
+                canList
+                  ? debouncedSearchTerm
+                    ? "No customers match this search."
+                    : "Create the first customer record."
+                  : "Your account can create customers, but cannot view customer records."
+              }
+              title={
+                canList
+                  ? searchTerm
+                    ? "No matching customers"
+                    : "No customers yet"
+                  : "Customer records hidden"
+              }
             />
           ) : (
             <>
@@ -262,11 +363,20 @@ export function CustomerListPage() {
                     {customers.map((customer) => (
                       <tr
                         key={customer.id}
-                        onClick={canList ? () => navigate(routePaths.customerDetail(customer.code)) : undefined}
+                        onClick={
+                          canList
+                            ? () =>
+                                navigate(
+                                  routePaths.customerDetail(customer.code),
+                                )
+                            : undefined
+                        }
                       >
                         <td>
                           <div className="customer-serene-person">
-                            <span className="customer-serene-person__avatar">{getInitials(customer.name)}</span>
+                            <span className="customer-serene-person__avatar">
+                              {getInitials(customer.name)}
+                            </span>
                             <span>
                               <strong>{customer.name}</strong>
                               <small>{customer.code}</small>
@@ -285,11 +395,18 @@ export function CustomerListPage() {
                         <td>
                           <span className="customer-serene-location">
                             <LocationPinIcon />
-                            {getCustomerValue(customer, 'primaryLocation', 'primary_location', customer.address ?? '-')}
+                            {getCustomerValue(
+                              customer,
+                              "primaryLocation",
+                              "primary_location",
+                              customer.address ?? "-",
+                            )}
                           </span>
                         </td>
                         <td>
-                          <LastActivityCell activity={getLastActivity(customer)} />
+                          <LastActivityCell
+                            activity={getLastActivity(customer)}
+                          />
                         </td>
                         {canUseRowActions && (
                           <td onClick={(event) => event.stopPropagation()}>
@@ -298,7 +415,11 @@ export function CustomerListPage() {
                                 <Button
                                   aria-label={`Edit ${customer.name}`}
                                   className="ui-button--icon"
-                                  onClick={() => navigate(routePaths.customerEdit(customer.code))}
+                                  onClick={() =>
+                                    navigate(
+                                      routePaths.customerEdit(customer.code),
+                                    )
+                                  }
                                   title="Edit customer"
                                   variant="secondary"
                                 >
@@ -333,25 +454,34 @@ export function CustomerListPage() {
                     customer={customer}
                     key={customer.id}
                     onDelete={() => setCustomerToDelete(customer)}
-                    onEdit={() => navigate(routePaths.customerEdit(customer.code))}
-                    onView={() => navigate(routePaths.customerDetail(customer.code))}
+                    onEdit={() =>
+                      navigate(routePaths.customerEdit(customer.code))
+                    }
+                    onView={() =>
+                      navigate(routePaths.customerDetail(customer.code))
+                    }
                   />
                 ))}
               </div>
 
               <footer className="customer-serene-pagination">
-                <span>Showing {showingFrom}-{showingTo} of {formatNumber(total)} customers</span>
+                <span>
+                  Showing {showingFrom}-{showingTo} of {formatNumber(total)}{" "}
+                  customers
+                </span>
                 <div className="customer-serene-pagination__controls">
                   <Button
                     disabled={currentPage <= 1}
-                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    onClick={() =>
+                      setCurrentPage((page) => Math.max(1, page - 1))
+                    }
                     variant="secondary"
                   >
                     Previous
                   </Button>
                   {pageNumbers.map((page) => (
                     <button
-                      aria-current={page === currentPage ? 'page' : undefined}
+                      aria-current={page === currentPage ? "page" : undefined}
                       className="customer-serene-pagination__page"
                       key={page}
                       onClick={() => setCurrentPage(page)}
@@ -362,7 +492,9 @@ export function CustomerListPage() {
                   ))}
                   <Button
                     disabled={currentPage >= lastPage}
-                    onClick={() => setCurrentPage((page) => Math.min(lastPage, page + 1))}
+                    onClick={() =>
+                      setCurrentPage((page) => Math.min(lastPage, page + 1))
+                    }
                     variant="secondary"
                   >
                     Next
@@ -378,13 +510,13 @@ export function CustomerListPage() {
         confirmLabel="Delete Customer"
         isLoading={isDeleting}
         isOpen={Boolean(customerToDelete)}
-        message={`Delete ${customerToDelete?.name ?? 'this customer'}? This action cannot be undone.`}
+        message={`Delete ${customerToDelete?.name ?? "this customer"}? This action cannot be undone.`}
         onCancel={() => setCustomerToDelete(null)}
         onConfirm={() => void handleDelete()}
         title="Confirm customer deletion"
       />
     </section>
-  )
+  );
 }
 
 function CustomerRecordCard({
@@ -395,30 +527,39 @@ function CustomerRecordCard({
   onEdit,
   onView,
 }: {
-  canDelete: boolean
-  canUpdate: boolean
-  customer: TenantCustomer
-  onDelete: () => void
-  onEdit: () => void
-  onView: () => void
+  canDelete: boolean;
+  canUpdate: boolean;
+  customer: TenantCustomer;
+  onDelete: () => void;
+  onEdit: () => void;
+  onView: () => void;
 }) {
-  const activity = getLastActivity(customer)
-  const displayScore = getCustomerNumber(customer, 'displayTrustScore', 'display_trust_score', normalizeTrustScore(getTrustScore(customer)))
-  const scoreOutOfTen = displayScore / 10
-  const isDue = getStatusTone(activity.tone) === 'danger'
+  const activity = getLastActivity(customer);
+  const displayScore = getCustomerNumber(
+    customer,
+    "displayTrustScore",
+    "display_trust_score",
+    normalizeTrustScore(getTrustScore(customer)),
+  );
+  const scoreOutOfTen = displayScore / 10;
+  const isDue = getStatusTone(activity.tone) === "danger";
 
   return (
     <article className="customer-record-card">
       <header className="customer-record-card__header">
         <div className="customer-record-card__identity">
-          <span className="customer-record-card__avatar">{getInitials(customer.name)}</span>
+          <span className="customer-record-card__avatar">
+            {getInitials(customer.name)}
+          </span>
           <span>
             <strong>{customer.name}</strong>
             <small>#{customer.code}</small>
           </span>
         </div>
-        <span className={`customer-record-card__status customer-record-card__status--${isDue ? 'due' : 'active'}`}>
-          {isDue ? 'DUE' : 'ACTIVE'}
+        <span
+          className={`customer-record-card__status customer-record-card__status--${isDue ? "due" : "active"}`}
+        >
+          {isDue ? "DUE" : "ACTIVE"}
         </span>
       </header>
 
@@ -429,9 +570,11 @@ function CustomerRecordCard({
         </div>
         <div
           className={[
-            'customer-record-card__progress',
-            displayScore < 50 ? 'customer-record-card__progress--danger' : '',
-          ].filter(Boolean).join(' ')}
+            "customer-record-card__progress",
+            displayScore < 50 ? "customer-record-card__progress--danger" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           aria-hidden="true"
         >
           <span style={{ width: `${displayScore}%` }} />
@@ -445,23 +588,37 @@ function CustomerRecordCard({
         </span>
         <div className="customer-record-card__actions">
           {canUpdate ? (
-            <button aria-label={`Edit ${customer.name}`} onClick={onEdit} title="Edit customer" type="button">
+            <button
+              aria-label={`Edit ${customer.name}`}
+              onClick={onEdit}
+              title="Edit customer"
+              type="button"
+            >
               <EditIcon />
             </button>
           ) : null}
           {canDelete ? (
-            <button aria-label={`Delete ${customer.name}`} onClick={onDelete} title="Delete customer" type="button">
+            <button
+              aria-label={`Delete ${customer.name}`}
+              onClick={onDelete}
+              title="Delete customer"
+              type="button"
+            >
               <TrashIcon />
             </button>
           ) : null}
-          <button className="customer-record-card__details" onClick={onView} type="button">
+          <button
+            className="customer-record-card__details"
+            onClick={onView}
+            type="button"
+          >
             View Details
             <ChevronRightIcon />
           </button>
         </div>
       </div>
     </article>
-  )
+  );
 }
 
 function CustomerMetricCard({
@@ -470,76 +627,94 @@ function CustomerMetricCard({
   meta,
   value,
 }: {
-  accent: 'teal' | 'blue' | 'red'
-  label: string
-  meta: string
-  value: string
+  accent: "teal" | "blue" | "red";
+  label: string;
+  meta: string;
+  value: string;
 }) {
   return (
-    <article className={`customer-serene-metric customer-serene-metric--${accent}`}>
+    <article
+      className={`customer-serene-metric customer-serene-metric--${accent}`}
+    >
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{meta}</small>
     </article>
-  )
+  );
 }
 
 function TrustScoreCell({ customer }: { customer: TenantCustomer }) {
-  const score = getCustomerNumber(customer, 'displayTrustScore', 'display_trust_score', normalizeTrustScore(getTrustScore(customer)))
-  const tone = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low'
+  const score = getCustomerNumber(
+    customer,
+    "displayTrustScore",
+    "display_trust_score",
+    normalizeTrustScore(getTrustScore(customer)),
+  );
+  const tone = score >= 70 ? "high" : score >= 40 ? "medium" : "low";
 
   return (
     <div className="customer-serene-trust">
       <span>{score}</span>
       <div className="customer-serene-trust__track" aria-hidden="true">
-        <span className={`customer-serene-trust__bar customer-serene-trust__bar--${tone}`} style={{ width: `${score}%` }} />
+        <span
+          className={`customer-serene-trust__bar customer-serene-trust__bar--${tone}`}
+          style={{ width: `${score}%` }}
+        />
       </div>
     </div>
-  )
+  );
 }
 
-function LastActivityCell({ activity }: { activity: TenantCustomerLastActivity }) {
+function LastActivityCell({
+  activity,
+}: {
+  activity: TenantCustomerLastActivity;
+}) {
   return (
     <div className="customer-serene-activity">
       <span>{formatDate(activity.date)}</span>
-      <strong className={`customer-serene-status customer-serene-status--${getStatusTone(activity.tone)}`}>{activity.status}</strong>
+      <strong
+        className={`customer-serene-status customer-serene-status--${getStatusTone(activity.tone)}`}
+      >
+        {activity.status}
+      </strong>
       <small>{activity.label}</small>
     </div>
-  )
+  );
 }
 
 function getRouteNotice(state: unknown) {
-  if (typeof state !== 'object' || state === null || !('notice' in state)) {
-    return null
+  if (typeof state !== "object" || state === null || !("notice" in state)) {
+    return null;
   }
 
-  const notice = state.notice
+  const notice = state.notice;
 
   if (
-    typeof notice === 'object' &&
+    typeof notice === "object" &&
     notice !== null &&
-    'message' in notice &&
-    typeof notice.message === 'string' &&
-    'title' in notice &&
-    typeof notice.title === 'string'
+    "message" in notice &&
+    typeof notice.message === "string" &&
+    "title" in notice &&
+    typeof notice.title === "string"
   ) {
-    return { message: notice.message, title: notice.title }
+    return { message: notice.message, title: notice.title };
   }
 
-  if (typeof notice === 'string') {
-    return { message: notice, title: 'Customer updated' }
+  if (typeof notice === "string") {
+    return { message: notice, title: "Customer updated" };
   }
 
-  return null
+  return null;
 }
 
 function getPageValue(
   pageData: TenantCustomerListPage,
-  camelKey: 'currentPage' | 'lastPage',
-  snakeKey: 'current_page' | 'last_page',
+  camelKey: "currentPage" | "lastPage",
+  snakeKey: "current_page" | "last_page",
   fallback: number,
 ) {
-  return pageData[camelKey] ?? pageData[snakeKey] ?? fallback
+  return pageData[camelKey] ?? pageData[snakeKey] ?? fallback;
 }
 
 function getSummaryValue(
@@ -548,7 +723,7 @@ function getSummaryValue(
   snakeKey: keyof TenantCustomerListSummary,
   fallback: number,
 ) {
-  return Number(summary?.[camelKey] ?? summary?.[snakeKey] ?? fallback)
+  return Number(summary?.[camelKey] ?? summary?.[snakeKey] ?? fallback);
 }
 
 function getCustomerValue(
@@ -557,9 +732,9 @@ function getCustomerValue(
   snakeKey: keyof TenantCustomer,
   fallback: string,
 ) {
-  const value = customer[camelKey] ?? customer[snakeKey]
+  const value = customer[camelKey] ?? customer[snakeKey];
 
-  return typeof value === 'string' && value.trim() !== '' ? value : fallback
+  return typeof value === "string" && value.trim() !== "" ? value : fallback;
 }
 
 function getCustomerNumber(
@@ -568,18 +743,21 @@ function getCustomerNumber(
   snakeKey: keyof TenantCustomer,
   fallback: number,
 ) {
-  const value = customer[camelKey] ?? customer[snakeKey]
+  const value = customer[camelKey] ?? customer[snakeKey];
 
-  return typeof value === 'number' ? value : fallback
+  return typeof value === "number" ? value : fallback;
 }
 
 function getLastActivity(customer: TenantCustomer): TenantCustomerLastActivity {
-  return customer.lastActivity ?? customer.last_activity ?? {
-    date: null,
-    status: 'NO ACTIVITY',
-    label: 'No pawn activity recorded',
-    tone: 'neutral',
-  }
+  return (
+    customer.lastActivity ??
+    customer.last_activity ?? {
+      date: null,
+      status: "NO ACTIVITY",
+      label: "No pawn activity recorded",
+      tone: "neutral",
+    }
+  );
 }
 
 function getInitials(name: string) {
@@ -588,96 +766,101 @@ function getInitials(name: string) {
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
-    .join('')
+    .join("");
 
-  return initials || 'CU'
+  return initials || "CU";
 }
 
 function normalizeTrustScore(score: number) {
-  return Math.max(0, Math.min(100, Math.round((score / 255) * 100)))
+  return Math.max(0, Math.min(100, Math.round((score / 255) * 100)));
 }
 
 function getStatusTone(tone: string) {
-  if (tone === 'success' || tone === 'danger' || tone === 'warning' || tone === 'info') {
-    return tone
+  if (
+    tone === "success" ||
+    tone === "danger" ||
+    tone === "warning" ||
+    tone === "info"
+  ) {
+    return tone;
   }
 
-  return 'neutral'
+  return "neutral";
 }
 
 function getVisiblePageNumbers(currentPage: number, lastPage: number) {
-  const start = Math.max(1, currentPage - 2)
-  const end = Math.min(lastPage, currentPage + 2)
-  const pages: number[] = []
+  const start = Math.max(1, currentPage - 2);
+  const end = Math.min(lastPage, currentPage + 2);
+  const pages: number[] = [];
 
   for (let page = start; page <= end; page += 1) {
-    pages.push(page)
+    pages.push(page);
   }
 
-  return pages
+  return pages;
 }
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat('en-US').format(value)
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function formatDecimal(value: number) {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 1,
     minimumFractionDigits: 1,
-  }).format(value)
+  }).format(value);
 }
 
 function formatTrustOutOfTen(value: number) {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 1,
     minimumFractionDigits: 1,
-  }).format(value)
+  }).format(value);
 }
 
 function formatValue(value?: string | number | null) {
-  return value === undefined || value === null || value === '' ? '-' : value
+  return value === undefined || value === null || value === "" ? "-" : value;
 }
 
 function formatDate(value?: string | null) {
-  return formatLocalDate(value)
+  return formatLocalDate(value);
 }
 
 function formatRelativeActivity(value?: string | null) {
   if (!value) {
-    return 'No activity'
+    return "No activity";
   }
 
-  const date = new Date(value)
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return value
+    return value;
   }
 
-  const diffMs = Date.now() - date.getTime()
-  const minute = 60 * 1000
-  const hour = 60 * minute
-  const day = 24 * hour
+  const diffMs = Date.now() - date.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
 
   if (diffMs < hour) {
-    const minutes = Math.max(1, Math.round(diffMs / minute))
-    return `${minutes} min ago`
+    const minutes = Math.max(1, Math.round(diffMs / minute));
+    return `${minutes} min ago`;
   }
 
   if (diffMs < day) {
-    const hours = Math.round(diffMs / hour)
-    return `${hours} hr${hours === 1 ? '' : 's'} ago`
+    const hours = Math.round(diffMs / hour);
+    return `${hours} hr${hours === 1 ? "" : "s"} ago`;
   }
 
   if (diffMs < day * 2) {
-    return 'Yesterday'
+    return "Yesterday";
   }
 
-  const days = Math.round(diffMs / day)
+  const days = Math.round(diffMs / day);
 
   if (days < 30) {
-    return `${days} days ago`
+    return `${days} days ago`;
   }
 
-  return formatDate(value)
+  return formatDate(value);
 }

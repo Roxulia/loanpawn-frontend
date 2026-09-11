@@ -1,6 +1,6 @@
-export { Can } from './Can'
-export { FeatureRoute } from './FeatureRoute'
-export { PermissionRoute } from './PermissionRoute'
+export { Can } from "./Can";
+export { FeatureRoute } from "./FeatureRoute";
+export { PermissionRoute } from "./PermissionRoute";
 export {
   hasAllPermissions,
   hasAnyPermission,
@@ -8,7 +8,7 @@ export {
   isPermissionCode,
   permissionCodes,
   type PermissionCode,
-} from './permissionCodes'
-export { usePermissions } from './usePermissions'
-export { useFeatures } from './useFeatures'
-export { ResourceUsageBadge } from './ResourceUsageBadge'
+} from "./permissionCodes";
+export { usePermissions } from "./usePermissions";
+export { useFeatures } from "./useFeatures";
+export { ResourceUsageBadge } from "./ResourceUsageBadge";

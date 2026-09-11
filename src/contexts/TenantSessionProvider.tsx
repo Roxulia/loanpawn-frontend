@@ -1,35 +1,42 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import type { TenantUser, TenantUserAuthSession } from '../dataobjects/tenant/auth'
-import type { TenantResolveState } from '../dataobjects/tenant/tenantResolver'
-import type { UiLocale } from '../locales/UiLocale'
+import { useMemo, useState, type ReactNode } from "react";
+import type {
+  TenantUser,
+  TenantUserAuthSession,
+} from "../dataobjects/tenant/auth";
+import type { TenantResolveState } from "../dataobjects/tenant/tenantResolver";
+import type { UiLocale } from "../locales/UiLocale";
 import {
   TenantSessionContext,
   type TenantAuthStatus,
   type TenantSessionContextValue,
-} from './tenantSession'
-import { PwaInstallPrompt } from '../components/pwa/PwaInstallPrompt'
+} from "./tenantSession";
+import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
 
 const initialTenantResolution: TenantResolveState = {
-  status: 'idle',
+  status: "idle",
   subdomain: null,
   tenant: null,
   error: null,
-}
+};
 
 export function TenantSessionProvider({ children }: { children: ReactNode }) {
-  const [authStatus, setAuthStatus] = useState<TenantAuthStatus>('checking')
-  const [currentUser, setCurrentUser] = useState<TenantUser | null>(null)
-  const [locale, setLocale] = useState<UiLocale>('en')
-  const [session, setSession] = useState<TenantUserAuthSession | null>(null)
+  const [authStatus, setAuthStatus] = useState<TenantAuthStatus>("checking");
+  const [currentUser, setCurrentUser] = useState<TenantUser | null>(null);
+  const [locale, setLocale] = useState<UiLocale>("en");
+  const [session, setSession] = useState<TenantUserAuthSession | null>(null);
   const [tenantResolution, setTenantResolution] = useState<TenantResolveState>(
     initialTenantResolution,
-  )
+  );
 
   function handleSetSession(nextSession: TenantUserAuthSession | null) {
-    setSession(nextSession)
-    setCurrentUser(nextSession?.user ?? null)
-    setLocale(nextSession?.user?.prefer_lang && nextSession.user.prefer_lang === 'mm' ? 'mm' : 'en')
-    setAuthStatus(nextSession ? 'authenticated' : 'unauthenticated')
+    setSession(nextSession);
+    setCurrentUser(nextSession?.user ?? null);
+    setLocale(
+      nextSession?.user?.prefer_lang && nextSession.user.prefer_lang === "mm"
+        ? "mm"
+        : "en",
+    );
+    setAuthStatus(nextSession ? "authenticated" : "unauthenticated");
   }
 
   const value = useMemo<TenantSessionContextValue>(
@@ -39,7 +46,10 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
       locale,
       session,
       tenantResolution,
-      isAuthenticated: authStatus === 'authenticated' || session !== null || currentUser !== null,
+      isAuthenticated:
+        authStatus === "authenticated" ||
+        session !== null ||
+        currentUser !== null,
       setAuthStatus,
       setCurrentUser,
       setLocale,
@@ -47,12 +57,12 @@ export function TenantSessionProvider({ children }: { children: ReactNode }) {
       setTenantResolution,
     }),
     [authStatus, currentUser, locale, session, tenantResolution],
-  )
+  );
 
   return (
     <TenantSessionContext.Provider value={value}>
       {children}
       <PwaInstallPrompt />
     </TenantSessionContext.Provider>
-  )
+  );
 }

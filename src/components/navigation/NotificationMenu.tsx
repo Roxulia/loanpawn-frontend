@@ -1,70 +1,85 @@
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
-import { routePaths } from '../../app/routes/paths'
-import { useUiLocale } from '../../locales/UiLocale'
-import { usePermissions } from '../../modules/auth/usePermissions'
-import { useNotifications } from '../../modules/notifications/useNotifications'
-import type { ReportingCurrencyNotificationStatus, TenantNotification } from '../../modules/notifications/types'
-import { BellIcon } from '../icons/icon'
-import { useAppCompatibility } from '../../modules/appCompatibility'
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { routePaths } from "../../app/routes/paths";
+import { useUiLocale } from "../../locales/UiLocale";
+import { usePermissions } from "../../modules/auth/usePermissions";
+import { useNotifications } from "../../modules/notifications/useNotifications";
+import type {
+  ReportingCurrencyNotificationStatus,
+  TenantNotification,
+} from "../../modules/notifications/types";
+import { BellIcon } from "../icons/icon";
+import { useAppCompatibility } from "../../modules/appCompatibility";
 
 type NotificationDropdownProps = {
-  error: string | null
-  isLoading: boolean
-  locale: 'en' | 'mm'
-  notifications: TenantNotification[]
-  onMarkAllRead: () => void
-  onOpenNotification: (notification: TenantNotification) => void
-  t: (value: string) => string
-  unreadCount: number
-}
+  error: string | null;
+  isLoading: boolean;
+  locale: "en" | "mm";
+  notifications: TenantNotification[];
+  onMarkAllRead: () => void;
+  onOpenNotification: (notification: TenantNotification) => void;
+  t: (value: string) => string;
+  unreadCount: number;
+};
 
 const statusTitles: Record<ReportingCurrencyNotificationStatus, string> = {
-  queued: 'Reporting currency recalculation queued',
-  processing: 'Reporting currency recalculation started',
-  waiting_for_rates: 'Historical exchange rates required',
-  completed: 'Reporting currency recalculation completed',
-  failed: 'Reporting currency recalculation failed',
-  cancelled: 'Reporting currency change cancelled',
-}
+  queued: "Reporting currency recalculation queued",
+  processing: "Reporting currency recalculation started",
+  waiting_for_rates: "Historical exchange rates required",
+  completed: "Reporting currency recalculation completed",
+  failed: "Reporting currency recalculation failed",
+  cancelled: "Reporting currency change cancelled",
+};
 
 export function NotificationMenu() {
-  const navigate = useNavigate()
-  const { locale, t } = useUiLocale()
-  const { hasPermission } = usePermissions()
-  const { isReadOnly } = useAppCompatibility()
-  const { notifications, unreadCount, isLoading, error, refresh, markRead, markAllRead } = useNotifications()
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement | null>(null)
+  const navigate = useNavigate();
+  const { locale, t } = useUiLocale();
+  const { hasPermission } = usePermissions();
+  const { isReadOnly } = useAppCompatibility();
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    refresh,
+    markRead,
+    markAllRead,
+  } = useNotifications();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function handleDocumentClick(event: MouseEvent) {
       if (!menuRef.current?.contains(event.target as Node)) {
-        setIsOpen(false)
+        setIsOpen(false);
       }
     }
 
-    document.addEventListener('mousedown', handleDocumentClick)
-    return () => document.removeEventListener('mousedown', handleDocumentClick)
-  }, [])
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
+  }, []);
 
   function toggleMenu() {
     setIsOpen((open) => {
-      const next = !open
-      if (next) void refresh()
-      return next
-    })
+      const next = !open;
+      if (next) void refresh();
+      return next;
+    });
   }
 
   async function openNotification(notification: TenantNotification) {
     try {
-      if (!isReadOnly) await markRead(notification.id)
+      if (!isReadOnly) await markRead(notification.id);
     } finally {
-      setIsOpen(false)
-      const canProvideRates = hasPermission('update_currency') && hasPermission('create_exchange_rate')
-      navigate(notification.status === 'waiting_for_rates' && canProvideRates
-        ? routePaths.reportingCurrencyRates
-        : routePaths.settings)
+      setIsOpen(false);
+      const canProvideRates =
+        hasPermission("update_currency") &&
+        hasPermission("create_exchange_rate");
+      navigate(
+        notification.status === "waiting_for_rates" && canProvideRates
+          ? routePaths.reportingCurrencyRates
+          : routePaths.settings,
+      );
     }
   }
 
@@ -73,14 +88,18 @@ export function NotificationMenu() {
       <button
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        aria-label={t('Notifications')}
+        aria-label={t("Notifications")}
         className="topbar-notification-button"
         onClick={toggleMenu}
-        title={t('Notifications')}
+        title={t("Notifications")}
         type="button"
       >
         <BellIcon />
-        {unreadCount > 0 && <span className="topbar-notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+        {unreadCount > 0 && (
+          <span className="topbar-notification-badge">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
       </button>
       {isOpen && (
         <>
@@ -90,7 +109,9 @@ export function NotificationMenu() {
             locale={locale}
             notifications={notifications}
             onMarkAllRead={() => void markAllRead()}
-            onOpenNotification={(notification) => void openNotification(notification)}
+            onOpenNotification={(notification) =>
+              void openNotification(notification)
+            }
             t={t}
             unreadCount={unreadCount}
           />
@@ -100,22 +121,34 @@ export function NotificationMenu() {
             locale={locale}
             notifications={notifications}
             onMarkAllRead={() => void markAllRead()}
-            onOpenNotification={(notification) => void openNotification(notification)}
+            onOpenNotification={(notification) =>
+              void openNotification(notification)
+            }
             t={t}
             unreadCount={unreadCount}
           />
         </>
       )}
     </div>
-  )
+  );
 }
 
 function DesktopNotificationDropdown(props: NotificationDropdownProps) {
-  return <NotificationDropdown className="notification-dropdown--desktop" {...props} />
+  return (
+    <NotificationDropdown
+      className="notification-dropdown--desktop"
+      {...props}
+    />
+  );
 }
 
 function MobileNotificationDropdown(props: NotificationDropdownProps) {
-  return <NotificationDropdown className="notification-dropdown--mobile" {...props} />
+  return (
+    <NotificationDropdown
+      className="notification-dropdown--mobile"
+      {...props}
+    />
+  );
 }
 
 function NotificationDropdown({
@@ -132,40 +165,72 @@ function NotificationDropdown({
   return (
     <div className={`notification-dropdown ${className}`} role="menu">
       <div className="notification-dropdown__header">
-        <strong>{t('Notifications')}</strong>
-        {unreadCount > 0 && <button onClick={onMarkAllRead} type="button">{t('Mark all as read')}</button>}
+        <strong>{t("Notifications")}</strong>
+        {unreadCount > 0 && (
+          <button onClick={onMarkAllRead} type="button">
+            {t("Mark all as read")}
+          </button>
+        )}
       </div>
       <div className="notification-dropdown__body">
-        {isLoading && notifications.length === 0 && <p className="notification-dropdown__state">{t('Loading notifications...')}</p>}
-        {error && notifications.length === 0 && <p className="notification-dropdown__state notification-dropdown__state--error">{t('Unable to load notifications.')}</p>}
-        {!isLoading && !error && notifications.length === 0 && <p className="notification-dropdown__state">{t('No notifications yet.')}</p>}
+        {isLoading && notifications.length === 0 && (
+          <p className="notification-dropdown__state">
+            {t("Loading notifications...")}
+          </p>
+        )}
+        {error && notifications.length === 0 && (
+          <p className="notification-dropdown__state notification-dropdown__state--error">
+            {t("Unable to load notifications.")}
+          </p>
+        )}
+        {!isLoading && !error && notifications.length === 0 && (
+          <p className="notification-dropdown__state">
+            {t("No notifications yet.")}
+          </p>
+        )}
         {notifications.map((notification) => (
           <button
-            className={notification.read_at ? 'notification-item' : 'notification-item is-unread'}
+            className={
+              notification.read_at
+                ? "notification-item"
+                : "notification-item is-unread"
+            }
             key={notification.id}
             onClick={() => onOpenNotification(notification)}
             role="menuitem"
             type="button"
           >
-            <span className={`notification-item__status notification-item__status--${notification.status}`} aria-hidden="true" />
+            <span
+              className={`notification-item__status notification-item__status--${notification.status}`}
+              aria-hidden="true"
+            />
             <span className="notification-item__content">
               <strong>{t(statusTitles[notification.status])}</strong>
-              <span>{notification.data.previous_currency.code} &rarr; {notification.data.requested_currency.code}</span>
-              {notification.status === 'waiting_for_rates' && notification.data.missing_rate_count > 0 && (
-                <span>{notification.data.missing_rate_count} {t('missing rate dates')}</span>
-              )}
-              <time dateTime={notification.created_at}>{formatNotificationTime(notification.created_at, locale)}</time>
+              <span>
+                {notification.data.previous_currency.code} &rarr;{" "}
+                {notification.data.requested_currency.code}
+              </span>
+              {notification.status === "waiting_for_rates" &&
+                notification.data.missing_rate_count > 0 && (
+                  <span>
+                    {notification.data.missing_rate_count}{" "}
+                    {t("missing rate dates")}
+                  </span>
+                )}
+              <time dateTime={notification.created_at}>
+                {formatNotificationTime(notification.created_at, locale)}
+              </time>
             </span>
           </button>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-function formatNotificationTime(value: string, locale: 'en' | 'mm') {
-  return new Intl.DateTimeFormat(locale === 'mm' ? 'my-MM' : 'en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
+function formatNotificationTime(value: string, locale: "en" | "mm") {
+  return new Intl.DateTimeFormat(locale === "mm" ? "my-MM" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }

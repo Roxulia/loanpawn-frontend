@@ -1,23 +1,33 @@
-import type { ReactNode } from 'react'
-import { useUiLocale } from '../../locales/UiLocale'
+import type { ReactNode } from "react";
+import { useUiLocale } from "../../locales/UiLocale";
 
 type ModalProps = {
-  children: ReactNode
-  footer?: ReactNode
-  isOpen: boolean
-  onClose: () => void
-  title: string
-}
+  children: ReactNode;
+  footer?: ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+};
 
-export function Modal({ children, footer, isOpen, onClose, title }: ModalProps) {
-  const { t } = useUiLocale()
+export function Modal({
+  children,
+  footer,
+  isOpen,
+  onClose,
+  title,
+}: ModalProps) {
+  const { t } = useUiLocale();
 
   if (!isOpen) {
-    return null
+    return null;
   }
 
   return (
-    <div className="ui-modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div
+      className="ui-modal-backdrop"
+      role="presentation"
+      onMouseDown={onClose}
+    >
       <section
         aria-modal="true"
         className="ui-modal"
@@ -26,7 +36,12 @@ export function Modal({ children, footer, isOpen, onClose, title }: ModalProps) 
       >
         <header className="ui-modal__header">
           <h2 className="ui-card__title">{t(title)}</h2>
-          <button className="ui-modal__close" onClick={onClose} type="button" aria-label={t('Close modal')}>
+          <button
+            className="ui-modal__close"
+            onClick={onClose}
+            type="button"
+            aria-label={t("Close modal")}
+          >
             ×
           </button>
         </header>
@@ -34,5 +49,5 @@ export function Modal({ children, footer, isOpen, onClose, title }: ModalProps) 
         {footer && <footer className="ui-modal__footer">{footer}</footer>}
       </section>
     </div>
-  )
+  );
 }

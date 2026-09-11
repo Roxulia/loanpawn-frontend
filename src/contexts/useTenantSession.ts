@@ -1,12 +1,14 @@
-import { useContext } from 'react'
-import { TenantSessionContext } from './tenantSession'
+import { useContext } from "react";
+import { TenantSessionContext } from "./tenantSession";
 
 export function useTenantSession() {
-  const context = useContext(TenantSessionContext)
+  const context = useContext(TenantSessionContext);
 
   if (!context) {
-    throw new Error('useTenantSession must be used inside TenantSessionProvider')
+    throw new Error(
+      "useTenantSession must be used inside TenantSessionProvider",
+    );
   }
 
-  return context
+  return context;
 }

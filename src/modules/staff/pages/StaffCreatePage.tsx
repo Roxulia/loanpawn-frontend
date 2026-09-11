@@ -1,110 +1,127 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { routePaths } from '../../../app/routes/paths'
-import { Button } from '../../../components/atoms'
-import { Alert } from '../../../components/feedback'
-import { SectionHeader } from '../../../components/molecules'
-import { Modal } from '../../../components/organisms'
-import type { TenantRoleOption, TenantUserCreateResponse } from '../../../dataobjects/tenant/staff'
-import { usePermissions } from '../../auth'
-import { StaffForm } from '../components/StaffForm'
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router";
+import { routePaths } from "../../../app/routes/paths";
+import { Button } from "../../../components/atoms";
+import { Alert } from "../../../components/feedback";
+import { SectionHeader } from "../../../components/molecules";
+import { Modal } from "../../../components/organisms";
+import type {
+  TenantRoleOption,
+  TenantUserCreateResponse,
+} from "../../../dataobjects/tenant/staff";
+import { usePermissions } from "../../auth";
+import { StaffForm } from "../components/StaffForm";
 import {
   emptyStaffForm,
   formToStaffPayload,
   validateStaffForm,
   type StaffFormErrors,
   type StaffFormState,
-} from '../components/staffFormModel'
-import { staffService } from '../services/staffService'
+} from "../components/staffFormModel";
+import { staffService } from "../services/staffService";
 
 export function StaffCreatePage() {
-  const navigate = useNavigate()
-  const { hasPermission } = usePermissions()
-  const canCreateAdmin = hasPermission('create_admin_user')
-  const [form, setForm] = useState<StaffFormState>(emptyStaffForm)
-  const [errors, setErrors] = useState<StaffFormErrors>({})
-  const [pageError, setPageError] = useState<string | null>(null)
-  const [roleOptions, setRoleOptions] = useState<TenantRoleOption[]>([])
-  const [isLoadingRoles, setIsLoadingRoles] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [createdUser, setCreatedUser] = useState<TenantUserCreateResponse | null>(null)
+  const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
+  const canCreateAdmin = hasPermission("create_admin_user");
+  const [form, setForm] = useState<StaffFormState>(emptyStaffForm);
+  const [errors, setErrors] = useState<StaffFormErrors>({});
+  const [pageError, setPageError] = useState<string | null>(null);
+  const [roleOptions, setRoleOptions] = useState<TenantRoleOption[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [createdUser, setCreatedUser] =
+    useState<TenantUserCreateResponse | null>(null);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     async function loadRoles() {
-      setIsLoadingRoles(true)
+      setIsLoadingRoles(true);
 
       try {
-        const roles = await staffService.listRoles({ excludeOwner: true })
+        const roles = await staffService.listRoles({ excludeOwner: true });
 
         if (!isMounted) {
-          return
+          return;
         }
 
-        const assignableRoles = roles.filter((role) => role.role_name.toLowerCase() !== 'admin' || canCreateAdmin)
+        const assignableRoles = roles.filter(
+          (role) => role.role_name.toLowerCase() !== "admin" || canCreateAdmin,
+        );
 
-        setRoleOptions(assignableRoles)
+        setRoleOptions(assignableRoles);
         setForm((current) => ({
           ...current,
-          role_id: current.role_id || String(assignableRoles[0]?.role_id ?? ''),
-        }))
+          role_id: current.role_id || String(assignableRoles[0]?.role_id ?? ""),
+        }));
       } catch (loadError) {
         if (isMounted) {
-          setPageError(loadError instanceof Error ? loadError.message : 'Unable to load staff roles.')
+          setPageError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load staff roles.",
+          );
         }
       } finally {
         if (isMounted) {
-          setIsLoadingRoles(false)
+          setIsLoadingRoles(false);
         }
       }
     }
 
-    void loadRoles()
+    void loadRoles();
 
     return () => {
-      isMounted = false
-    }
-  }, [canCreateAdmin])
+      isMounted = false;
+    };
+  }, [canCreateAdmin]);
 
-  function updateFormField<K extends keyof StaffFormState>(field: K, value: StaffFormState[K]) {
-    setForm((current) => ({ ...current, [field]: value }))
-    setErrors((current) => ({ ...current, [field]: undefined }))
+  function updateFormField<K extends keyof StaffFormState>(
+    field: K,
+    value: StaffFormState[K],
+  ) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
   function handleReset() {
     setForm({
       ...emptyStaffForm,
-      role_id: String(roleOptions[0]?.role_id ?? ''),
-    })
-    setErrors({})
-    setPageError(null)
+      role_id: String(roleOptions[0]?.role_id ?? ""),
+    });
+    setErrors({});
+    setPageError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const nextErrors = validateStaffForm(form)
+    event.preventDefault();
+    const nextErrors = validateStaffForm(form);
 
     if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors)
-      return
+      setErrors(nextErrors);
+      return;
     }
 
-    setIsSaving(true)
-    setPageError(null)
+    setIsSaving(true);
+    setPageError(null);
 
     try {
-      const created = await staffService.createUser(formToStaffPayload(form))
-      setCreatedUser(created)
+      const created = await staffService.createUser(formToStaffPayload(form));
+      setCreatedUser(created);
     } catch (saveError) {
-      setPageError(saveError instanceof Error ? saveError.message : 'Unable to create staff account.')
+      setPageError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to create staff account.",
+      );
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
   function handleCreatedUserModalClose() {
-    navigate(routePaths.staff, { state: { notice: 'Staff account created.' } })
+    navigate(routePaths.staff, { state: { notice: "Staff account created." } });
   }
 
   return (
@@ -112,7 +129,11 @@ export function StaffCreatePage() {
       <SectionHeader
         title="Add Staff"
         subtitle="Create a staff account for this tenant."
-        titlePrefix={<Link className="ui-text-link" to={routePaths.staff}>Go back</Link>}
+        titlePrefix={
+          <Link className="ui-text-link" to={routePaths.staff}>
+            Go back
+          </Link>
+        }
       />
 
       <StaffForm
@@ -123,7 +144,16 @@ export function StaffCreatePage() {
         onChange={updateFormField}
         onReset={handleReset}
         onSubmit={handleSubmit}
-        operationAlert={pageError ? <Alert message={pageError} onDismiss={() => setPageError(null)} title="Create failed" tone="danger" /> : null}
+        operationAlert={
+          pageError ? (
+            <Alert
+              message={pageError}
+              onDismiss={() => setPageError(null)}
+              title="Create failed"
+              tone="danger"
+            />
+          ) : null
+        }
         roleOptions={roleOptions}
         value={form}
       />
@@ -155,7 +185,9 @@ export function StaffCreatePage() {
               </li>
               <li>
                 <span>Role</span>
-                <strong>{createdUser.role_name ?? createdUser.roleName ?? '-'}</strong>
+                <strong>
+                  {createdUser.role_name ?? createdUser.roleName ?? "-"}
+                </strong>
               </li>
               <li>
                 <span>Password</span>
@@ -166,5 +198,5 @@ export function StaffCreatePage() {
         )}
       </Modal>
     </section>
-  )
+  );
 }

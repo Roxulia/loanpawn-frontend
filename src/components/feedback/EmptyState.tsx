@@ -1,15 +1,20 @@
-import type { ReactNode } from 'react'
-import { useUiLocale } from '../../locales/UiLocale'
+import type { ReactNode } from "react";
+import { useUiLocale } from "../../locales/UiLocale";
 
 type EmptyStateProps = {
-  action?: ReactNode
-  title: string
-  description: string
-  icon?: ReactNode
-}
+  action?: ReactNode;
+  title: string;
+  description: string;
+  icon?: ReactNode;
+};
 
-export function EmptyState({ action, description, icon, title }: EmptyStateProps) {
-  const { t } = useUiLocale()
+export function EmptyState({
+  action,
+  description,
+  icon,
+  title,
+}: EmptyStateProps) {
+  const { t } = useUiLocale();
 
   return (
     <section className="ui-empty-state">
@@ -18,5 +23,5 @@ export function EmptyState({ action, description, icon, title }: EmptyStateProps
       <p className="ui-empty-state__description">{t(description)}</p>
       {action}
     </section>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 type FinanceHistoryMobileCardProps = {
-  actions?: ReactNode
-  amount: ReactNode
-  eyebrow: ReactNode
-  meta: ReactNode
-  onClick?: () => void
-  status: ReactNode
-  statusTone: 'active' | 'due'
-  title: ReactNode
-}
+  actions?: ReactNode;
+  amount: ReactNode;
+  eyebrow: ReactNode;
+  meta: ReactNode;
+  onClick?: () => void;
+  status: ReactNode;
+  statusTone: "active" | "due";
+  title: ReactNode;
+};
 
 export function FinanceHistoryMobileCard({
   actions,
@@ -21,13 +21,16 @@ export function FinanceHistoryMobileCard({
   statusTone,
   title,
 }: FinanceHistoryMobileCardProps) {
-  const content = <>
+  const content = (
+    <>
       <header className="finance-history-mobile-card__header">
         <div className="finance-history-mobile-card__identity">
           <small>{eyebrow}</small>
           <strong>{title}</strong>
         </div>
-        <span className={`finance-history-mobile-card__status finance-history-mobile-card__status--${statusTone}`}>
+        <span
+          className={`finance-history-mobile-card__status finance-history-mobile-card__status--${statusTone}`}
+        >
           {status}
         </span>
       </header>
@@ -39,18 +42,39 @@ export function FinanceHistoryMobileCard({
 
       <footer className="finance-history-mobile-card__footer">
         <span className="finance-history-mobile-card__meta">{meta}</span>
-        {actions ? <div className="finance-history-mobile-card__actions" onClick={(event) => event.stopPropagation()}>{actions}</div> : null}
+        {actions ? (
+          <div
+            className="finance-history-mobile-card__actions"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {actions}
+          </div>
+        ) : null}
       </footer>
     </>
+  );
 
   if (onClick) {
-    return <article className="finance-history-mobile-card finance-history-mobile-card--button" onClick={onClick} onKeyDown={(event) => {
-      if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-        event.preventDefault()
-        onClick()
-      }
-    }} role="link" tabIndex={0}>{content}</article>
+    return (
+      <article
+        className="finance-history-mobile-card finance-history-mobile-card--button"
+        onClick={onClick}
+        onKeyDown={(event) => {
+          if (
+            event.target === event.currentTarget &&
+            (event.key === "Enter" || event.key === " ")
+          ) {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+        role="link"
+        tabIndex={0}
+      >
+        {content}
+      </article>
+    );
   }
 
-  return <article className="finance-history-mobile-card">{content}</article>
+  return <article className="finance-history-mobile-card">{content}</article>;
 }

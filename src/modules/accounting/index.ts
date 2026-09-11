@@ -1,2 +1,2 @@
-export { AccountingPage } from './pages/AccountingPage'
-export const accountingModuleId = 'accounting'
+export { AccountingPage } from "./pages/AccountingPage";
+export const accountingModuleId = "accounting";

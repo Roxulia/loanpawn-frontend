@@ -1,6 +1,6 @@
-import { useEffect, useRef, type ReactNode } from 'react'
-import { tenantAuthService } from '../../services/tenant/authService'
-import { useTenantSession } from '../../contexts/useTenantSession'
+import { useEffect, useRef, type ReactNode } from "react";
+import { tenantAuthService } from "../../services/tenant/authService";
+import { useTenantSession } from "../../contexts/useTenantSession";
 
 export function AuthenticationGate({ children }: { children: ReactNode }) {
   const {
@@ -9,34 +9,34 @@ export function AuthenticationGate({ children }: { children: ReactNode }) {
     setSession,
     setLocale,
     tenantResolution,
-  } = useTenantSession()
-  const checkedKey = useRef<string | null>(null)
+  } = useTenantSession();
+  const checkedKey = useRef<string | null>(null);
 
   useEffect(() => {
     const tenantKey =
-      tenantResolution.status === 'resolved'
+      tenantResolution.status === "resolved"
         ? `tenant:${tenantResolution.tenant.code}`
-        : 'public-app'
+        : "public-app";
 
     if (checkedKey.current === tenantKey) {
-      return
+      return;
     }
 
-    checkedKey.current = tenantKey
-    setAuthStatus('checking')
+    checkedKey.current = tenantKey;
+    setAuthStatus("checking");
 
     tenantAuthService
       .me()
       .then((user) => {
-        setCurrentUser(user)
-        setLocale(user.prefer_lang && user.prefer_lang === 'mm' ? 'mm' : 'en') 
-        setAuthStatus('authenticated')
+        setCurrentUser(user);
+        setLocale(user.prefer_lang && user.prefer_lang === "mm" ? "mm" : "en");
+        setAuthStatus("authenticated");
         //console.log('User authenticated:', user)
       })
       .catch(() => {
-        setSession(null)
-      })
-  }, [setAuthStatus, setCurrentUser, setSession, tenantResolution])
+        setSession(null);
+      });
+  }, [setAuthStatus, setCurrentUser, setSession, tenantResolution]);
 
-  return children
+  return children;
 }

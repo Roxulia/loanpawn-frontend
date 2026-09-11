@@ -1,253 +1,397 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Badge, Button, Input, Textarea } from '../../../components/atoms'
-import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
-import { CloseIcon, FilterIcon, SearchIcon } from '../../../components/icons/icon'
-import { ActionBar, Card, FilterBar, FinancialAmountInput, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
-import { DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
-import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
-import { createIdempotencyKey } from '../../../services/http/idempotency'
-import { formatDate, formatMoney, getSlipCustomerName } from '../../slips/slipFormat'
-import { redemptionService, type RedemptionCalculationResult, type RedemptionDebt, type RedemptionDetail, type RedemptionInterestPayment } from '../services/redemptionService'
-import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
-import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
-import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
-import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
-import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { Badge, Button, Input, Textarea } from "../../../components/atoms";
+import { Alert, EmptyState, LoadingState } from "../../../components/feedback";
+import {
+  CloseIcon,
+  FilterIcon,
+  SearchIcon,
+} from "../../../components/icons/icon";
+import {
+  ActionBar,
+  Card,
+  FilterBar,
+  FinancialAmountInput,
+  FormField,
+  KeyValueList,
+  SectionHeader,
+} from "../../../components/molecules";
+import {
+  DataTable,
+  Modal,
+  type DataTableColumn,
+} from "../../../components/organisms";
+import { LocalizedText, useUiLocale } from "../../../locales/UiLocale";
+import { createIdempotencyKey } from "../../../services/http/idempotency";
+import {
+  formatDate,
+  formatMoney,
+  getSlipCustomerName,
+} from "../../slips/slipFormat";
+import {
+  redemptionService,
+  type RedemptionCalculationResult,
+  type RedemptionDebt,
+  type RedemptionDetail,
+  type RedemptionInterestPayment,
+} from "../services/redemptionService";
+import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
+import {
+  financialAmountToBase,
+  type FinancialUnitCode,
+} from "../../finance/financialUnits";
+import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
+import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateField";
+import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
 
-const perPage = 10
+const perPage = 10;
 
-type RedemptionTab = 'workflow' | 'history'
+type RedemptionTab = "workflow" | "history";
 
 function formatDateInputValue(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
-  return `${year}-${month}-${day}`
+  return `${year}-${month}-${day}`;
 }
 
 function initialRedemptionDate() {
-  return formatDateInputValue(new Date())
+  return formatDateInputValue(new Date());
 }
 
 function initialMonthStartDate() {
-  const today = new Date()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
 
-  return `${today.getFullYear()}-${month}-01`
+  return `${today.getFullYear()}-${month}-01`;
 }
 
 export function RedemptionsPage() {
-  const { t } = useUiLocale()
-  const [activeTab, setActiveTab] = useState<RedemptionTab>('workflow')
-  const [slipNo, setSlipNo] = useState('')
-  const [paymentAmount, setPaymentAmount] = useState('')
-  const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
-  const [accountId, setAccountId] = useState('')
-  const [reportingExchangeRate, setReportingExchangeRate] = useState('')
-  const [reportingExchangeRateInversed, setReportingExchangeRateInversed] = useState(false)
-  const [redemptionDate, setRedemptionDate] = useState(initialRedemptionDate)
-  const [notes, setNotes] = useState('')
-  const [calculation, setCalculation] = useState<RedemptionCalculationResult | null>(null)
-  const [redemptionResult, setRedemptionResult] = useState<RedemptionDetail | null>(null)
-  const [records, setRecords] = useState<RedemptionDetail[]>([])
-  const [selectedRecord, setSelectedRecord] = useState<RedemptionDetail | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [managementStartDate, setManagementStartDate] = useState(initialMonthStartDate)
-  const [managementEndDate, setManagementEndDate] = useState(initialRedemptionDate)
-  const [draftManagementStartDate, setDraftManagementStartDate] = useState(initialMonthStartDate)
-  const [draftManagementEndDate, setDraftManagementEndDate] = useState(initialRedemptionDate)
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
-  const [isManagementDetailModalOpen, setIsManagementDetailModalOpen] = useState(false)
-  const [isCalculating, setIsCalculating] = useState(false)
-  const [isRedeeming, setIsRedeeming] = useState(false)
-  const [isLoadingRecords, setIsLoadingRecords] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
-  const redemptionIdempotencyKeyRef = useRef<string | null>(null)
+  const { t } = useUiLocale();
+  const [activeTab, setActiveTab] = useState<RedemptionTab>("workflow");
+  const [slipNo, setSlipNo] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentAmountUnit, setPaymentAmountUnit] =
+    useState<FinancialUnitCode>("UNIT");
+  const [accountId, setAccountId] = useState("");
+  const [reportingExchangeRate, setReportingExchangeRate] = useState("");
+  const [reportingExchangeRateInversed, setReportingExchangeRateInversed] =
+    useState(false);
+  const [redemptionDate, setRedemptionDate] = useState(initialRedemptionDate);
+  const [notes, setNotes] = useState("");
+  const [calculation, setCalculation] =
+    useState<RedemptionCalculationResult | null>(null);
+  const [redemptionResult, setRedemptionResult] =
+    useState<RedemptionDetail | null>(null);
+  const [records, setRecords] = useState<RedemptionDetail[]>([]);
+  const [selectedRecord, setSelectedRecord] = useState<RedemptionDetail | null>(
+    null,
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [managementStartDate, setManagementStartDate] = useState(
+    initialMonthStartDate,
+  );
+  const [managementEndDate, setManagementEndDate] = useState(
+    initialRedemptionDate,
+  );
+  const [draftManagementStartDate, setDraftManagementStartDate] = useState(
+    initialMonthStartDate,
+  );
+  const [draftManagementEndDate, setDraftManagementEndDate] = useState(
+    initialRedemptionDate,
+  );
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isManagementDetailModalOpen, setIsManagementDetailModalOpen] =
+    useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const redemptionIdempotencyKeyRef = useRef<string | null>(null);
 
-  const totalToPay = calculation?.total_amount_to_pay ?? 0
-  const receivedAmount = financialAmountToBase({ amount: paymentAmount, unit: paymentAmountUnit })
-  const changeAmount = Math.max(receivedAmount - totalToPay, 0)
+  const totalToPay = calculation?.total_amount_to_pay ?? 0;
+  const receivedAmount = financialAmountToBase({
+    amount: paymentAmount,
+    unit: paymentAmountUnit,
+  });
+  const changeAmount = Math.max(receivedAmount - totalToPay, 0);
 
-  const loadRecords = useCallback(async (page: number) => {
-    setIsLoadingRecords(true)
-    setError(null)
+  const loadRecords = useCallback(
+    async (page: number) => {
+      setIsLoadingRecords(true);
+      setError(null);
 
-    try {
-      const response = await redemptionService.listRedemptions({
-        endDate: managementEndDate,
-        page,
-        perPage,
-        startDate: managementStartDate,
-      })
-      const pageData = response
-      const nextItems = pageData.items ?? []
-      const nextPerPage = pageData.per_page ?? perPage
+      try {
+        const response = await redemptionService.listRedemptions({
+          endDate: managementEndDate,
+          page,
+          perPage,
+          startDate: managementStartDate,
+        });
+        const pageData = response;
+        const nextItems = pageData.items ?? [];
+        const nextPerPage = pageData.per_page ?? perPage;
 
-      setRecords(nextItems)
-      setSelectedRecord((current) => current ?? nextItems[0] ?? null)
-      setCurrentPage(pageData.current_page ?? pageData.page ?? page)
-      setLastPage(Math.max(1, Math.ceil((pageData.total ?? nextItems.length) / nextPerPage)))
-      setTotal(pageData.total ?? nextItems.length)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load redemption history.')
-    } finally {
-      setIsLoadingRecords(false)
-    }
-  }, [managementEndDate, managementStartDate])
+        setRecords(nextItems);
+        setSelectedRecord((current) => current ?? nextItems[0] ?? null);
+        setCurrentPage(pageData.current_page ?? pageData.page ?? page);
+        setLastPage(
+          Math.max(
+            1,
+            Math.ceil((pageData.total ?? nextItems.length) / nextPerPage),
+          ),
+        );
+        setTotal(pageData.total ?? nextItems.length);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load redemption history.",
+        );
+      } finally {
+        setIsLoadingRecords(false);
+      }
+    },
+    [managementEndDate, managementStartDate],
+  );
 
   useEffect(() => {
-    if (activeTab === 'history') {
+    if (activeTab === "history") {
       const loadTimer = window.setTimeout(() => {
-        void loadRecords(currentPage)
-      }, 0)
+        void loadRecords(currentPage);
+      }, 0);
 
-      return () => window.clearTimeout(loadTimer)
+      return () => window.clearTimeout(loadTimer);
     }
-  }, [activeTab, currentPage, loadRecords])
+  }, [activeTab, currentPage, loadRecords]);
 
   async function handleCalculate(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault()
+    event?.preventDefault();
 
     if (!slipNo.trim()) {
-      setError('Slip number is required.')
-      return
+      setError("Slip number is required.");
+      return;
     }
 
-    setIsCalculating(true)
-    setError(null)
-    setNotice(null)
-    setRedemptionResult(null)
-    setAccountId('')
+    setIsCalculating(true);
+    setError(null);
+    setNotice(null);
+    setRedemptionResult(null);
+    setAccountId("");
 
     try {
-      const response = await redemptionService.calculate(slipNo.trim())
-      setCalculation(response)
-      setPaymentAmount(String(response.total_amount_to_pay))
-      setNotice(`Redemption calculated for slip ${response.slip.slip_no}.`)
+      const response = await redemptionService.calculate(slipNo.trim());
+      setCalculation(response);
+      setPaymentAmount(String(response.total_amount_to_pay));
+      setNotice(`Redemption calculated for slip ${response.slip.slip_no}.`);
     } catch (calculateError) {
-      setCalculation(null)
-      setError(calculateError instanceof Error ? calculateError.message : 'Unable to calculate redemption.')
+      setCalculation(null);
+      setError(
+        calculateError instanceof Error
+          ? calculateError.message
+          : "Unable to calculate redemption.",
+      );
     } finally {
-      setIsCalculating(false)
+      setIsCalculating(false);
     }
   }
 
   async function handleRedeem(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (redemptionIdempotencyKeyRef.current !== null) {
-      return
+      return;
     }
 
     if (!calculation) {
-      setError('Calculate a slip before redeeming.')
-      return
+      setError("Calculate a slip before redeeming.");
+      return;
     }
 
     if (receivedAmount < totalToPay) {
-      setError('Payment amount must be at least the total amount to pay.')
-      return
+      setError("Payment amount must be at least the total amount to pay.");
+      return;
     }
 
-    setIsRedeeming(true)
-    setError(null)
-    redemptionIdempotencyKeyRef.current = createIdempotencyKey()
+    setIsRedeeming(true);
+    setError(null);
+    redemptionIdempotencyKeyRef.current = createIdempotencyKey();
 
     try {
-      const interests = getInterestPayments(calculation).map(toRedemptionInterestPayload)
-      const debts = getUnpaidDebts(calculation).map(toRedemptionDebtPayload)
-      const response = await redemptionService.create({
-        ...(accountId ? { account_id: Number(accountId) } : {}),
-        ...(reportingExchangeRate ? { reporting_exchange_rate: Number(reportingExchangeRate), reporting_exchange_rate_inversed: reportingExchangeRateInversed } : {}),
-        slip_no: calculation.slip.slip_no,
-        calculated_total: totalToPay,
-        payment_amount: Number(paymentAmount),
-        payment_amount_unit: paymentAmountUnit,
-        interests,
-        debts,
-        redemption_at: redemptionDate || undefined,
-        notes: notes.trim() || undefined,
-      }, undefined, {
-        idempotencyKey: redemptionIdempotencyKeyRef.current,
-      })
+      const interests = getInterestPayments(calculation).map(
+        toRedemptionInterestPayload,
+      );
+      const debts = getUnpaidDebts(calculation).map(toRedemptionDebtPayload);
+      const response = await redemptionService.create(
+        {
+          ...(accountId ? { account_id: Number(accountId) } : {}),
+          ...(reportingExchangeRate
+            ? {
+                reporting_exchange_rate: Number(reportingExchangeRate),
+                reporting_exchange_rate_inversed: reportingExchangeRateInversed,
+              }
+            : {}),
+          slip_no: calculation.slip.slip_no,
+          calculated_total: totalToPay,
+          payment_amount: Number(paymentAmount),
+          payment_amount_unit: paymentAmountUnit,
+          interests,
+          debts,
+          redemption_at: redemptionDate || undefined,
+          notes: notes.trim() || undefined,
+        },
+        undefined,
+        {
+          idempotencyKey: redemptionIdempotencyKeyRef.current,
+        },
+      );
 
-      setNotice('Pawn redemption created successfully.')
-      setRedemptionResult(response)
-      resetRedemptionForm()
-      if (activeTab === 'history') {
-        await loadRecords(1)
+      setNotice("Pawn redemption created successfully.");
+      setRedemptionResult(response);
+      resetRedemptionForm();
+      if (activeTab === "history") {
+        await loadRecords(1);
       }
     } catch (redeemError) {
-      setError(redeemError instanceof Error ? redeemError.message : 'Unable to redeem slip.')
+      setError(
+        redeemError instanceof Error
+          ? redeemError.message
+          : "Unable to redeem slip.",
+      );
     } finally {
-      redemptionIdempotencyKeyRef.current = null
-      setIsRedeeming(false)
+      redemptionIdempotencyKeyRef.current = null;
+      setIsRedeeming(false);
     }
   }
 
   function resetRedemptionForm() {
-    setSlipNo('')
-    setPaymentAmount('')
-    setAccountId('')
-    setReportingExchangeRate('')
-    setReportingExchangeRateInversed(false)
-    setRedemptionDate(initialRedemptionDate())
-    setNotes('')
-    setCalculation(null)
+    setSlipNo("");
+    setPaymentAmount("");
+    setAccountId("");
+    setReportingExchangeRate("");
+    setReportingExchangeRateInversed(false);
+    setRedemptionDate(initialRedemptionDate());
+    setNotes("");
+    setCalculation(null);
   }
 
   function applyManagementFilters() {
-    if (draftManagementStartDate && draftManagementEndDate && draftManagementEndDate < draftManagementStartDate) {
-      setError('To date must be on or after from date.')
-      return
+    if (
+      draftManagementStartDate &&
+      draftManagementEndDate &&
+      draftManagementEndDate < draftManagementStartDate
+    ) {
+      setError("To date must be on or after from date.");
+      return;
     }
 
-    setManagementStartDate(draftManagementStartDate)
-    setManagementEndDate(draftManagementEndDate)
-    setSelectedRecord(null)
-    setCurrentPage(1)
-    setIsFilterModalOpen(false)
+    setManagementStartDate(draftManagementStartDate);
+    setManagementEndDate(draftManagementEndDate);
+    setSelectedRecord(null);
+    setCurrentPage(1);
+    setIsFilterModalOpen(false);
   }
 
   function clearManagementFilters() {
-    setDraftManagementStartDate('')
-    setDraftManagementEndDate('')
-    setManagementStartDate('')
-    setManagementEndDate('')
-    setSelectedRecord(null)
-    setCurrentPage(1)
-    setIsFilterModalOpen(false)
+    setDraftManagementStartDate("");
+    setDraftManagementEndDate("");
+    setManagementStartDate("");
+    setManagementEndDate("");
+    setSelectedRecord(null);
+    setCurrentPage(1);
+    setIsFilterModalOpen(false);
   }
 
   function openMobileManagementDetail(record: RedemptionDetail) {
-    setSelectedRecord(record)
-    setIsManagementDetailModalOpen(true)
+    setSelectedRecord(record);
+    setIsManagementDetailModalOpen(true);
   }
 
   const historyColumns: Array<DataTableColumn<RedemptionDetail>> = [
-    { header: 'Slip No', key: 'slip', render: (record) => <strong>{getRedemptionSlipNumber(record)}</strong> },
-    { header: 'Net Amount', key: 'net', render: (record) => <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'net')} /> },
-    { header: 'Received', key: 'received', render: (record) => <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'received')} /> },
-    { header: 'Change', key: 'change', render: (record) => <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'change')} /> },
-    { header: 'Redeemed At', key: 'date', render: (record) => formatDate(getRedemptionDate(record)) },
-  ]
+    {
+      header: "Slip No",
+      key: "slip",
+      render: (record) => <strong>{getRedemptionSlipNumber(record)}</strong>,
+    },
+    {
+      header: "Net Amount",
+      key: "net",
+      render: (record) => (
+        <AccountCurrencyAmount
+          accountId={record.account_id ?? record.accountId}
+          amount={getRedemptionAmount(record, "net")}
+        />
+      ),
+    },
+    {
+      header: "Received",
+      key: "received",
+      render: (record) => (
+        <AccountCurrencyAmount
+          accountId={record.account_id ?? record.accountId}
+          amount={getRedemptionAmount(record, "received")}
+        />
+      ),
+    },
+    {
+      header: "Change",
+      key: "change",
+      render: (record) => (
+        <AccountCurrencyAmount
+          accountId={record.account_id ?? record.accountId}
+          amount={getRedemptionAmount(record, "change")}
+        />
+      ),
+    },
+    {
+      header: "Redeemed At",
+      key: "date",
+      render: (record) => formatDate(getRedemptionDate(record)),
+    },
+  ];
 
   return (
     <section className="page ops-page ops-page--settlement">
       <div className="ops-hero">
-        <SectionHeader title="Redemptions" subtitle="Calculate redemption totals, receive payment, and review redemption records." />
-        <div className="ops-metrics" aria-label={t('Redemption summary')}>
+        <SectionHeader
+          title="Redemptions"
+          subtitle="Calculate redemption totals, receive payment, and review redemption records."
+        />
+        <div className="ops-metrics" aria-label={t("Redemption summary")}>
           <div className="ops-metric ops-metric--amount">
             <span>Total to pay</span>
-            <strong><AccountCurrencyAmount accountId={calculation?.slip.account_id ?? calculation?.slip.accountId} amount={totalToPay} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={
+                  calculation?.slip.account_id ?? calculation?.slip.accountId
+                }
+                amount={totalToPay}
+              />
+            </strong>
           </div>
           <div className="ops-metric">
             <span>Change</span>
-            <strong><AccountCurrencyAmount accountId={accountId ? Number(accountId) : (calculation?.slip.account_id ?? calculation?.slip.accountId)} amount={changeAmount} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={
+                  accountId
+                    ? Number(accountId)
+                    : (calculation?.slip.account_id ??
+                      calculation?.slip.accountId)
+                }
+                amount={changeAmount}
+              />
+            </strong>
           </div>
           <div className="ops-metric">
             <span>History total</span>
@@ -256,23 +400,78 @@ export function RedemptionsPage() {
         </div>
       </div>
 
-      <div className="module-tabs ops-tabs redemption-mobile-tabs" role="tablist" aria-label={t('Redemption sections')}>
-        <Button aria-pressed={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Creation</Button>
-        <Button aria-pressed={activeTab === 'history'} onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>Management</Button>
+      <div
+        className="module-tabs ops-tabs redemption-mobile-tabs"
+        role="tablist"
+        aria-label={t("Redemption sections")}
+      >
+        <Button
+          aria-pressed={activeTab === "workflow"}
+          onClick={() => setActiveTab("workflow")}
+          variant={activeTab === "workflow" ? "primary" : "secondary"}
+        >
+          Creation
+        </Button>
+        <Button
+          aria-pressed={activeTab === "history"}
+          onClick={() => setActiveTab("history")}
+          variant={activeTab === "history" ? "primary" : "secondary"}
+        >
+          Management
+        </Button>
       </div>
 
-      {error && <Alert message={error} onDismiss={() => setError(null)} title="Redemption action failed" tone="danger" />}
-      {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Redemption updated" tone="success" />}
+      {error && (
+        <Alert
+          message={error}
+          onDismiss={() => setError(null)}
+          title="Redemption action failed"
+          tone="danger"
+        />
+      )}
+      {notice && (
+        <Alert
+          message={notice}
+          onDismiss={() => setNotice(null)}
+          title="Redemption updated"
+          tone="success"
+        />
+      )}
 
-      {activeTab === 'workflow' ? (
+      {activeTab === "workflow" ? (
         <div className="redemption-creation-flow">
-          <RedemptionCreationStep description="Find the active slip and confirm the amounts and collateral before payment." isComplete={Boolean(calculation)} number={1} title="Slip details">
+          <RedemptionCreationStep
+            description="Find the active slip and confirm the amounts and collateral before payment."
+            isComplete={Boolean(calculation)}
+            number={1}
+            title="Slip details"
+          >
             <Card title="Slip Lookup">
-              <form className="inline-form ops-lookup-form redemption-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
-                <FormField id="redemption-slip-no" label="Slip Number or Barcode">
-                  <Input id="redemption-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
+              <form
+                className="inline-form ops-lookup-form redemption-lookup-form"
+                onSubmit={(event) => void handleCalculate(event)}
+              >
+                <FormField
+                  id="redemption-slip-no"
+                  label="Slip Number or Barcode"
+                >
+                  <Input
+                    id="redemption-slip-no"
+                    value={slipNo}
+                    onChange={(event) => setSlipNo(event.target.value)}
+                  />
                 </FormField>
-                <Button aria-label="Load Detail" className="redemption-lookup-submit" isLoading={isCalculating} leftIcon={<SearchIcon />} title="Load Detail" type="submit" variant="primary">Load Detail</Button>
+                <Button
+                  aria-label="Load Detail"
+                  className="redemption-lookup-submit"
+                  isLoading={isCalculating}
+                  leftIcon={<SearchIcon />}
+                  title="Load Detail"
+                  type="submit"
+                  variant="primary"
+                >
+                  Load Detail
+                </Button>
               </form>
             </Card>
 
@@ -284,43 +483,146 @@ export function RedemptionsPage() {
           </RedemptionCreationStep>
 
           {calculation && (
-            <RedemptionCreationStep description="Record the received amount, receiving account, and final redemption details." number={2} title="Receive payment">
+            <RedemptionCreationStep
+              description="Record the received amount, receiving account, and final redemption details."
+              number={2}
+              title="Receive payment"
+            >
               <Card title="Receive Payment">
-                <form className="workflow-stack redemption-payment-form" onSubmit={(event) => void handleRedeem(event)}>
+                <form
+                  className="workflow-stack redemption-payment-form"
+                  onSubmit={(event) => void handleRedeem(event)}
+                >
                   <div className="form-grid-compact redemption-payment-form__fields">
                     <FormField id="redemption-payment" label="Payment Amount">
-                      <FinancialAmountInput id="redemption-payment" min="0" step="0.01" value={{ amount: paymentAmount, unit: paymentAmountUnit }} onChange={(next) => { setPaymentAmount(next.amount); setPaymentAmountUnit(next.unit) }} />
+                      <FinancialAmountInput
+                        id="redemption-payment"
+                        min="0"
+                        step="0.01"
+                        value={{
+                          amount: paymentAmount,
+                          unit: paymentAmountUnit,
+                        }}
+                        onChange={(next) => {
+                          setPaymentAmount(next.amount);
+                          setPaymentAmountUnit(next.unit);
+                        }}
+                      />
                     </FormField>
                     <FormField id="redemption-date" label="Redemption Date">
-                      <Input id="redemption-date" type="date" value={redemptionDate} onChange={(event) => setRedemptionDate(event.target.value)} />
+                      <Input
+                        id="redemption-date"
+                        type="date"
+                        value={redemptionDate}
+                        onChange={(event) =>
+                          setRedemptionDate(event.target.value)
+                        }
+                      />
                     </FormField>
-                    <FormField id="redemption-account" label="Receiving Account" helperText="Only accounts using the loan currency are shown.">
+                    <FormField
+                      id="redemption-account"
+                      label="Receiving Account"
+                      helperText="Only accounts using the loan currency are shown."
+                    >
                       <FinancialAccountSelect
                         id="redemption-account"
-                        matchAccountId={calculation.slip.account_id ?? calculation.slip.accountId}
+                        matchAccountId={
+                          calculation.slip.account_id ??
+                          calculation.slip.accountId
+                        }
                         onChange={setAccountId}
                         value={accountId}
                       />
                     </FormField>
-                    <ReportingExchangeRateField accountId={accountId || calculation.slip.account_id || calculation.slip.accountId} inversed={reportingExchangeRateInversed} manualRate={reportingExchangeRate} onInversedChange={setReportingExchangeRateInversed} onManualRateChange={setReportingExchangeRate} />
+                    <ReportingExchangeRateField
+                      accountId={
+                        accountId ||
+                        calculation.slip.account_id ||
+                        calculation.slip.accountId
+                      }
+                      inversed={reportingExchangeRateInversed}
+                      manualRate={reportingExchangeRate}
+                      onInversedChange={setReportingExchangeRateInversed}
+                      onManualRateChange={setReportingExchangeRate}
+                    />
                   </div>
                   <FormField id="redemption-notes" label="Notes">
-                    <Textarea id="redemption-notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
+                    <Textarea
+                      id="redemption-notes"
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                    />
                   </FormField>
                   <div className="ops-amount-panel redemption-payment-info">
-                    <KeyValueList items={[
-                      { key: 'Total Amount To Pay', value: <AccountCurrencyAmount accountId={calculation.slip.account_id ?? calculation.slip.accountId} amount={totalToPay} /> },
-                      { key: 'Received', value: <AccountCurrencyAmount accountId={accountId ? Number(accountId) : null} amount={receivedAmount} fallbackAccountId={calculation.slip.account_id ?? calculation.slip.accountId} /> },
-                      { key: 'Change', value: <AccountCurrencyAmount accountId={accountId ? Number(accountId) : null} amount={changeAmount} fallbackAccountId={calculation.slip.account_id ?? calculation.slip.accountId} /> },
-                    ]} />
+                    <KeyValueList
+                      items={[
+                        {
+                          key: "Total Amount To Pay",
+                          value: (
+                            <AccountCurrencyAmount
+                              accountId={
+                                calculation.slip.account_id ??
+                                calculation.slip.accountId
+                              }
+                              amount={totalToPay}
+                            />
+                          ),
+                        },
+                        {
+                          key: "Received",
+                          value: (
+                            <AccountCurrencyAmount
+                              accountId={accountId ? Number(accountId) : null}
+                              amount={receivedAmount}
+                              fallbackAccountId={
+                                calculation.slip.account_id ??
+                                calculation.slip.accountId
+                              }
+                            />
+                          ),
+                        },
+                        {
+                          key: "Change",
+                          value: (
+                            <AccountCurrencyAmount
+                              accountId={accountId ? Number(accountId) : null}
+                              amount={changeAmount}
+                              fallbackAccountId={
+                                calculation.slip.account_id ??
+                                calculation.slip.accountId
+                              }
+                            />
+                          ),
+                        },
+                      ]}
+                    />
                   </div>
                   <ActionBar>
-                    <Button onClick={() => { resetRedemptionForm(); setRedemptionResult(null) }} variant="secondary">Reset</Button>
-                    <Button disabled={!calculation} isLoading={isRedeeming} type="submit" variant="primary">Redeem</Button>
+                    <Button
+                      onClick={() => {
+                        resetRedemptionForm();
+                        setRedemptionResult(null);
+                      }}
+                      variant="secondary"
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      disabled={!calculation}
+                      isLoading={isRedeeming}
+                      type="submit"
+                      variant="primary"
+                    >
+                      Redeem
+                    </Button>
                   </ActionBar>
                   <div className="redemption-caution">
-                    <strong><LocalizedText text="Before finalizing" /></strong>
-                    <span><LocalizedText text="Inspect returned collateral before redeeming. Redeem will permanently update this slip." /></span>
+                    <strong>
+                      <LocalizedText text="Before finalizing" />
+                    </strong>
+                    <span>
+                      <LocalizedText text="Inspect returned collateral before redeeming. Redeem will permanently update this slip." />
+                    </span>
                   </div>
                 </form>
               </Card>
@@ -330,7 +632,7 @@ export function RedemptionsPage() {
       ) : (
         <div className="split-workspace ops-history-workspace redemption-management-workspace">
           <Card
-            action={(
+            action={
               <Button
                 aria-label="Filter redemption dates"
                 className="ui-button--icon redemption-management-mobile-filter-button"
@@ -341,9 +643,9 @@ export function RedemptionsPage() {
               >
                 Filter
               </Button>
-            )}
+            }
             title="Redemption History"
-            description={`${total} total redemption${total === 1 ? '' : 's'}`}
+            description={`${total} total redemption${total === 1 ? "" : "s"}`}
           >
             <div className="redemption-management-desktop-filter">
               <RedemptionManagementFilterFields
@@ -361,7 +663,9 @@ export function RedemptionsPage() {
                 emptyDescription="Completed redemptions will appear here."
                 emptyTitle="No redemptions yet"
                 getItemId={(record) => record.id}
-                getItemTitle={(record) => `Slip ${getRedemptionSlipNumber(record)}`}
+                getItemTitle={(record) =>
+                  `Slip ${getRedemptionSlipNumber(record)}`
+                }
                 isLoading={isLoadingRecords}
                 items={records}
                 onRowClick={(record) => setSelectedRecord(record)}
@@ -387,30 +691,48 @@ export function RedemptionsPage() {
           </Card>
           <div className="redemption-management-desktop-detail">
             {selectedRecord ? (
-              <RedemptionManagementDetailCard record={selectedRecord} onClose={() => setSelectedRecord(null)} />
+              <RedemptionManagementDetailCard
+                record={selectedRecord}
+                onClose={() => setSelectedRecord(null)}
+              />
             ) : (
-              <Card title="Redemption Detail" description="Select a redemption record">
-                <p className="muted"><LocalizedText text="No redemption selected." /></p>
+              <Card
+                title="Redemption Detail"
+                description="Select a redemption record"
+              >
+                <p className="muted">
+                  <LocalizedText text="No redemption selected." />
+                </p>
               </Card>
             )}
           </div>
         </div>
       )}
       <Modal
-        footer={<Button onClick={() => setRedemptionResult(null)} variant="primary">Done</Button>}
+        footer={
+          <Button onClick={() => setRedemptionResult(null)} variant="primary">
+            Done
+          </Button>
+        }
         isOpen={Boolean(redemptionResult)}
         onClose={() => setRedemptionResult(null)}
         title="Redemption Result"
       >
-        {redemptionResult && <RedemptionDetailPanel record={redemptionResult} />}
+        {redemptionResult && (
+          <RedemptionDetailPanel record={redemptionResult} />
+        )}
       </Modal>
       <Modal
-        footer={(
+        footer={
           <>
-            <Button onClick={clearManagementFilters} variant="secondary">Clear</Button>
-            <Button onClick={applyManagementFilters} variant="primary">Apply Filter</Button>
+            <Button onClick={clearManagementFilters} variant="secondary">
+              Clear
+            </Button>
+            <Button onClick={applyManagementFilters} variant="primary">
+              Apply Filter
+            </Button>
           </>
-        )}
+        }
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         title="Filter redemption dates"
@@ -425,21 +747,47 @@ export function RedemptionsPage() {
         </div>
       </Modal>
       {isManagementDetailModalOpen && selectedRecord && (
-        <div className="redemption-management-mobile-detail-backdrop" role="presentation" onMouseDown={() => setIsManagementDetailModalOpen(false)}>
-          <div className="redemption-management-mobile-detail-modal" onMouseDown={(event) => event.stopPropagation()}>
-            <RedemptionManagementDetailCard record={selectedRecord} onClose={() => setIsManagementDetailModalOpen(false)} />
+        <div
+          className="redemption-management-mobile-detail-backdrop"
+          role="presentation"
+          onMouseDown={() => setIsManagementDetailModalOpen(false)}
+        >
+          <div
+            className="redemption-management-mobile-detail-modal"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <RedemptionManagementDetailCard
+              record={selectedRecord}
+              onClose={() => setIsManagementDetailModalOpen(false)}
+            />
           </div>
         </div>
       )}
     </section>
-  )
+  );
 }
 
-function RedemptionCreationStep({ children, description, isComplete = false, number, title }: { children: ReactNode; description: string; isComplete?: boolean; number: number; title: string }) {
+function RedemptionCreationStep({
+  children,
+  description,
+  isComplete = false,
+  number,
+  title,
+}: {
+  children: ReactNode;
+  description: string;
+  isComplete?: boolean;
+  number: number;
+  title: string;
+}) {
   return (
-    <section className={`redemption-creation-step${isComplete ? ' redemption-creation-step--complete' : ''}`}>
+    <section
+      className={`redemption-creation-step${isComplete ? " redemption-creation-step--complete" : ""}`}
+    >
       <header className="redemption-creation-step__header">
-        <span className="redemption-creation-step__number" aria-hidden="true">{number}</span>
+        <span className="redemption-creation-step__number" aria-hidden="true">
+          {number}
+        </span>
         <div>
           <h2>{title}</h2>
           <p>{description}</p>
@@ -448,11 +796,11 @@ function RedemptionCreationStep({ children, description, isComplete = false, num
       </header>
       <div className="redemption-creation-step__content">{children}</div>
     </section>
-  )
+  );
 }
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat('en-US').format(value)
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function RedemptionManagementDateFields({
@@ -461,21 +809,31 @@ function RedemptionManagementDateFields({
   onStartDateChange,
   startDate,
 }: {
-  endDate: string
-  onEndDateChange: (value: string) => void
-  onStartDateChange: (value: string) => void
-  startDate: string
+  endDate: string;
+  onEndDateChange: (value: string) => void;
+  onStartDateChange: (value: string) => void;
+  startDate: string;
 }) {
   return (
     <div className="redemption-management-filter-fields">
       <FormField id="redemption-management-start-date" label="From date">
-        <Input id="redemption-management-start-date" onChange={(event) => onStartDateChange(event.target.value)} type="date" value={startDate} />
+        <Input
+          id="redemption-management-start-date"
+          onChange={(event) => onStartDateChange(event.target.value)}
+          type="date"
+          value={startDate}
+        />
       </FormField>
       <FormField id="redemption-management-end-date" label="To date">
-        <Input id="redemption-management-end-date" onChange={(event) => onEndDateChange(event.target.value)} type="date" value={endDate} />
+        <Input
+          id="redemption-management-end-date"
+          onChange={(event) => onEndDateChange(event.target.value)}
+          type="date"
+          value={endDate}
+        />
       </FormField>
     </div>
-  )
+  );
 }
 
 function RedemptionManagementFilterFields({
@@ -486,21 +844,25 @@ function RedemptionManagementFilterFields({
   onStartDateChange,
   startDate,
 }: {
-  endDate: string
-  onApply: () => void
-  onClear: () => void
-  onEndDateChange: (value: string) => void
-  onStartDateChange: (value: string) => void
-  startDate: string
+  endDate: string;
+  onApply: () => void;
+  onClear: () => void;
+  onEndDateChange: (value: string) => void;
+  onStartDateChange: (value: string) => void;
+  startDate: string;
 }) {
   return (
     <FilterBar
-      actions={(
+      actions={
         <>
-          <Button onClick={onClear} variant="secondary">Clear</Button>
-          <Button onClick={onApply} variant="primary">Apply Filter</Button>
+          <Button onClick={onClear} variant="secondary">
+            Clear
+          </Button>
+          <Button onClick={onApply} variant="primary">
+            Apply Filter
+          </Button>
         </>
-      )}
+      }
     >
       <RedemptionManagementDateFields
         endDate={endDate}
@@ -509,7 +871,7 @@ function RedemptionManagementFilterFields({
         startDate={startDate}
       />
     </FilterBar>
-  )
+  );
 }
 
 function RedemptionManagementMobileList({
@@ -522,29 +884,32 @@ function RedemptionManagementMobileList({
   records,
   total,
 }: {
-  currentPage: number
-  isLoading: boolean
-  lastPage: number
-  onNext: () => void
-  onPrevious: () => void
-  onSelect: (record: RedemptionDetail) => void
-  records: RedemptionDetail[]
-  total: number
+  currentPage: number;
+  isLoading: boolean;
+  lastPage: number;
+  onNext: () => void;
+  onPrevious: () => void;
+  onSelect: (record: RedemptionDetail) => void;
+  records: RedemptionDetail[];
+  total: number;
 }) {
   if (isLoading) {
     return (
       <div className="redemption-management-mobile-list">
         <LoadingState rows={5} />
       </div>
-    )
+    );
   }
 
   if (records.length === 0) {
     return (
       <div className="redemption-management-mobile-list">
-        <EmptyState description="Completed redemptions will appear here." title="No redemptions yet" />
+        <EmptyState
+          description="Completed redemptions will appear here."
+          title="No redemptions yet"
+        />
       </div>
-    )
+    );
   }
 
   return (
@@ -552,7 +917,12 @@ function RedemptionManagementMobileList({
       <div className="redemption-management-mobile-cards">
         {records.map((record) => (
           <FinanceHistoryMobileCard
-            amount={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'net')} />}
+            amount={
+              <AccountCurrencyAmount
+                accountId={record.account_id ?? record.accountId}
+                amount={getRedemptionAmount(record, "net")}
+              />
+            }
             eyebrow="Redemption"
             key={record.id}
             meta={formatDate(getRedemptionDate(record))}
@@ -567,19 +937,38 @@ function RedemptionManagementMobileList({
         <span className="ui-pagination__meta">
           Page {currentPage} of {lastPage} - {total} records
         </span>
-        <Button disabled={currentPage <= 1} onClick={onPrevious} variant="secondary">Previous</Button>
-        <Button disabled={currentPage >= lastPage} onClick={onNext} variant="secondary">Next</Button>
+        <Button
+          disabled={currentPage <= 1}
+          onClick={onPrevious}
+          variant="secondary"
+        >
+          Previous
+        </Button>
+        <Button
+          disabled={currentPage >= lastPage}
+          onClick={onNext}
+          variant="secondary"
+        >
+          Next
+        </Button>
       </div>
     </div>
-  )
+  );
 }
 
-function RedemptionSummary({ calculation }: { calculation: RedemptionCalculationResult }) {
-  const interestPayments = getInterestPayments(calculation)
-  const unpaidDebts = getUnpaidDebts(calculation)
-  const excludedDebts = calculation.excluded_debts ?? calculation.excludedDebts ?? []
-  const collateralItems = calculation.collateral_items ?? calculation.slip.items ?? []
-  const slipAccountId = calculation.slip.account_id ?? calculation.slip.accountId
+function RedemptionSummary({
+  calculation,
+}: {
+  calculation: RedemptionCalculationResult;
+}) {
+  const interestPayments = getInterestPayments(calculation);
+  const unpaidDebts = getUnpaidDebts(calculation);
+  const excludedDebts =
+    calculation.excluded_debts ?? calculation.excludedDebts ?? [];
+  const collateralItems =
+    calculation.collateral_items ?? calculation.slip.items ?? [];
+  const slipAccountId =
+    calculation.slip.account_id ?? calculation.slip.accountId;
 
   return (
     <div className="redemption-detail-panel">
@@ -590,24 +979,47 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         </div>
         <div className="redemption-mobile-summary-card__total">
           <span>Total Amount To Pay</span>
-          <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.total_amount_to_pay} /></strong>
+          <strong>
+            <AccountCurrencyAmount
+              accountId={slipAccountId}
+              amount={calculation.total_amount_to_pay}
+            />
+          </strong>
         </div>
         <div className="redemption-mobile-summary-card__metrics">
           <div>
             <span>Customer Name</span>
-            <strong>{calculation.customer?.name ?? getSlipCustomerName(calculation.slip)}</strong>
+            <strong>
+              {calculation.customer?.name ??
+                getSlipCustomerName(calculation.slip)}
+            </strong>
           </div>
           <div>
             <span>Loan Amount</span>
-            <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.loan_amount} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={slipAccountId}
+                amount={calculation.loan_amount}
+              />
+            </strong>
           </div>
           <div>
             <span>Total Unpaid Interest</span>
-            <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.calculated_interest} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={slipAccountId}
+                amount={calculation.calculated_interest}
+              />
+            </strong>
           </div>
           <div>
             <span>Total Unpaid Debt</span>
-            <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.total_debt} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={slipAccountId}
+                amount={calculation.total_debt}
+              />
+            </strong>
           </div>
         </div>
         <div className="redemption-mobile-collateral-list">
@@ -615,13 +1027,20 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
             <strong>Collateral Items</strong>
             <span>{collateralItems.length} item(s)</span>
           </div>
-          {collateralItems.length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
+          {collateralItems.length === 0 ? (
+            <p className="muted">
+              <LocalizedText text="No collateral items returned." />
+            </p>
+          ) : (
             <div className="redemption-mobile-collateral-list__items">
               {collateralItems.map((item) => (
-                <article className="redemption-mobile-collateral-item" key={item.code ?? item.id}>
+                <article
+                  className="redemption-mobile-collateral-item"
+                  key={item.code ?? item.id}
+                >
                   <div>
                     <strong>{item.name}</strong>
-                    <span>{item.code ?? '-'}</span>
+                    <span>{item.code ?? "-"}</span>
                   </div>
                   <span>{item.type}</span>
                 </article>
@@ -638,38 +1057,84 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         </div>
         <div>
           <span>Customer</span>
-          <strong>{calculation.customer?.name ?? getSlipCustomerName(calculation.slip)}</strong>
+          <strong>
+            {calculation.customer?.name ??
+              getSlipCustomerName(calculation.slip)}
+          </strong>
         </div>
         <div>
           <span>Loan Amount</span>
-          <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.loan_amount} /></strong>
+          <strong>
+            <AccountCurrencyAmount
+              accountId={slipAccountId}
+              amount={calculation.loan_amount}
+            />
+          </strong>
         </div>
         <div>
           <span>Interest</span>
-          <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.calculated_interest} /></strong>
+          <strong>
+            <AccountCurrencyAmount
+              accountId={slipAccountId}
+              amount={calculation.calculated_interest}
+            />
+          </strong>
         </div>
         <div>
           <span>Debt</span>
-          <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.total_debt} /></strong>
+          <strong>
+            <AccountCurrencyAmount
+              accountId={slipAccountId}
+              amount={calculation.total_debt}
+            />
+          </strong>
         </div>
         <div className="redemption-summary-grid__total">
           <span>Total Amount To Pay</span>
-          <strong><AccountCurrencyAmount accountId={slipAccountId} amount={calculation.total_amount_to_pay} /></strong>
+          <strong>
+            <AccountCurrencyAmount
+              accountId={slipAccountId}
+              amount={calculation.total_amount_to_pay}
+            />
+          </strong>
         </div>
       </div>
 
       <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>
-          <strong><LocalizedText text="Collateral Summary" /></strong>
+          <strong>
+            <LocalizedText text="Collateral Summary" />
+          </strong>
           <span>{collateralItems.length} item(s)</span>
         </header>
-        {collateralItems.length === 0 ? <p className="muted"><LocalizedText text="No collateral items returned." /></p> : (
+        {collateralItems.length === 0 ? (
+          <p className="muted">
+            <LocalizedText text="No collateral items returned." />
+          </p>
+        ) : (
           <DataTable
             columns={[
-              { header: 'Code', key: 'code', render: (item) => item.code ?? '-' },
-              { header: 'Name', key: 'name', render: (item) => <strong>{item.name}</strong> },
-              { header: 'Type', key: 'type', render: (item) => item.type },
-              { header: 'Estimated Value', key: 'estimated', render: (item) => <AccountCurrencyAmount accountId={slipAccountId} amount={item.estimated_value} /> },
+              {
+                header: "Code",
+                key: "code",
+                render: (item) => item.code ?? "-",
+              },
+              {
+                header: "Name",
+                key: "name",
+                render: (item) => <strong>{item.name}</strong>,
+              },
+              { header: "Type", key: "type", render: (item) => item.type },
+              {
+                header: "Estimated Value",
+                key: "estimated",
+                render: (item) => (
+                  <AccountCurrencyAmount
+                    accountId={slipAccountId}
+                    amount={item.estimated_value}
+                  />
+                ),
+              },
             ]}
             getItemId={(item) => item.code ?? item.id}
             getItemTitle={(item) => item.name}
@@ -681,8 +1146,17 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
       {excludedDebts.length > 0 && (
         <section className="redemption-snapshot-section">
           <header>
-            <strong><LocalizedText text="Debts excluded from redemption" /></strong>
-            <span>{excludedDebts.length} · {formatMoney(calculation.excluded_debt_total ?? calculation.excludedDebtTotal ?? 0)}</span>
+            <strong>
+              <LocalizedText text="Debts excluded from redemption" />
+            </strong>
+            <span>
+              {excludedDebts.length} ·{" "}
+              {formatMoney(
+                calculation.excluded_debt_total ??
+                  calculation.excludedDebtTotal ??
+                  0,
+              )}
+            </span>
           </header>
           <Alert
             message="These debts use a different currency (or have no originating account). Pay them separately from the Debts page."
@@ -691,9 +1165,26 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
           />
           <DataTable
             columns={[
-              { header: 'Code', key: 'code', render: (debt) => <strong>{debt.code ?? '-'}</strong> },
-              { header: 'Description', key: 'description', render: (debt) => debt.description ?? '-' },
-              { header: 'Amount', key: 'amount', render: (debt) => <AccountCurrencyAmount accountId={debt.created_account_id ?? debt.createdAccountId} amount={debt.amount} /> },
+              {
+                header: "Code",
+                key: "code",
+                render: (debt) => <strong>{debt.code ?? "-"}</strong>,
+              },
+              {
+                header: "Description",
+                key: "description",
+                render: (debt) => debt.description ?? "-",
+              },
+              {
+                header: "Amount",
+                key: "amount",
+                render: (debt) => (
+                  <AccountCurrencyAmount
+                    accountId={debt.created_account_id ?? debt.createdAccountId}
+                    amount={debt.amount}
+                  />
+                ),
+              },
             ]}
             getItemId={(debt) => debt.code ?? debt.id}
             getItemTitle={(debt) => debt.code ?? `Debt ${debt.id}`}
@@ -704,19 +1195,55 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
 
       <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>
-          <strong><LocalizedText text="Interest Snapshot" /></strong>
+          <strong>
+            <LocalizedText text="Interest Snapshot" />
+          </strong>
           <span>{interestPayments.length} row(s)</span>
         </header>
-        {interestPayments.length === 0 ? <p className="muted"><LocalizedText text="No interest rows returned." /></p> : (
+        {interestPayments.length === 0 ? (
+          <p className="muted">
+            <LocalizedText text="No interest rows returned." />
+          </p>
+        ) : (
           <DataTable
             columns={[
-              { header: 'Start Date', key: 'start', render: (payment) => formatDate(getInterestStartDate(payment)) },
-              { header: 'End Date', key: 'end', render: (payment) => formatDate(getInterestEndDate(payment)) },
-              { header: 'Interest', key: 'interest', render: (payment) => <AccountCurrencyAmount accountId={payment.created_account_id ?? payment.createdAccountId} amount={getInterestAmount(payment)} fallbackAccountId={slipAccountId} /> },
-              { header: 'Status', key: 'status', render: (payment) => <Badge tone={isInterestPaid(payment) ? 'success' : 'warning'}>{isInterestPaid(payment) ? 'Paid' : 'Unpaid'}</Badge> },
+              {
+                header: "Start Date",
+                key: "start",
+                render: (payment) => formatDate(getInterestStartDate(payment)),
+              },
+              {
+                header: "End Date",
+                key: "end",
+                render: (payment) => formatDate(getInterestEndDate(payment)),
+              },
+              {
+                header: "Interest",
+                key: "interest",
+                render: (payment) => (
+                  <AccountCurrencyAmount
+                    accountId={
+                      payment.created_account_id ?? payment.createdAccountId
+                    }
+                    amount={getInterestAmount(payment)}
+                    fallbackAccountId={slipAccountId}
+                  />
+                ),
+              },
+              {
+                header: "Status",
+                key: "status",
+                render: (payment) => (
+                  <Badge tone={isInterestPaid(payment) ? "success" : "warning"}>
+                    {isInterestPaid(payment) ? "Paid" : "Unpaid"}
+                  </Badge>
+                ),
+              },
             ]}
             getItemId={(payment) => payment.id}
-            getItemTitle={(payment) => `${formatDate(getInterestStartDate(payment))} - ${formatDate(getInterestEndDate(payment))}`}
+            getItemTitle={(payment) =>
+              `${formatDate(getInterestStartDate(payment))} - ${formatDate(getInterestEndDate(payment))}`
+            }
             items={interestPayments}
           />
         )}
@@ -724,15 +1251,39 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
 
       <section className="redemption-snapshot-section redemption-mobile-hidden-snapshot">
         <header>
-          <strong><LocalizedText text="Debt Snapshot" /></strong>
+          <strong>
+            <LocalizedText text="Debt Snapshot" />
+          </strong>
           <span>{unpaidDebts.length} unpaid</span>
         </header>
-        {unpaidDebts.length === 0 ? <p className="muted"><LocalizedText text="No unpaid debts returned." /></p> : (
+        {unpaidDebts.length === 0 ? (
+          <p className="muted">
+            <LocalizedText text="No unpaid debts returned." />
+          </p>
+        ) : (
           <DataTable
             columns={[
-              { header: 'Code', key: 'code', render: (debt) => <strong>{debt.code ?? '-'}</strong> },
-              { header: 'Description', key: 'description', render: (debt) => debt.description ?? '-' },
-              { header: 'Amount', key: 'amount', render: (debt) => <AccountCurrencyAmount accountId={debt.created_account_id ?? debt.createdAccountId} amount={debt.amount} fallbackAccountId={slipAccountId} /> },
+              {
+                header: "Code",
+                key: "code",
+                render: (debt) => <strong>{debt.code ?? "-"}</strong>,
+              },
+              {
+                header: "Description",
+                key: "description",
+                render: (debt) => debt.description ?? "-",
+              },
+              {
+                header: "Amount",
+                key: "amount",
+                render: (debt) => (
+                  <AccountCurrencyAmount
+                    accountId={debt.created_account_id ?? debt.createdAccountId}
+                    amount={debt.amount}
+                    fallbackAccountId={slipAccountId}
+                  />
+                ),
+              },
             ]}
             getItemId={(debt) => debt.code ?? debt.id}
             getItemTitle={(debt) => debt.code ?? `Debt ${debt.id}`}
@@ -741,11 +1292,17 @@ function RedemptionSummary({ calculation }: { calculation: RedemptionCalculation
         )}
       </section>
     </div>
-  )
+  );
 }
 
-function RedemptionManagementDetailCard({ onClose, record }: { onClose: () => void; record: RedemptionDetail }) {
-  const slipNumber = getRedemptionSlipNumber(record)
+function RedemptionManagementDetailCard({
+  onClose,
+  record,
+}: {
+  onClose: () => void;
+  record: RedemptionDetail;
+}) {
+  const slipNumber = getRedemptionSlipNumber(record);
 
   return (
     <section className="redemption-management-detail-card">
@@ -761,118 +1318,222 @@ function RedemptionManagementDetailCard({ onClose, record }: { onClose: () => vo
 
       <div className="redemption-management-detail-card__body">
         <div className="redemption-management-detail-card__metrics">
-          <RedemptionMetricRow label="Slip No" tone="primary" value={slipNumber} />
-          <RedemptionMetricRow label="Gross Amount" value={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'gross')} />} />
-          <RedemptionMetricRow label="Net Amount" tone="primary" value={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'net')} />} />
-          <RedemptionMetricRow label="Interest" tone="warning" value={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'interest')} />} />
-          <RedemptionMetricRow label="Received" tone="success" value={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'received')} />} />
-          <RedemptionMetricRow label="Change" value={<AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'change')} />} />
-          <RedemptionMetricRow label="Redeemed At" value={formatDate(getRedemptionDate(record))} />
+          <RedemptionMetricRow
+            label="Slip No"
+            tone="primary"
+            value={slipNumber}
+          />
+          <RedemptionMetricRow
+            label="Gross Amount"
+            value={
+              <AccountCurrencyAmount
+                accountId={record.account_id ?? record.accountId}
+                amount={getRedemptionAmount(record, "gross")}
+              />
+            }
+          />
+          <RedemptionMetricRow
+            label="Net Amount"
+            tone="primary"
+            value={
+              <AccountCurrencyAmount
+                accountId={record.account_id ?? record.accountId}
+                amount={getRedemptionAmount(record, "net")}
+              />
+            }
+          />
+          <RedemptionMetricRow
+            label="Interest"
+            tone="warning"
+            value={
+              <AccountCurrencyAmount
+                accountId={record.account_id ?? record.accountId}
+                amount={getRedemptionAmount(record, "interest")}
+              />
+            }
+          />
+          <RedemptionMetricRow
+            label="Received"
+            tone="success"
+            value={
+              <AccountCurrencyAmount
+                accountId={record.account_id ?? record.accountId}
+                amount={getRedemptionAmount(record, "received")}
+              />
+            }
+          />
+          <RedemptionMetricRow
+            label="Change"
+            value={
+              <AccountCurrencyAmount
+                accountId={record.account_id ?? record.accountId}
+                amount={getRedemptionAmount(record, "change")}
+              />
+            }
+          />
+          <RedemptionMetricRow
+            label="Redeemed At"
+            value={formatDate(getRedemptionDate(record))}
+          />
         </div>
 
         <section className="redemption-management-detail-card__notes">
           <h4>Internal Notes</h4>
-          <div>{record.notes || 'No notes recorded for this redemption.'}</div>
+          <div>{record.notes || "No notes recorded for this redemption."}</div>
         </section>
       </div>
     </section>
-  )
+  );
 }
 
-function RedemptionMetricRow({ label, tone, value }: { label: string; tone?: 'primary' | 'success' | 'warning'; value: ReactNode }) {
-  const toneClass = tone ? ` redemption-management-detail-card__row--${tone}` : ''
+function RedemptionMetricRow({
+  label,
+  tone,
+  value,
+}: {
+  label: string;
+  tone?: "primary" | "success" | "warning";
+  value: ReactNode;
+}) {
+  const toneClass = tone
+    ? ` redemption-management-detail-card__row--${tone}`
+    : "";
 
   return (
     <div className={`redemption-management-detail-card__row${toneClass}`}>
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
-  )
+  );
 }
 
 function RedemptionDetailPanel({ record }: { record: RedemptionDetail }) {
   return (
-    <KeyValueList items={[
-      { key: 'Slip No', value: getRedemptionSlipNumber(record) },
-      { key: 'Gross Amount', value: <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'gross')} /> },
-      { key: 'Net Amount', value: <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'net')} /> },
-      { key: 'Interest', value: <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'interest')} /> },
-      { key: 'Received', value: <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'received')} /> },
-      { key: 'Change', value: <AccountCurrencyAmount accountId={record.account_id ?? record.accountId} amount={getRedemptionAmount(record, 'change')} /> },
-      { key: 'Redeemed At', value: formatDate(getRedemptionDate(record)) },
-      { key: 'Notes', value: record.notes || '-' },
-    ]} />
-  )
+    <KeyValueList
+      items={[
+        { key: "Slip No", value: getRedemptionSlipNumber(record) },
+        {
+          key: "Gross Amount",
+          value: (
+            <AccountCurrencyAmount
+              accountId={record.account_id ?? record.accountId}
+              amount={getRedemptionAmount(record, "gross")}
+            />
+          ),
+        },
+        {
+          key: "Net Amount",
+          value: (
+            <AccountCurrencyAmount
+              accountId={record.account_id ?? record.accountId}
+              amount={getRedemptionAmount(record, "net")}
+            />
+          ),
+        },
+        {
+          key: "Interest",
+          value: (
+            <AccountCurrencyAmount
+              accountId={record.account_id ?? record.accountId}
+              amount={getRedemptionAmount(record, "interest")}
+            />
+          ),
+        },
+        {
+          key: "Received",
+          value: (
+            <AccountCurrencyAmount
+              accountId={record.account_id ?? record.accountId}
+              amount={getRedemptionAmount(record, "received")}
+            />
+          ),
+        },
+        {
+          key: "Change",
+          value: (
+            <AccountCurrencyAmount
+              accountId={record.account_id ?? record.accountId}
+              amount={getRedemptionAmount(record, "change")}
+            />
+          ),
+        },
+        { key: "Redeemed At", value: formatDate(getRedemptionDate(record)) },
+        { key: "Notes", value: record.notes || "-" },
+      ]}
+    />
+  );
 }
 
 function getRedemptionSlipNumber(record: RedemptionDetail) {
-  return record.slip_number ?? '-'
+  return record.slip_number ?? "-";
 }
 
 function getRedemptionDate(record: RedemptionDetail) {
-  return record.redemption_at ?? null
+  return record.redemption_at ?? null;
 }
 
 function getRedemptionAmount(
   record: RedemptionDetail,
-  field: 'gross' | 'net' | 'interest' | 'received' | 'change',
+  field: "gross" | "net" | "interest" | "received" | "change",
 ) {
-  if (field === 'gross') {
-    return record.gross_amount ?? 0
+  if (field === "gross") {
+    return record.gross_amount ?? 0;
   }
 
-  if (field === 'net') {
-    return record.net_amount ?? 0
+  if (field === "net") {
+    return record.net_amount ?? 0;
   }
 
-  if (field === 'interest') {
-    return record.interest_amount ?? 0
+  if (field === "interest") {
+    return record.interest_amount ?? 0;
   }
 
-  if (field === 'received') {
-    return record.received_amount ?? 0
+  if (field === "received") {
+    return record.received_amount ?? 0;
   }
 
-  return record.change_amount ?? 0
+  return record.change_amount ?? 0;
 }
 
 function getInterestPayments(calculation: RedemptionCalculationResult | null) {
-  return calculation?.interest_payments ?? []
+  return calculation?.interest_payments ?? [];
 }
 
 function getUnpaidDebts(calculation: RedemptionCalculationResult | null) {
-  return (calculation?.debts ?? []).filter((debt) => !(debt.is_paid ?? false))
+  return (calculation?.debts ?? []).filter((debt) => !(debt.is_paid ?? false));
 }
 
 function isInterestPaid(payment: RedemptionInterestPayment) {
-  return Boolean(payment.is_paid ?? false)
+  return Boolean(payment.is_paid ?? false);
 }
 
 function getInterestUpdateKey(payment: RedemptionInterestPayment) {
-  return payment.update_key ?? null
+  return payment.update_key ?? null;
 }
 
 function getInterestAmount(payment: RedemptionInterestPayment) {
-  return payment.interest_amount ?? 0
+  return payment.interest_amount ?? 0;
 }
 
 function getInterestStartDate(payment: RedemptionInterestPayment) {
-  return payment.start_period_at ?? null
+  return payment.start_period_at ?? null;
 }
 
 function getInterestEndDate(payment: RedemptionInterestPayment) {
-  return payment.end_period_at ?? null
+  return payment.end_period_at ?? null;
 }
 
 function getDebtUpdateKey(debt: RedemptionDebt) {
-  return debt.update_key ?? null
+  return debt.update_key ?? null;
 }
 
 function toRedemptionInterestPayload(payment: RedemptionInterestPayment) {
-  const updateKey = getInterestUpdateKey(payment)
+  const updateKey = getInterestUpdateKey(payment);
 
   if (updateKey === null) {
-    throw new Error('Interest snapshot data is stale or incomplete. Refresh the calculation and try again.')
+    throw new Error(
+      "Interest snapshot data is stale or incomplete. Refresh the calculation and try again.",
+    );
   }
 
   return {
@@ -881,19 +1542,21 @@ function toRedemptionInterestPayload(payment: RedemptionInterestPayment) {
     interest_amount: getInterestAmount(payment),
     start_period_at: getInterestStartDate(payment),
     end_period_at: getInterestEndDate(payment),
-  }
+  };
 }
 
 function toRedemptionDebtPayload(debt: RedemptionDebt) {
-  const updateKey = getDebtUpdateKey(debt)
+  const updateKey = getDebtUpdateKey(debt);
 
   if (updateKey === null) {
-    throw new Error('Debt snapshot data is stale or incomplete. Refresh the calculation and try again.')
+    throw new Error(
+      "Debt snapshot data is stale or incomplete. Refresh the calculation and try again.",
+    );
   }
 
   return {
     id: debt.id,
     update_key: updateKey,
     amount: Number(debt.amount),
-  }
+  };
 }

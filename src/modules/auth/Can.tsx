@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-import type { PermissionCode } from './permissionCodes'
-import { usePermissions } from './usePermissions'
+import type { ReactNode } from "react";
+import type { PermissionCode } from "./permissionCodes";
+import { usePermissions } from "./usePermissions";
 
 export function Can({
   all,
@@ -9,20 +9,20 @@ export function Can({
   fallback = null,
   permission,
 }: {
-  all?: PermissionCode[]
-  any?: PermissionCode[]
-  children: ReactNode
-  fallback?: ReactNode
-  permission?: PermissionCode
+  all?: PermissionCode[];
+  any?: PermissionCode[];
+  children: ReactNode;
+  fallback?: ReactNode;
+  permission?: PermissionCode;
 }) {
-  const permissions = usePermissions()
+  const permissions = usePermissions();
   const allowed = permission
     ? permissions.hasPermission(permission)
     : any
       ? permissions.hasAnyPermission(any)
       : all
         ? permissions.hasAllPermissions(all)
-        : false
+        : false;
 
-  return allowed ? children : fallback
+  return allowed ? children : fallback;
 }

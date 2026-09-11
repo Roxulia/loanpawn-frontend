@@ -1,19 +1,19 @@
-import { Button } from '../atoms'
-import { Alert } from '../feedback'
-import { Modal } from './Modal'
+import { Button } from "../atoms";
+import { Alert } from "../feedback";
+import { Modal } from "./Modal";
 
 type ConfirmDialogProps = {
-  confirmLabel?: string
-  isLoading?: boolean
-  isOpen: boolean
-  message: string
-  onCancel: () => void
-  onConfirm: () => void
-  title: string
-}
+  confirmLabel?: string;
+  isLoading?: boolean;
+  isOpen: boolean;
+  message: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  title: string;
+};
 
 export function ConfirmDialog({
-  confirmLabel = 'Confirm',
+  confirmLabel = "Confirm",
   isLoading = false,
   isOpen,
   message,
@@ -23,7 +23,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   function handleCancel() {
     if (!isLoading) {
-      onCancel()
+      onCancel();
     }
   }
 
@@ -31,7 +31,13 @@ export function ConfirmDialog({
     <Modal
       footer={
         <>
-          <Button disabled={isLoading} onClick={handleCancel} variant="secondary">Cancel</Button>
+          <Button
+            disabled={isLoading}
+            onClick={handleCancel}
+            variant="secondary"
+          >
+            Cancel
+          </Button>
           <Button isLoading={isLoading} onClick={onConfirm} variant="danger">
             {confirmLabel}
           </Button>
@@ -41,7 +47,11 @@ export function ConfirmDialog({
       onClose={handleCancel}
       title={title}
     >
-      <Alert message={message} title="Please confirm this action" tone="warning" />
+      <Alert
+        message={message}
+        title="Please confirm this action"
+        tone="warning"
+      />
     </Modal>
-  )
+  );
 }

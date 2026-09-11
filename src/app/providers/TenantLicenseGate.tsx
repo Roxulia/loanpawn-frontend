@@ -1,20 +1,20 @@
-import type { ReactNode } from 'react'
-import { useTenantSession } from '../../contexts/useTenantSession'
-import { TenantLicenseExpiredPage } from '../../pages/auth/TenantLicenseExpiredPage'
+import type { ReactNode } from "react";
+import { useTenantSession } from "../../contexts/useTenantSession";
+import { TenantLicenseExpiredPage } from "../../pages/auth/TenantLicenseExpiredPage";
 
 export function TenantLicenseGate({ children }: { children: ReactNode }) {
-  const { authStatus, tenantResolution } = useTenantSession()
+  const { authStatus, tenantResolution } = useTenantSession();
   const isExpired =
-    tenantResolution.status === 'resolved' &&
-    tenantResolution.tenant.tenant_license.status === 'expired'
+    tenantResolution.status === "resolved" &&
+    tenantResolution.tenant.tenant_license.status === "expired";
 
   if (!isExpired) {
-    return children
+    return children;
   }
 
-  if (authStatus !== 'authenticated') {
-    return children
+  if (authStatus !== "authenticated") {
+    return children;
   }
 
-  return <TenantLicenseExpiredPage />
+  return <TenantLicenseExpiredPage />;
 }

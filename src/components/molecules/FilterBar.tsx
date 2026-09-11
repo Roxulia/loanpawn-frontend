@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 type FilterBarProps = {
-  actions: ReactNode
-  children: ReactNode
-}
+  actions: ReactNode;
+  children: ReactNode;
+};
 
 export function FilterBar({ actions, children }: FilterBarProps) {
   return (
@@ -11,5 +11,5 @@ export function FilterBar({ actions, children }: FilterBarProps) {
       <div className="ui-filter-bar__fields">{children}</div>
       <div className="ui-filter-bar__actions">{actions}</div>
     </div>
-  )
+  );
 }

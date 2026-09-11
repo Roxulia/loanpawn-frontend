@@ -1,5 +1,5 @@
-import { SettingsSectionPage } from './SettingsSectionPage'
+import { SettingsSectionPage } from "./SettingsSectionPage";
 
 export function PersonalSettingsPage() {
-  return <SettingsSectionPage section="personal" />
+  return <SettingsSectionPage section="personal" />;
 }

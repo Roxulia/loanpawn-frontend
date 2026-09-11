@@ -1,77 +1,89 @@
-import { useEffect, useState } from 'react'
-import { Button } from '../atoms'
-import { useTenantSession } from '../../contexts/useTenantSession'
+import { useEffect, useState } from "react";
+import { Button } from "../atoms";
+import { useTenantSession } from "../../contexts/useTenantSession";
 
-const dismissedKey = 'lonepawn.pwaInstallPromptDismissed.v1'
+const dismissedKey = "lonepawn.pwaInstallPromptDismissed.v1";
 
 type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
-}
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 export function PwaInstallPrompt() {
-  const { isAuthenticated } = useTenantSession()
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isInstalled, setIsInstalled] = useState(isRunningStandalone)
-  const [isDismissed, setIsDismissed] = useState(readDismissedState)
-  const isIos = isIosBrowser()
+  const { isAuthenticated } = useTenantSession();
+  const [installPrompt, setInstallPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(isRunningStandalone);
+  const [isDismissed, setIsDismissed] = useState(readDismissedState);
+  const isIos = isIosBrowser();
 
   useEffect(() => {
     function captureInstallPrompt(event: Event) {
-      event.preventDefault()
-      setInstallPrompt(event as BeforeInstallPromptEvent)
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
     }
 
     function markInstalled() {
-      setIsInstalled(true)
-      setInstallPrompt(null)
-      clearDismissedState()
+      setIsInstalled(true);
+      setInstallPrompt(null);
+      clearDismissedState();
     }
 
-    window.addEventListener('beforeinstallprompt', captureInstallPrompt)
-    window.addEventListener('appinstalled', markInstalled)
+    window.addEventListener("beforeinstallprompt", captureInstallPrompt);
+    window.addEventListener("appinstalled", markInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', captureInstallPrompt)
-      window.removeEventListener('appinstalled', markInstalled)
-    }
-  }, [])
+      window.removeEventListener("beforeinstallprompt", captureInstallPrompt);
+      window.removeEventListener("appinstalled", markInstalled);
+    };
+  }, []);
 
-  if (!isAuthenticated || isInstalled || isDismissed || (!installPrompt && !isIos)) {
-    return null
+  if (
+    !isAuthenticated ||
+    isInstalled ||
+    isDismissed ||
+    (!installPrompt && !isIos)
+  ) {
+    return null;
   }
 
   async function install() {
     if (!installPrompt) {
-      return
+      return;
     }
 
-    await installPrompt.prompt()
-    const choice = await installPrompt.userChoice
-    setInstallPrompt(null)
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    setInstallPrompt(null);
 
-    if (choice.outcome === 'accepted') {
-      setIsInstalled(true)
-      clearDismissedState()
-      return
+    if (choice.outcome === "accepted") {
+      setIsInstalled(true);
+      clearDismissedState();
+      return;
     }
 
-    dismiss()
+    dismiss();
   }
 
   function dismiss() {
-    writeDismissedState()
-    setIsDismissed(true)
+    writeDismissedState();
+    setIsDismissed(true);
   }
 
-  const promptProps = { isIos, install, dismiss }
+  const promptProps = { isIos, install, dismiss };
 
   return (
     <>
-      <InstallPromptCard className="pwa-install-prompt--desktop" {...promptProps} />
-      <InstallPromptCard className="pwa-install-prompt--mobile" {...promptProps} />
+      <InstallPromptCard
+        className="pwa-install-prompt--desktop"
+        {...promptProps}
+      />
+      <InstallPromptCard
+        className="pwa-install-prompt--mobile"
+        {...promptProps}
+      />
     </>
-  )
+  );
 }
 
 function InstallPromptCard({
@@ -80,10 +92,10 @@ function InstallPromptCard({
   install,
   isIos,
 }: {
-  className: string
-  dismiss: () => void
-  install: () => Promise<void>
-  isIos: boolean
+  className: string;
+  dismiss: () => void;
+  install: () => Promise<void>;
+  isIos: boolean;
 }) {
   return (
     <section
@@ -102,47 +114,59 @@ function InstallPromptCard({
         <h2 id={`${className}-title`}>Add LonePawn to your home screen</h2>
         <p id={`${className}-description`}>
           {isIos
-            ? 'Open the browser Share menu, then choose “Add to Home Screen”.'
-            : 'Install the app for faster access and a full-screen workspace.'}
+            ? "Open the browser Share menu, then choose “Add to Home Screen”."
+            : "Install the app for faster access and a full-screen workspace."}
         </p>
       </div>
       <div className="pwa-install-prompt__actions">
-        {!isIos && <Button onClick={() => void install()} variant="primary">Add to home page</Button>}
-        <Button onClick={dismiss} variant="ghost">Not now</Button>
+        {!isIos && (
+          <Button onClick={() => void install()} variant="primary">
+            Add to home page
+          </Button>
+        )}
+        <Button onClick={dismiss} variant="ghost">
+          Not now
+        </Button>
       </div>
     </section>
-  )
+  );
 }
 
 function isRunningStandalone() {
-  if (typeof window === 'undefined') {
-    return false
+  if (typeof window === "undefined") {
+    return false;
   }
 
-  return window.matchMedia('(display-mode: standalone)').matches
-    || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone)
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    Boolean(
+      (window.navigator as Navigator & { standalone?: boolean }).standalone,
+    )
+  );
 }
 
 function isIosBrowser() {
-  if (typeof navigator === 'undefined') {
-    return false
+  if (typeof navigator === "undefined") {
+    return false;
   }
 
-  return /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
+  );
 }
 
 function readDismissedState() {
   try {
-    return window.sessionStorage.getItem(dismissedKey) === 'true'
+    return window.sessionStorage.getItem(dismissedKey) === "true";
   } catch {
-    return false
+    return false;
   }
 }
 
 function writeDismissedState() {
   try {
-    window.sessionStorage.setItem(dismissedKey, 'true')
+    window.sessionStorage.setItem(dismissedKey, "true");
   } catch {
     // Storage can be unavailable in private browsing; local state still dismisses the prompt.
   }
@@ -150,7 +174,7 @@ function writeDismissedState() {
 
 function clearDismissedState() {
   try {
-    window.sessionStorage.removeItem(dismissedKey)
+    window.sessionStorage.removeItem(dismissedKey);
   } catch {
     // Nothing to clear when storage is unavailable.
   }

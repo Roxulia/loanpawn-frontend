@@ -1,150 +1,199 @@
-import { useCallback, useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
-import { Badge, Button, Input } from '../../../components/atoms'
-import { Alert, EmptyState, LoadingState } from '../../../components/feedback'
-import { CheckIcon, DownloadIcon, FilterIcon, VaultIcon } from '../../../components/icons/icon'
-import { FormField, SearchField } from '../../../components/molecules'
-import { ConfirmDialog, Modal } from '../../../components/organisms'
-import type { AccountingDay, AccountingOverview, AccountingTransaction } from '../../../dataobjects/tenant/finance'
-import { tenantResourceService } from '../../../services/tenant/tenantResourceService'
-import { usePermissions } from '../../auth'
+import { useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { Badge, Button, Input } from "../../../components/atoms";
+import { Alert, EmptyState, LoadingState } from "../../../components/feedback";
+import {
+  CheckIcon,
+  DownloadIcon,
+  FilterIcon,
+  VaultIcon,
+} from "../../../components/icons/icon";
+import { FormField, SearchField } from "../../../components/molecules";
+import { ConfirmDialog, Modal } from "../../../components/organisms";
+import type {
+  AccountingDay,
+  AccountingOverview,
+  AccountingTransaction,
+} from "../../../dataobjects/tenant/finance";
+import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
+import { usePermissions } from "../../auth";
 import {
   getStringField,
   transactionTypeLabel,
-} from '../../finance/financeFormat'
-import { useTenantCurrencies } from '../../finance/useTenantCurrencies'
-import { defaultFinancialUnits, formatFinancialAmount, type FinancialUnitCode } from '../../finance/financialUnits'
+} from "../../finance/financeFormat";
+import { useTenantCurrencies } from "../../finance/useTenantCurrencies";
+import {
+  defaultFinancialUnits,
+  formatFinancialAmount,
+  type FinancialUnitCode,
+} from "../../finance/financialUnits";
 
-const perPage = 10
-const today = new Date().toISOString().slice(0, 10)
-const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
+const perPage = 10;
+const today = new Date().toISOString().slice(0, 10);
+const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  .toISOString()
+  .slice(0, 10);
 const ledgerHistoryStartDate = (() => {
-  const date = new Date()
-  date.setMonth(date.getMonth() - 3)
-  return date.toISOString().slice(0, 10)
-})()
+  const date = new Date();
+  date.setMonth(date.getMonth() - 3);
+  return date.toISOString().slice(0, 10);
+})();
 
 export function AccountingPage() {
-  const { effectiveReportingCurrencySymbol, reportingCurrencyRecalculation, defaultFinancialUnit } = useTenantCurrencies()
-  const formatReportingAmount = (amount: number) => formatFinancialAmount(amount, effectiveReportingCurrencySymbol, defaultFinancialUnits, 'en-US', defaultFinancialUnit)
-  const { hasPermission } = usePermissions()
-  const canList = hasPermission('list_accounting')
-  const canCloseAccountingDay = hasPermission('close_accounting_day')
-  const [overview, setOverview] = useState<AccountingOverview | null>(null)
-  const [accountingDay, setAccountingDay] = useState<AccountingDay | null>(null)
-  const [transactions, setTransactions] = useState<AccountingTransaction[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
-  const [startDate, setStartDate] = useState(monthStart)
-  const [endDate, setEndDate] = useState(today)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
-  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
-  const [isClosingDay, setIsClosingDay] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const {
+    effectiveReportingCurrencySymbol,
+    reportingCurrencyRecalculation,
+    defaultFinancialUnit,
+  } = useTenantCurrencies();
+  const formatReportingAmount = (amount: number) =>
+    formatFinancialAmount(
+      amount,
+      effectiveReportingCurrencySymbol,
+      defaultFinancialUnits,
+      "en-US",
+      defaultFinancialUnit,
+    );
+  const { hasPermission } = usePermissions();
+  const canList = hasPermission("list_accounting");
+  const canCloseAccountingDay = hasPermission("close_accounting_day");
+  const [overview, setOverview] = useState<AccountingOverview | null>(null);
+  const [accountingDay, setAccountingDay] = useState<AccountingDay | null>(
+    null,
+  );
+  const [transactions, setTransactions] = useState<AccountingTransaction[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState(monthStart);
+  const [endDate, setEndDate] = useState(today);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
+  const [isClosingDay, setIsClosingDay] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const loadAccounting = useCallback(async (page: number, search = debouncedSearchTerm) => {
-    if (!canList) {
-      setOverview(null)
-      setTransactions([])
-      setCurrentPage(1)
-      setLastPage(1)
-      setTotal(0)
-      return
-    }
+  const loadAccounting = useCallback(
+    async (page: number, search = debouncedSearchTerm) => {
+      if (!canList) {
+        setOverview(null);
+        setTransactions([]);
+        setCurrentPage(1);
+        setLastPage(1);
+        setTotal(0);
+        return;
+      }
 
-    setIsLoading(true)
-    setError(null)
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const [overviewResponse, transactionResponse, accountingDayResponse] = await Promise.all([
-        tenantResourceService.getAccountingOverview(),
-        tenantResourceService.listAccounting({ page, perPage, search }),
-        tenantResourceService.getCurrentAccountingDay(),
-      ])
+      try {
+        const [overviewResponse, transactionResponse, accountingDayResponse] =
+          await Promise.all([
+            tenantResourceService.getAccountingOverview(),
+            tenantResourceService.listAccounting({ page, perPage, search }),
+            tenantResourceService.getCurrentAccountingDay(),
+          ]);
 
-      setOverview(overviewResponse)
-      setTransactions(transactionResponse.items)
-      setCurrentPage(transactionResponse.current_page ?? page)
-      setLastPage(transactionResponse.last_page ?? 1)
-      setTotal(transactionResponse.total)
-      setAccountingDay(accountingDayResponse)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load accounting ledger.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [canList, debouncedSearchTerm])
+        setOverview(overviewResponse);
+        setTransactions(transactionResponse.items);
+        setCurrentPage(transactionResponse.current_page ?? page);
+        setLastPage(transactionResponse.last_page ?? 1);
+        setTotal(transactionResponse.total);
+        setAccountingDay(accountingDayResponse);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load accounting ledger.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [canList, debouncedSearchTerm],
+  );
 
   useEffect(() => {
     const searchTimer = window.setTimeout(() => {
-      setCurrentPage(1)
-      setDebouncedSearchTerm(searchTerm.trim())
-    }, 300)
+      setCurrentPage(1);
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
 
-    return () => window.clearTimeout(searchTimer)
-  }, [searchTerm])
+    return () => window.clearTimeout(searchTimer);
+  }, [searchTerm]);
 
   useEffect(() => {
-    void loadAccounting(currentPage, debouncedSearchTerm)
-  }, [currentPage, debouncedSearchTerm, loadAccounting])
+    void loadAccounting(currentPage, debouncedSearchTerm);
+  }, [currentPage, debouncedSearchTerm, loadAccounting]);
 
   useEffect(() => {
     const refreshTimer = window.setInterval(() => {
-      void loadAccounting(currentPage, debouncedSearchTerm)
-    }, 300000)
+      void loadAccounting(currentPage, debouncedSearchTerm);
+    }, 300000);
 
-    return () => window.clearInterval(refreshTimer)
-  }, [currentPage, debouncedSearchTerm, loadAccounting])
+    return () => window.clearInterval(refreshTimer);
+  }, [currentPage, debouncedSearchTerm, loadAccounting]);
 
   async function generateReport() {
     if (!startDate || !endDate) {
-      setError('Choose both start date and end date.')
-      return
+      setError("Choose both start date and end date.");
+      return;
     }
 
-    setIsDownloading(true)
-    setError(null)
+    setIsDownloading(true);
+    setError(null);
 
     try {
-      const blob = await tenantResourceService.downloadAccountingLedger({ endDate, startDate })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `general-ledger-${startDate}-to-${endDate}.xlsx`
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
+      const blob = await tenantResourceService.downloadAccountingLedger({
+        endDate,
+        startDate,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `general-ledger-${startDate}-to-${endDate}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (downloadError) {
-      setError(downloadError instanceof Error ? downloadError.message : 'Unable to download ledger report.')
+      setError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Unable to download ledger report.",
+      );
     } finally {
-      setIsDownloading(false)
+      setIsDownloading(false);
     }
   }
 
   async function closeAccountingDay() {
-    if (isClosingDay) return
+    if (isClosingDay) return;
 
-    setIsClosingDay(true)
-    setError(null)
-    setNotice(null)
+    setIsClosingDay(true);
+    setError(null);
+    setNotice(null);
 
     try {
-      const closedDay = await tenantResourceService.closeCurrentAccountingDay()
-      setAccountingDay(closedDay)
-      setIsCloseDialogOpen(false)
-      setNotice(`Accounting day ${closedDay.business_date} was closed successfully.`)
-      await loadAccounting(currentPage, debouncedSearchTerm)
+      const closedDay = await tenantResourceService.closeCurrentAccountingDay();
+      setAccountingDay(closedDay);
+      setIsCloseDialogOpen(false);
+      setNotice(
+        `Accounting day ${closedDay.business_date} was closed successfully.`,
+      );
+      await loadAccounting(currentPage, debouncedSearchTerm);
     } catch (closeError) {
-      setError(closeError instanceof Error ? closeError.message : 'Unable to close the accounting day.')
+      setError(
+        closeError instanceof Error
+          ? closeError.message
+          : "Unable to close the accounting day.",
+      );
     } finally {
-      setIsClosingDay(false)
+      setIsClosingDay(false);
     }
   }
 
@@ -154,49 +203,96 @@ export function AccountingPage() {
         <div>
           <span className="eyebrow">Finance / Ledger</span>
           <h1>Accounting Ledger</h1>
-          <p>Monitor capital movement, verify ledger activity, and export date-range accounting reports.</p>
+          <p>
+            Monitor capital movement, verify ledger activity, and export
+            date-range accounting reports.
+          </p>
         </div>
       </header>
 
-      {error && <Alert message={error} onDismiss={() => setError(null)} title="Accounting action failed" tone="danger" />}
-      {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Accounting day updated" tone="success" />}
+      {error && (
+        <Alert
+          message={error}
+          onDismiss={() => setError(null)}
+          title="Accounting action failed"
+          tone="danger"
+        />
+      )}
+      {notice && (
+        <Alert
+          message={notice}
+          onDismiss={() => setNotice(null)}
+          title="Accounting day updated"
+          tone="success"
+        />
+      )}
       {reportingCurrencyRecalculation && (
         <Alert
-          message={`Ledger totals remain in ${effectiveReportingCurrencySymbol || 'the previous reporting currency'} while recalculation is ${reportingCurrencyRecalculation.status.replaceAll('_', ' ')}.`}
+          message={`Ledger totals remain in ${effectiveReportingCurrencySymbol || "the previous reporting currency"} while recalculation is ${reportingCurrencyRecalculation.status.replaceAll("_", " ")}.`}
           title="Reporting currency update pending"
           tone="warning"
         />
       )}
 
-      <AccountingDayStatusCard accountingDay={accountingDay} canClose={canCloseAccountingDay} className="accounting-day-status-card--desktop" onClose={() => setIsCloseDialogOpen(true)} />
-      <AccountingDayStatusCard accountingDay={accountingDay} canClose={canCloseAccountingDay} className="accounting-day-status-card--mobile" onClose={() => setIsCloseDialogOpen(true)} />
+      <AccountingDayStatusCard
+        accountingDay={accountingDay}
+        canClose={canCloseAccountingDay}
+        className="accounting-day-status-card--desktop"
+        onClose={() => setIsCloseDialogOpen(true)}
+      />
+      <AccountingDayStatusCard
+        accountingDay={accountingDay}
+        canClose={canCloseAccountingDay}
+        className="accounting-day-status-card--mobile"
+        onClose={() => setIsCloseDialogOpen(true)}
+      />
 
-      <section className="accounting-serene-metrics" aria-label="Accounting overview">
+      <section
+        className="accounting-serene-metrics"
+        aria-label="Accounting overview"
+      >
         <AccountingMetricCard
           icon={<VaultIcon />}
           label="System Vault"
           meta="Total Liquid Capital"
           trend="Live ledger balance"
-          value={formatReportingAmount(getOverviewNumber(overview, 'liquidCapital', 'liquid_capital'))}
+          value={formatReportingAmount(
+            getOverviewNumber(overview, "liquidCapital", "liquid_capital"),
+          )}
           variant="primary"
         />
         <AccountingMetricCard
           label="Incoming Flows"
-          meta={`${formatPercent(getOverviewNumber(overview, 'incomingProgress', 'incoming_progress'))} of monthly flow`}
-          progress={getOverviewNumber(overview, 'incomingProgress', 'incoming_progress')}
-          value={formatReportingAmount(getOverviewNumber(overview, 'monthIncoming', 'month_incoming'))}
+          meta={`${formatPercent(getOverviewNumber(overview, "incomingProgress", "incoming_progress"))} of monthly flow`}
+          progress={getOverviewNumber(
+            overview,
+            "incomingProgress",
+            "incoming_progress",
+          )}
+          value={formatReportingAmount(
+            getOverviewNumber(overview, "monthIncoming", "month_incoming"),
+          )}
           variant="incoming"
         />
         <AccountingMetricCard
           label="Operational Outgo"
-          meta={`${formatPercent(getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress'))} of monthly movement`}
-          progress={getOverviewNumber(overview, 'outgoingProgress', 'outgoing_progress')}
-          value={formatReportingAmount(getOverviewNumber(overview, 'monthOutgoing', 'month_outgoing'))}
+          meta={`${formatPercent(getOverviewNumber(overview, "outgoingProgress", "outgoing_progress"))} of monthly movement`}
+          progress={getOverviewNumber(
+            overview,
+            "outgoingProgress",
+            "outgoing_progress",
+          )}
+          value={formatReportingAmount(
+            getOverviewNumber(overview, "monthOutgoing", "month_outgoing"),
+          )}
           variant="outgoing"
         />
       </section>
 
-      <section className="accounting-serene-controls" aria-label="Accounting filters">
+      <section
+        className="accounting-serene-controls"
+        aria-label="Accounting filters"
+      >
         <SearchField
           id="ledger-search"
           label="Search ledger"
@@ -225,11 +321,16 @@ export function AccountingPage() {
         </Button>
       </section>
 
-      <section className="accounting-serene-ledger" aria-label="Recent transactions">
+      <section
+        className="accounting-serene-ledger"
+        aria-label="Recent transactions"
+      >
         <header className="accounting-serene-ledger__header">
           <div>
             <h2>Recent Transactions</h2>
-            <p>{total} ledger record{total === 1 ? '' : 's'}</p>
+            <p>
+              {total} ledger record{total === 1 ? "" : "s"}
+            </p>
           </div>
           <Badge tone="info">Verified ledger</Badge>
         </header>
@@ -238,8 +339,16 @@ export function AccountingPage() {
           <LoadingState rows={6} />
         ) : transactions.length === 0 ? (
           <EmptyState
-            description={debouncedSearchTerm ? 'No ledger records match this search.' : 'No accounting records have been posted yet.'}
-            title={debouncedSearchTerm ? 'No matching transactions' : 'No transactions'}
+            description={
+              debouncedSearchTerm
+                ? "No ledger records match this search."
+                : "No accounting records have been posted yet."
+            }
+            title={
+              debouncedSearchTerm
+                ? "No matching transactions"
+                : "No transactions"
+            }
           />
         ) : (
           <>
@@ -257,18 +366,33 @@ export function AccountingPage() {
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <TransactionRow currencySymbol={effectiveReportingCurrencySymbol} defaultFinancialUnit={defaultFinancialUnit} item={transaction} key={transaction.id} />
+                    <TransactionRow
+                      currencySymbol={effectiveReportingCurrencySymbol}
+                      defaultFinancialUnit={defaultFinancialUnit}
+                      item={transaction}
+                      key={transaction.id}
+                    />
                   ))}
                 </tbody>
               </table>
             </div>
             <footer className="accounting-serene-pagination">
-              <span>Page {currentPage} of {lastPage} - {total} records</span>
+              <span>
+                Page {currentPage} of {lastPage} - {total} records
+              </span>
               <div>
-                <Button disabled={currentPage <= 1} onClick={() => setCurrentPage((page) => page - 1)} variant="secondary">
+                <Button
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((page) => page - 1)}
+                  variant="secondary"
+                >
                   Previous
                 </Button>
-                <Button disabled={currentPage >= lastPage} onClick={() => setCurrentPage((page) => page + 1)} variant="secondary">
+                <Button
+                  disabled={currentPage >= lastPage}
+                  onClick={() => setCurrentPage((page) => page + 1)}
+                  variant="secondary"
+                >
                   Next
                 </Button>
               </div>
@@ -278,26 +402,43 @@ export function AccountingPage() {
       </section>
 
       <Modal
-        footer={(
+        footer={
           <>
-            <Button onClick={() => setIsFilterModalOpen(false)} variant="secondary">
+            <Button
+              onClick={() => setIsFilterModalOpen(false)}
+              variant="secondary"
+            >
               Close
             </Button>
-            <Button onClick={() => setIsFilterModalOpen(false)} variant="primary">
+            <Button
+              onClick={() => setIsFilterModalOpen(false)}
+              variant="primary"
+            >
               Apply Filter
             </Button>
           </>
-        )}
+        }
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         title="Filter report dates"
       >
         <div className="accounting-serene-filter-modal">
           <FormField id="ledger-start-date" label="From date">
-            <Input id="ledger-start-date" min={ledgerHistoryStartDate} onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
+            <Input
+              id="ledger-start-date"
+              min={ledgerHistoryStartDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              type="date"
+              value={startDate}
+            />
           </FormField>
           <FormField id="ledger-end-date" label="To date">
-            <Input id="ledger-end-date" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
+            <Input
+              id="ledger-end-date"
+              onChange={(event) => setEndDate(event.target.value)}
+              type="date"
+              value={endDate}
+            />
           </FormField>
         </div>
       </Modal>
@@ -305,31 +446,64 @@ export function AccountingPage() {
         confirmLabel="Close Accounting Day"
         isLoading={isClosingDay}
         isOpen={isCloseDialogOpen}
-        message={`Close accounting day ${accountingDay?.business_date ?? ''}? Financial amounts for this day will become immutable.`}
+        message={`Close accounting day ${accountingDay?.business_date ?? ""}? Financial amounts for this day will become immutable.`}
         onCancel={() => setIsCloseDialogOpen(false)}
         onConfirm={() => void closeAccountingDay()}
         title="Close accounting day"
       />
     </section>
-  )
+  );
 }
 
-function AccountingDayStatusCard({ accountingDay, canClose, className, onClose }: { accountingDay: AccountingDay | null; canClose: boolean; className: string; onClose: () => void }) {
-  const status = accountingDay?.status ?? 'NOT_OPENED'
-  const tone = status === 'OPEN' ? 'success' : status === 'CLOSING' ? 'warning' : status === 'CLOSED' ? 'danger' : 'info'
+function AccountingDayStatusCard({
+  accountingDay,
+  canClose,
+  className,
+  onClose,
+}: {
+  accountingDay: AccountingDay | null;
+  canClose: boolean;
+  className: string;
+  onClose: () => void;
+}) {
+  const status = accountingDay?.status ?? "NOT_OPENED";
+  const tone =
+    status === "OPEN"
+      ? "success"
+      : status === "CLOSING"
+        ? "warning"
+        : status === "CLOSED"
+          ? "danger"
+          : "info";
 
-  return <section className={`accounting-day-status-card ${className}`} aria-label="Current accounting day">
-    <div className="accounting-day-status-card__details">
-      <strong>{accountingDay?.business_date ?? 'Today'}</strong>
-      <Badge tone={tone}>{status.replace('_', ' ')}</Badge>
-      <p>{accountingDay ? `${accountingDay.timezone}${accountingDay.opened_at ? ` · Opened ${formatAccountingDayTime(accountingDay.opened_at)}` : ''}` : 'The first financial transaction will open today’s accounting day.'}</p>
-    </div>
-    {canClose && status === 'OPEN' && <Button onClick={onClose} variant="danger">Close Accounting Day</Button>}
-  </section>
+  return (
+    <section
+      className={`accounting-day-status-card ${className}`}
+      aria-label="Current accounting day"
+    >
+      <div className="accounting-day-status-card__details">
+        <strong>{accountingDay?.business_date ?? "Today"}</strong>
+        <Badge tone={tone}>{status.replace("_", " ")}</Badge>
+        <p>
+          {accountingDay
+            ? `${accountingDay.timezone}${accountingDay.opened_at ? ` · Opened ${formatAccountingDayTime(accountingDay.opened_at)}` : ""}`
+            : "The first financial transaction will open today’s accounting day."}
+        </p>
+      </div>
+      {canClose && status === "OPEN" && (
+        <Button onClick={onClose} variant="danger">
+          Close Accounting Day
+        </Button>
+      )}
+    </section>
+  );
 }
 
 function formatAccountingDayTime(value: string) {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function AccountingMetricCard({
@@ -341,16 +515,18 @@ function AccountingMetricCard({
   value,
   variant,
 }: {
-  icon?: ReactNode
-  label: string
-  meta: string
-  progress?: number
-  trend?: string
-  value: string
-  variant: 'primary' | 'incoming' | 'outgoing'
+  icon?: ReactNode;
+  label: string;
+  meta: string;
+  progress?: number;
+  trend?: string;
+  value: string;
+  variant: "primary" | "incoming" | "outgoing";
 }) {
   return (
-    <article className={`accounting-serene-metric accounting-serene-metric--${variant}`}>
+    <article
+      className={`accounting-serene-metric accounting-serene-metric--${variant}`}
+    >
       <div className="accounting-serene-metric__top">
         <span>{label}</span>
         {icon}
@@ -364,61 +540,102 @@ function AccountingMetricCard({
       ) : null}
       {progress !== undefined ? <em>{meta}</em> : null}
     </article>
-  )
+  );
 }
 
-function TransactionRow({ currencySymbol, defaultFinancialUnit, item }: { currencySymbol: string; defaultFinancialUnit: FinancialUnitCode | null; item: AccountingTransaction }) {
-  const transactionType = getStringField(item, 'transaction_type', 'transactionType') || 'incoming'
-  const isIncoming = transactionType === 'incoming'
-  const referenceLabel = getStringField(item, 'reference_label', 'referenceLabel')
-  const description = item.description
+function TransactionRow({
+  currencySymbol,
+  defaultFinancialUnit,
+  item,
+}: {
+  currencySymbol: string;
+  defaultFinancialUnit: FinancialUnitCode | null;
+  item: AccountingTransaction;
+}) {
+  const transactionType =
+    getStringField(item, "transaction_type", "transactionType") || "incoming";
+  const isIncoming = transactionType === "incoming";
+  const referenceLabel = getStringField(
+    item,
+    "reference_label",
+    "referenceLabel",
+  );
+  const description = item.description;
 
   return (
     <tr>
       <td data-label="Transaction ID">
-        <strong className="accounting-serene-transaction-id">{formatTransactionId(item.id)}</strong>
+        <strong className="accounting-serene-transaction-id">
+          {formatTransactionId(item.id)}
+        </strong>
       </td>
       <td data-label="Entity">
         <div className="accounting-serene-entity">
           <span>{getInitials(description)}</span>
           <div>
             <strong>{description}</strong>
-            <small>{referenceLabel || transactionTypeLabel(transactionType as 'incoming' | 'outgoing')}</small>
+            <small>
+              {referenceLabel ||
+                transactionTypeLabel(
+                  transactionType as "incoming" | "outgoing",
+                )}
+            </small>
           </div>
         </div>
       </td>
       <td data-label="Category">
-        <span className={`accounting-serene-category accounting-serene-category--${isIncoming ? 'incoming' : 'outgoing'}`}>
-          {referenceLabel || (isIncoming ? 'Asset Inflow' : 'Operational Ex')}
+        <span
+          className={`accounting-serene-category accounting-serene-category--${isIncoming ? "incoming" : "outgoing"}`}
+        >
+          {referenceLabel || (isIncoming ? "Asset Inflow" : "Operational Ex")}
         </span>
       </td>
       <td data-label="Amount">
-        <strong className={`accounting-serene-amount accounting-serene-amount--${isIncoming ? 'incoming' : 'outgoing'}`}>
-          {isIncoming ? '' : '-'}{formatFinancialAmount(item.reporting_amount ?? item.reportingAmount ?? 0, currencySymbol, defaultFinancialUnits, 'en-US', defaultFinancialUnit)}
+        <strong
+          className={`accounting-serene-amount accounting-serene-amount--${isIncoming ? "incoming" : "outgoing"}`}
+        >
+          {isIncoming ? "" : "-"}
+          {formatFinancialAmount(
+            item.reporting_amount ?? item.reportingAmount ?? 0,
+            currencySymbol,
+            defaultFinancialUnits,
+            "en-US",
+            defaultFinancialUnit,
+          )}
         </strong>
       </td>
       <td data-label="Status">
-        <span className="accounting-serene-status"><span />Completed</span>
+        <span className="accounting-serene-status">
+          <span />
+          Completed
+        </span>
       </td>
       <td data-label="Verification">
-        <span className="accounting-serene-verified" title="Verified against ledger">
+        <span
+          className="accounting-serene-verified"
+          title="Verified against ledger"
+        >
           <CheckIcon />
         </span>
       </td>
     </tr>
-  )
+  );
 }
 
-function getOverviewNumber(overview: AccountingOverview | null, camelKey: keyof AccountingOverview, snakeKey: keyof AccountingOverview) {
-  return Number(overview?.[camelKey] ?? overview?.[snakeKey] ?? 0)
+function getOverviewNumber(
+  overview: AccountingOverview | null,
+  camelKey: keyof AccountingOverview,
+  snakeKey: keyof AccountingOverview,
+) {
+  return Number(overview?.[camelKey] ?? overview?.[snakeKey] ?? 0);
 }
 
 function formatTransactionId(id: number) {
-  return `#TX-${String(id).padStart(5, '0')}`
+  return `#TX-${String(id).padStart(5, "0")}`;
 }
 
 function formatPercent(value: number) {
-  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)}%`
+  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value)}%`;
 }
 
 function getInitials(value: string) {
@@ -427,8 +644,7 @@ function getInitials(value: string) {
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
-    .join('')
+    .join("");
 
-  return initials || 'TX'
+  return initials || "TX";
 }
-

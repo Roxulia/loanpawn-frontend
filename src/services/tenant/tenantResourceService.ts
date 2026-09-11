@@ -1,4 +1,4 @@
-import type { PaginatedResult } from '../../dataobjects/common/api'
+import type { PaginatedResult } from "../../dataobjects/common/api";
 import type {
   AccountingLedger,
   AccountingDay,
@@ -11,118 +11,161 @@ import type {
   TenantCapital,
   TenantDebt,
   TenantExpense,
-} from '../../dataobjects/tenant/finance'
-import type { TenantUser } from '../../dataobjects/tenant/auth'
-import { apiClient } from '../http/apiClient'
+} from "../../dataobjects/tenant/finance";
+import type { TenantUser } from "../../dataobjects/tenant/auth";
+import { apiClient } from "../http/apiClient";
 
 type TenantAuth = {
-  idempotencyKey?: string
-  token?: string
-  tenantCode?: string
-}
+  idempotencyKey?: string;
+  token?: string;
+  tenantCode?: string;
+};
 
 type ListParams = {
-  page?: number
-  perPage?: number
-  search?: string
-}
+  page?: number;
+  perPage?: number;
+  search?: string;
+};
 
 type LedgerParams = ListParams & {
-  startDate: string
-  endDate: string
-}
+  startDate: string;
+  endDate: string;
+};
 
 type DashboardSummaryParams = {
-  endDate?: string
-  startDate?: string
-  timeFilter?: DashboardTimeFilter
-}
+  endDate?: string;
+  startDate?: string;
+  timeFilter?: DashboardTimeFilter;
+};
 
 type TenantBrandingSlipLayouts = {
-  data: unknown
-}
+  data: unknown;
+};
 
 function authOptions(auth: TenantAuth = {}) {
   return {
     idempotencyKey: auth.idempotencyKey,
     tenantCode: auth.tenantCode,
     token: auth.token,
-  }
+  };
 }
 
 function listOptions(params: ListParams = {}, auth?: TenantAuth) {
   return {
     ...authOptions(auth),
-      params: {
-        page: params.page,
-        per_page: params.perPage,
-        search: params.search,
-      },
-  }
+    params: {
+      page: params.page,
+      per_page: params.perPage,
+      search: params.search,
+    },
+  };
 }
 
 export const tenantResourceService = {
   getDashboardSummary(params: DashboardSummaryParams = {}, auth?: TenantAuth) {
-    return apiClient.get<TenantDashboardSummary>('/tenant/dashboard/summary', {
+    return apiClient.get<TenantDashboardSummary>("/tenant/dashboard/summary", {
       ...authOptions(auth),
       params: {
         end_at: params.endDate,
         start_at: params.startDate,
         time_filter: params.timeFilter,
       },
-    })
+    });
   },
 
   listUsers(auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<TenantUser>>('/tenant/users', authOptions(auth))
+    return apiClient.get<PaginatedResult<TenantUser>>(
+      "/tenant/users",
+      authOptions(auth),
+    );
   },
 
   createUser(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<TenantUser>('/tenant/users', payload, authOptions(auth))
+    return apiClient.post<TenantUser>(
+      "/tenant/users",
+      payload,
+      authOptions(auth),
+    );
   },
 
   updateUser(tenantUserCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<TenantUser>(`/tenant/users/${encodeURIComponent(tenantUserCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantUser>(
+      `/tenant/users/${encodeURIComponent(tenantUserCode)}`,
+      payload,
+      authOptions(auth),
+    );
   },
 
   deleteUser(tenantUserCode: string, auth?: TenantAuth) {
-    return apiClient.deleteMessage(`/tenant/users/${encodeURIComponent(tenantUserCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(
+      `/tenant/users/${encodeURIComponent(tenantUserCode)}`,
+      authOptions(auth),
+    );
   },
 
   listAccounting(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<AccountingTransaction>>(
+      "/tenant/accounting",
+      listOptions(params, auth),
+    );
   },
 
   getAccountingOverview(auth?: TenantAuth) {
-    return apiClient.get<AccountingOverview>('/tenant/accounting/overview', authOptions(auth))
+    return apiClient.get<AccountingOverview>(
+      "/tenant/accounting/overview",
+      authOptions(auth),
+    );
   },
 
   getCurrentAccountingDay(auth?: TenantAuth) {
-    return apiClient.get<AccountingDay | null>('/tenant/accounting-days/current', authOptions(auth))
+    return apiClient.get<AccountingDay | null>(
+      "/tenant/accounting-days/current",
+      authOptions(auth),
+    );
   },
 
   closeCurrentAccountingDay(auth?: TenantAuth) {
-    return apiClient.post<AccountingDay>('/tenant/accounting-days/close', {}, authOptions(auth))
+    return apiClient.post<AccountingDay>(
+      "/tenant/accounting-days/close",
+      {},
+      authOptions(auth),
+    );
   },
 
   getAccountingDaySchedule(auth?: TenantAuth) {
-    return apiClient.get<AccountingDaySchedule>('/tenant/accounting-days/schedule', authOptions(auth))
+    return apiClient.get<AccountingDaySchedule>(
+      "/tenant/accounting-days/schedule",
+      authOptions(auth),
+    );
   },
 
-  updateAccountingDaySchedule(days: AccountingDaySchedule['days'], auth?: TenantAuth) {
-    return apiClient.put<AccountingDaySchedule>('/tenant/accounting-days/schedule', { days }, authOptions(auth))
+  updateAccountingDaySchedule(
+    days: AccountingDaySchedule["days"],
+    auth?: TenantAuth,
+  ) {
+    return apiClient.put<AccountingDaySchedule>(
+      "/tenant/accounting-days/schedule",
+      { days },
+      authOptions(auth),
+    );
   },
 
   listIncomingAccounting(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting/incoming', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<AccountingTransaction>>(
+      "/tenant/accounting/incoming",
+      listOptions(params, auth),
+    );
   },
 
   listOutgoingAccounting(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<AccountingTransaction>>('/tenant/accounting/outgoing', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<AccountingTransaction>>(
+      "/tenant/accounting/outgoing",
+      listOptions(params, auth),
+    );
   },
 
   generateAccountingLedger(params: LedgerParams, auth?: TenantAuth) {
-    return apiClient.get<AccountingLedger>('/tenant/accounting/ledger', {
+    return apiClient.get<AccountingLedger>("/tenant/accounting/ledger", {
       ...authOptions(auth),
       params: {
         end_at: params.endDate,
@@ -130,113 +173,218 @@ export const tenantResourceService = {
         per_page: params.perPage,
         start_at: params.startDate,
       },
-    })
+    });
   },
 
-  downloadAccountingLedger(params: Pick<LedgerParams, 'startDate' | 'endDate'>, auth?: TenantAuth) {
-    return apiClient.download('/tenant/accounting/ledger/download', {
+  downloadAccountingLedger(
+    params: Pick<LedgerParams, "startDate" | "endDate">,
+    auth?: TenantAuth,
+  ) {
+    return apiClient.download("/tenant/accounting/ledger/download", {
       ...authOptions(auth),
       params: {
         end_at: params.endDate,
         start_at: params.startDate,
       },
-    })
+    });
   },
 
   listExpenses(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<TenantExpense>>('/tenant/expenses', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<TenantExpense>>(
+      "/tenant/expenses",
+      listOptions(params, auth),
+    );
   },
 
   createExpense(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<TenantExpense>('/tenant/expenses', payload, authOptions(auth))
+    return apiClient.post<TenantExpense>(
+      "/tenant/expenses",
+      payload,
+      authOptions(auth),
+    );
   },
 
   getExpense(expenseCode: string, auth?: TenantAuth) {
-    return apiClient.get<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
+    return apiClient.get<TenantExpense>(
+      `/tenant/expenses/${encodeURIComponent(expenseCode)}`,
+      authOptions(auth),
+    );
   },
 
   updateExpense(expenseCode: string, payload: unknown, auth?: TenantAuth) {
     if (payload instanceof FormData) {
-      payload.set('_method', 'PUT')
-      return apiClient.post<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, payload, authOptions(auth))
+      payload.set("_method", "PUT");
+      return apiClient.post<TenantExpense>(
+        `/tenant/expenses/${encodeURIComponent(expenseCode)}`,
+        payload,
+        authOptions(auth),
+      );
     }
 
-    return apiClient.put<TenantExpense>(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantExpense>(
+      `/tenant/expenses/${encodeURIComponent(expenseCode)}`,
+      payload,
+      authOptions(auth),
+    );
   },
 
   deleteExpense(expenseCode: string, auth?: TenantAuth) {
-    return apiClient.deleteMessage(`/tenant/expenses/${encodeURIComponent(expenseCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(
+      `/tenant/expenses/${encodeURIComponent(expenseCode)}`,
+      authOptions(auth),
+    );
   },
 
   listCapitals(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<TenantCapital>>('/tenant/capitals', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<TenantCapital>>(
+      "/tenant/capitals",
+      listOptions(params, auth),
+    );
   },
 
   createCapital(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<TenantCapital>('/tenant/capitals', payload, authOptions(auth))
+    return apiClient.post<TenantCapital>(
+      "/tenant/capitals",
+      payload,
+      authOptions(auth),
+    );
   },
 
   getCapital(capitalCode: string, auth?: TenantAuth) {
-    return apiClient.get<TenantCapital>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
+    return apiClient.get<TenantCapital>(
+      `/tenant/capitals/${encodeURIComponent(capitalCode)}`,
+      authOptions(auth),
+    );
   },
 
   updateCapital(capitalCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<TenantCapital>(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantCapital>(
+      `/tenant/capitals/${encodeURIComponent(capitalCode)}`,
+      payload,
+      authOptions(auth),
+    );
   },
 
   deleteCapital(capitalCode: string, auth?: TenantAuth) {
-    return apiClient.deleteMessage(`/tenant/capitals/${encodeURIComponent(capitalCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(
+      `/tenant/capitals/${encodeURIComponent(capitalCode)}`,
+      authOptions(auth),
+    );
   },
 
   listExpenseTypes(auth?: TenantAuth) {
-    return apiClient.get<ExpenseTypeOption[]>('/tenant/expense-types', authOptions(auth))
+    return apiClient.get<ExpenseTypeOption[]>(
+      "/tenant/expense-types",
+      authOptions(auth),
+    );
   },
 
   listDebts(params?: ListParams, auth?: TenantAuth) {
-    return apiClient.get<PaginatedResult<TenantDebt>>('/tenant/debts', listOptions(params, auth))
+    return apiClient.get<PaginatedResult<TenantDebt>>(
+      "/tenant/debts",
+      listOptions(params, auth),
+    );
   },
 
   createDebt(payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<TenantDebt>('/tenant/debts', payload, authOptions(auth))
+    return apiClient.post<TenantDebt>(
+      "/tenant/debts",
+      payload,
+      authOptions(auth),
+    );
   },
 
   updateDebt(debtCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}`, payload, authOptions(auth))
+    return apiClient.put<TenantDebt>(
+      `/tenant/debts/${encodeURIComponent(debtCode)}`,
+      payload,
+      authOptions(auth),
+    );
   },
 
   deleteDebt(debtCode: string, auth?: TenantAuth) {
-    return apiClient.deleteMessage(`/tenant/debts/${encodeURIComponent(debtCode)}`, authOptions(auth))
+    return apiClient.deleteMessage(
+      `/tenant/debts/${encodeURIComponent(debtCode)}`,
+      authOptions(auth),
+    );
   },
 
   payDebt(debtCode: string, payload: unknown, auth?: TenantAuth) {
-    return apiClient.post<import('../../dataobjects/tenant/finance').DebtPaymentResult>(`/tenant/debts/${encodeURIComponent(debtCode)}/paid`, payload, authOptions(auth))
+    return apiClient.post<
+      import("../../dataobjects/tenant/finance").DebtPaymentResult
+    >(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/paid`,
+      payload,
+      authOptions(auth),
+    );
   },
 
   getDebt(debtCode: string, auth?: TenantAuth) {
-    return apiClient.get<import('../../dataobjects/tenant/finance').TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}`, authOptions(auth))
+    return apiClient.get<import("../../dataobjects/tenant/finance").TenantDebt>(
+      `/tenant/debts/${encodeURIComponent(debtCode)}`,
+      authOptions(auth),
+    );
   },
 
   calculateDebtInterest(debtCode: string, auth?: TenantAuth) {
-    return apiClient.get<import('../../dataobjects/tenant/finance').DebtInterestCalculation>(`/tenant/debts/${encodeURIComponent(debtCode)}/interest`, authOptions(auth))
+    return apiClient.get<
+      import("../../dataobjects/tenant/finance").DebtInterestCalculation
+    >(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/interest`,
+      authOptions(auth),
+    );
   },
 
   listDebtPayments(debtCode: string, auth?: TenantAuth) {
-    return apiClient.get<import('../../dataobjects/tenant/finance').DebtPaymentHistoryItem[]>(`/tenant/debts/${encodeURIComponent(debtCode)}/payments`, authOptions(auth))
+    return apiClient.get<
+      import("../../dataobjects/tenant/finance").DebtPaymentHistoryItem[]
+    >(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/payments`,
+      authOptions(auth),
+    );
   },
 
-  updateDebtCompoundSchedule(debtCode: string, payload: { debt_update_key: number; enabled: boolean; compound_every?: number | null; compound_every_type?: string | null; next_compound_at?: string | null }, auth?: TenantAuth) {
-    return apiClient.put<import('../../dataobjects/tenant/finance').TenantDebt>(`/tenant/debts/${encodeURIComponent(debtCode)}/compound-schedule`, payload, authOptions(auth))
+  updateDebtCompoundSchedule(
+    debtCode: string,
+    payload: {
+      debt_update_key: number;
+      enabled: boolean;
+      compound_every?: number | null;
+      compound_every_type?: string | null;
+      next_compound_at?: string | null;
+    },
+    auth?: TenantAuth,
+  ) {
+    return apiClient.put<import("../../dataobjects/tenant/finance").TenantDebt>(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/compound-schedule`,
+      payload,
+      authOptions(auth),
+    );
   },
 
   compoundDebtInterest(debtCode: string, auth?: TenantAuth) {
-    return apiClient.post<{ debt: import('../../dataobjects/tenant/finance').TenantDebt; compounded_interest: number }>(`/tenant/debts/${encodeURIComponent(debtCode)}/compound-interest`, {}, authOptions(auth))
+    return apiClient.post<{
+      debt: import("../../dataobjects/tenant/finance").TenantDebt;
+      compounded_interest: number;
+    }>(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/compound-interest`,
+      {},
+      authOptions(auth),
+    );
   },
 
   showBrandingSlipLayouts(auth?: TenantAuth) {
-    return apiClient.get<TenantBrandingSlipLayouts>('/tenant/branding/slip-layouts', authOptions(auth))
+    return apiClient.get<TenantBrandingSlipLayouts>(
+      "/tenant/branding/slip-layouts",
+      authOptions(auth),
+    );
   },
 
   updateBrandingSlipLayouts(payload: unknown, auth?: TenantAuth) {
-    return apiClient.put<TenantBrandingSlipLayouts>('/tenant/branding/slip-layouts', payload, authOptions(auth))
+    return apiClient.put<TenantBrandingSlipLayouts>(
+      "/tenant/branding/slip-layouts",
+      payload,
+      authOptions(auth),
+    );
   },
-}
+};

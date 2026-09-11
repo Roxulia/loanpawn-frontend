@@ -1,5 +1,5 @@
-import { SettingsSectionPage } from './SettingsSectionPage'
+import { SettingsSectionPage } from "./SettingsSectionPage";
 
 export function FinanceSettingsPage() {
-  return <SettingsSectionPage section="finance" />
+  return <SettingsSectionPage section="finance" />;
 }

@@ -1,5 +1,5 @@
-import { SettingsSectionPage } from './SettingsSectionPage'
+import { SettingsSectionPage } from "./SettingsSectionPage";
 
 export function DefaultDataSettingsPage() {
-  return <SettingsSectionPage section="default-data" />
+  return <SettingsSectionPage section="default-data" />;
 }

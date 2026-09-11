@@ -1,29 +1,190 @@
-import type { PermissionCode } from '../auth'
+import type { PermissionCode } from "../auth";
 
-export type PermissionOption = { code: PermissionCode; description: string; label: string }
-export type PermissionGroup = { label: string; permissions: PermissionOption[] }
+export type PermissionOption = {
+  code: PermissionCode;
+  description: string;
+  label: string;
+};
+export type PermissionGroup = {
+  label: string;
+  permissions: PermissionOption[];
+};
 
-const option = (code: PermissionCode, label: string, description = `Allow staff to ${label.toLowerCase()}.`): PermissionOption => ({ code, label, description })
+const option = (
+  code: PermissionCode,
+  label: string,
+  description = `Allow staff to ${label.toLowerCase()}.`,
+): PermissionOption => ({ code, label, description });
 
 export const permissionGroups: PermissionGroup[] = [
-  { label: 'Dashboard', permissions: [option('dashboard', 'View dashboard')] },
-  { label: 'Staff', permissions: [option('list_user', 'View staff'), option('create_user', 'Create staff'), option('update_user_roles', 'Assign staff roles'), option('update_user_info', 'Edit regular staff profiles'), option('update_user_self', 'Edit own profile'), option('assign_permission', 'Assign staff permissions'), option('delete_user', 'Deactivate regular staff'), option('create_admin_user', 'Create Admin accounts'), option('update_admin_user', 'Edit Admin accounts'), option('delete_admin_user', 'Deactivate Admin accounts')] },
-  { label: 'Customers', permissions: [option('list_customer', 'View customers'), option('create_customer', 'Create customers'), option('update_customer', 'Edit customers'), option('delete_customer', 'Delete customers')] },
-  { label: 'Collateral', permissions: [option('list_collateral', 'View collateral'), option('create_collateral', 'Create collateral'), option('update_collateral', 'Edit collateral'), option('delete_collateral', 'Delete collateral')] },
-  { label: 'Loan Operations', permissions: [option('list_loan_contract', 'View loan slips'), option('create_loan_contract', 'Create slip operations'), option('delete_loan_contract', 'Delete loan slips')] },
-  { label: 'Accounting Days', permissions: [option('list_accounting', 'View accounting'), option('open_accounting_day', 'Open accounting day manually'), option('close_accounting_day', 'Close accounting day manually'), option('manage_accounting_day_schedule', 'Manage automatic schedule')] },
-  { label: 'Wallets', permissions: [option('list_financial_account', 'View wallets'), option('create_financial_account', 'Create wallets'), option('update_financial_account', 'Edit wallets'), option('delete_financial_account', 'Delete wallets'), option('transfer_financial_account', 'Transfer wallet balances'), option('manage_financial_account_assignments', 'Assign wallets to staff')] },
-  { label: 'Expenses', permissions: [option('list_expense', 'View expenses'), option('create_expense', 'Create expenses'), option('update_expense', 'Edit expenses'), option('delete_expense', 'Delete expenses')] },
-  { label: 'Capital and Debt', permissions: [option('list_capital', 'View capital'), option('create_capital', 'Create capital'), option('update_capital', 'Edit capital'), option('delete_capital', 'Delete capital'), option('list_debt', 'View debts'), option('create_debt', 'Create debts'), option('update_debt', 'Edit debts'), option('delete_debt', 'Delete debts'), option('manage_debt_settings', 'Manage debt settings'), option('manage_debt_compound_schedule', 'Manage debt compounding'), option('compound_debt_interest', 'Compound debt interest'), option('list_business_loan', 'View business loans'), option('create_business_loan', 'Create business loans'), option('update_business_loan', 'Edit and pay business loans'), option('delete_business_loan', 'Delete business loans'), option('list_lender', 'View lenders'), option('create_lender', 'Create lenders'), option('update_lender', 'Edit lenders'), option('delete_lender', 'Delete lenders')] },
-  { label: 'Currency and Exchange', permissions: [option('list_currency', 'View currencies'), option('create_currency', 'Create currencies'), option('update_currency', 'Edit currencies'), option('delete_currency', 'Delete currencies'), option('list_exchange_pair', 'View exchange pairs'), option('create_exchange_pair', 'Create exchange pairs'), option('update_exchange_pair', 'Edit exchange pairs'), option('delete_exchange_pair', 'Delete exchange pairs'), option('list_exchange_rate', 'View exchange rates'), option('create_exchange_rate', 'Create exchange rates'), option('correct_exchange_rate', 'Correct exchange rates'), option('void_exchange_rate', 'Void exchange rates')] },
-  { label: 'Financial Account Types', permissions: [option('list_financial_account_type', 'View financial account types'), option('create_financial_account_type', 'Create financial account types'), option('update_financial_account_type', 'Edit financial account types'), option('delete_financial_account_type', 'Delete financial account types')] },
-  { label: 'Pawn Reference Data', permissions: [option('list_material_type', 'View material types'), option('create_material_type', 'Create material types'), option('update_material_type', 'Edit material types'), option('delete_material_type', 'Delete material types'), option('list_interest_type', 'View interest types'), option('create_interest_type', 'Create interest types'), option('update_interest_type', 'Edit interest types'), option('delete_interest_type', 'Delete interest types'), option('list_item_category_type', 'View item categories'), option('create_item_category_type', 'Create item categories'), option('update_item_category_type', 'Edit item categories'), option('delete_item_category_type', 'Delete item categories')] },
-  { label: 'Expense Types', permissions: [option('list_expense_type', 'View expense types'), option('create_expense_type', 'Create expense types'), option('update_expense_type', 'Edit expense types'), option('delete_expense_type', 'Delete expense types')] },
-  { label: 'Tenant Settings', permissions: [option('manage_tenant_timezone', 'Manage business timezone'), option('manage_tenant_contact', 'Manage tenant contact'), option('manage_slip_document', 'Manage slip document layout'), option('update_default_currency', 'Update default currency'), option('update_reporting_currency', 'Update reporting currency'), option('update_default_financial_unit', 'Update default financial unit')] },
-]
+  { label: "Dashboard", permissions: [option("dashboard", "View dashboard")] },
+  {
+    label: "Staff",
+    permissions: [
+      option("list_user", "View staff"),
+      option("create_user", "Create staff"),
+      option("update_user_roles", "Assign staff roles"),
+      option("update_user_info", "Edit regular staff profiles"),
+      option("update_user_self", "Edit own profile"),
+      option("assign_permission", "Assign staff permissions"),
+      option("delete_user", "Deactivate regular staff"),
+      option("create_admin_user", "Create Admin accounts"),
+      option("update_admin_user", "Edit Admin accounts"),
+      option("delete_admin_user", "Deactivate Admin accounts"),
+    ],
+  },
+  {
+    label: "Customers",
+    permissions: [
+      option("list_customer", "View customers"),
+      option("create_customer", "Create customers"),
+      option("update_customer", "Edit customers"),
+      option("delete_customer", "Delete customers"),
+    ],
+  },
+  {
+    label: "Collateral",
+    permissions: [
+      option("list_collateral", "View collateral"),
+      option("create_collateral", "Create collateral"),
+      option("update_collateral", "Edit collateral"),
+      option("delete_collateral", "Delete collateral"),
+    ],
+  },
+  {
+    label: "Loan Operations",
+    permissions: [
+      option("list_loan_contract", "View loan slips"),
+      option("create_loan_contract", "Create slip operations"),
+      option("delete_loan_contract", "Delete loan slips"),
+    ],
+  },
+  {
+    label: "Accounting Days",
+    permissions: [
+      option("list_accounting", "View accounting"),
+      option("open_accounting_day", "Open accounting day manually"),
+      option("close_accounting_day", "Close accounting day manually"),
+      option("manage_accounting_day_schedule", "Manage automatic schedule"),
+    ],
+  },
+  {
+    label: "Wallets",
+    permissions: [
+      option("list_financial_account", "View wallets"),
+      option("create_financial_account", "Create wallets"),
+      option("update_financial_account", "Edit wallets"),
+      option("delete_financial_account", "Delete wallets"),
+      option("transfer_financial_account", "Transfer wallet balances"),
+      option("manage_financial_account_assignments", "Assign wallets to staff"),
+    ],
+  },
+  {
+    label: "Expenses",
+    permissions: [
+      option("list_expense", "View expenses"),
+      option("create_expense", "Create expenses"),
+      option("update_expense", "Edit expenses"),
+      option("delete_expense", "Delete expenses"),
+    ],
+  },
+  {
+    label: "Capital and Debt",
+    permissions: [
+      option("list_capital", "View capital"),
+      option("create_capital", "Create capital"),
+      option("update_capital", "Edit capital"),
+      option("delete_capital", "Delete capital"),
+      option("list_debt", "View debts"),
+      option("create_debt", "Create debts"),
+      option("update_debt", "Edit debts"),
+      option("delete_debt", "Delete debts"),
+      option("manage_debt_settings", "Manage debt settings"),
+      option("manage_debt_compound_schedule", "Manage debt compounding"),
+      option("compound_debt_interest", "Compound debt interest"),
+      option("list_business_loan", "View business loans"),
+      option("create_business_loan", "Create business loans"),
+      option("update_business_loan", "Edit and pay business loans"),
+      option("delete_business_loan", "Delete business loans"),
+      option("list_lender", "View lenders"),
+      option("create_lender", "Create lenders"),
+      option("update_lender", "Edit lenders"),
+      option("delete_lender", "Delete lenders"),
+    ],
+  },
+  {
+    label: "Currency and Exchange",
+    permissions: [
+      option("list_currency", "View currencies"),
+      option("create_currency", "Create currencies"),
+      option("update_currency", "Edit currencies"),
+      option("delete_currency", "Delete currencies"),
+      option("list_exchange_pair", "View exchange pairs"),
+      option("create_exchange_pair", "Create exchange pairs"),
+      option("update_exchange_pair", "Edit exchange pairs"),
+      option("delete_exchange_pair", "Delete exchange pairs"),
+      option("list_exchange_rate", "View exchange rates"),
+      option("create_exchange_rate", "Create exchange rates"),
+      option("correct_exchange_rate", "Correct exchange rates"),
+      option("void_exchange_rate", "Void exchange rates"),
+    ],
+  },
+  {
+    label: "Financial Account Types",
+    permissions: [
+      option("list_financial_account_type", "View financial account types"),
+      option("create_financial_account_type", "Create financial account types"),
+      option("update_financial_account_type", "Edit financial account types"),
+      option("delete_financial_account_type", "Delete financial account types"),
+    ],
+  },
+  {
+    label: "Pawn Reference Data",
+    permissions: [
+      option("list_material_type", "View material types"),
+      option("create_material_type", "Create material types"),
+      option("update_material_type", "Edit material types"),
+      option("delete_material_type", "Delete material types"),
+      option("list_interest_type", "View interest types"),
+      option("create_interest_type", "Create interest types"),
+      option("update_interest_type", "Edit interest types"),
+      option("delete_interest_type", "Delete interest types"),
+      option("list_item_category_type", "View item categories"),
+      option("create_item_category_type", "Create item categories"),
+      option("update_item_category_type", "Edit item categories"),
+      option("delete_item_category_type", "Delete item categories"),
+    ],
+  },
+  {
+    label: "Expense Types",
+    permissions: [
+      option("list_expense_type", "View expense types"),
+      option("create_expense_type", "Create expense types"),
+      option("update_expense_type", "Edit expense types"),
+      option("delete_expense_type", "Delete expense types"),
+    ],
+  },
+  {
+    label: "Tenant Settings",
+    permissions: [
+      option("manage_tenant_timezone", "Manage business timezone"),
+      option("manage_tenant_contact", "Manage tenant contact"),
+      option("manage_slip_document", "Manage slip document layout"),
+      option("update_default_currency", "Update default currency"),
+      option("update_reporting_currency", "Update reporting currency"),
+      option("update_default_financial_unit", "Update default financial unit"),
+    ],
+  },
+];
 
-export const assignablePermissionCodes = permissionGroups.flatMap((group) => group.permissions.map(({ code }) => code))
+export const assignablePermissionCodes = permissionGroups.flatMap((group) =>
+  group.permissions.map(({ code }) => code),
+);
 
 export function getPermissionLabel(code: string) {
-  return permissionGroups.flatMap((group) => group.permissions).find((permission) => permission.code === code)?.label ?? code
+  return (
+    permissionGroups
+      .flatMap((group) => group.permissions)
+      .find((permission) => permission.code === code)?.label ?? code
+  );
 }

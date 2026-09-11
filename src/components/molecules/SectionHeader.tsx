@@ -1,15 +1,20 @@
-import type { ReactNode } from 'react'
-import { useUiLocale } from '../../locales/UiLocale'
+import type { ReactNode } from "react";
+import { useUiLocale } from "../../locales/UiLocale";
 
 type SectionHeaderProps = {
-  action?: ReactNode
-  subtitle?: string
-  titlePrefix?: ReactNode
-  title: string
-}
+  action?: ReactNode;
+  subtitle?: string;
+  titlePrefix?: ReactNode;
+  title: string;
+};
 
-export function SectionHeader({ action, subtitle, title, titlePrefix }: SectionHeaderProps) {
-  const { t } = useUiLocale()
+export function SectionHeader({
+  action,
+  subtitle,
+  title,
+  titlePrefix,
+}: SectionHeaderProps) {
+  const { t } = useUiLocale();
 
   return (
     <header className="ui-section-header">
@@ -18,9 +23,11 @@ export function SectionHeader({ action, subtitle, title, titlePrefix }: SectionH
           {titlePrefix}
           <h2 className="ui-section-header__title">{t(title)}</h2>
         </div>
-        {subtitle && <p className="ui-section-header__subtitle">{t(subtitle)}</p>}
+        {subtitle && (
+          <p className="ui-section-header__subtitle">{t(subtitle)}</p>
+        )}
       </div>
       {action}
     </header>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { Card } from '../molecules'
-import { LoadingState, Skeleton } from './LoadingState'
+import { Card } from "../molecules";
+import { LoadingState, Skeleton } from "./LoadingState";
 
 export function DashboardSkeleton() {
   return (
@@ -13,7 +13,7 @@ export function DashboardSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export function TablePageSkeleton() {
@@ -25,7 +25,7 @@ export function TablePageSkeleton() {
         <LoadingState rows={6} />
       </Card>
     </div>
-  )
+  );
 }
 
 export function FormPageSkeleton() {
@@ -40,7 +40,7 @@ export function FormPageSkeleton() {
         </div>
       </Card>
     </div>
-  )
+  );
 }
 
 export function DetailPageSkeleton() {
@@ -51,5 +51,5 @@ export function DetailPageSkeleton() {
         <LoadingState rows={8} />
       </Card>
     </div>
-  )
+  );
 }

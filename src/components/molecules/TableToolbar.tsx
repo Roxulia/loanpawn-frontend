@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 type TableToolbarProps = {
-  actions?: ReactNode
-  filters?: ReactNode
-  search?: ReactNode
-}
+  actions?: ReactNode;
+  filters?: ReactNode;
+  search?: ReactNode;
+};
 
 export function TableToolbar({ actions, filters, search }: TableToolbarProps) {
   return (
@@ -15,5 +15,5 @@ export function TableToolbar({ actions, filters, search }: TableToolbarProps) {
         {actions}
       </div>
     </div>
-  )
+  );
 }

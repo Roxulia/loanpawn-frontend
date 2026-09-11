@@ -1,78 +1,79 @@
 @font-face {
   font-display: swap;
-  font-family: 'Inter';
+  font-family: "Inter";
   font-style: normal;
   font-weight: 100 900;
-  src: url('../assets/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+  src: url("../assets/Inter/Inter-VariableFont_opsz,wght.ttf")
+    format("truetype");
 }
 
 @font-face {
   font-display: swap;
-  font-family: 'Inter';
+  font-family: "Inter";
   font-style: italic;
   font-weight: 100 900;
-  src: url('../assets/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  src: url("../assets/Inter/Inter-Italic-VariableFont_opsz,wght.ttf")
+    format("truetype");
 }
 
 @font-face {
   font-display: swap;
-  font-family: 'Manrope';
+  font-family: "Manrope";
   font-style: normal;
   font-weight: 200 800;
-  src: url('../assets/Manrope/Manrope-VariableFont_wght.ttf') format('truetype');
+  src: url("../assets/Manrope/Manrope-VariableFont_wght.ttf") format("truetype");
 }
 
-
-
 :root {
-  --color-1: #1F5161;
-  --color-2: #0B1F2D;
-  --color-3: #B8D7DF;
-  --color-4: #2BABCE;
-  --color-5: #00677F;
-  --color-6: #E0F2F1;
-  --color-background: #F6F9FF;
-  --color-surface: #FFFFFF;
-  --color-surface-bright: #FFFFFF;
-  --color-surface-muted: #ECF5FF;
-  --color-surface-container: #E0F2F1;
-  --color-surface-container-high: #C9DCF0;
-  --color-primary: #00677F;
+  --color-1: #1f5161;
+  --color-2: #0b1f2d;
+  --color-3: #b8d7df;
+  --color-4: #2babce;
+  --color-5: #00677f;
+  --color-6: #e0f2f1;
+  --color-background: #f6f9ff;
+  --color-surface: #ffffff;
+  --color-surface-bright: #ffffff;
+  --color-surface-muted: #ecf5ff;
+  --color-surface-container: #e0f2f1;
+  --color-surface-container-high: #c9dcf0;
+  --color-primary: #00677f;
   --color-primary-hover: #005266;
   --color-primary-active: #004050;
-  --color-on-primary: #FFFFFF;
-  --color-accent: #1F5161;
+  --color-on-primary: #ffffff;
+  --color-accent: #1f5161;
   --color-accent-hover: #356575;
-  --color-text-primary: #0B1F2D;
-  --color-text-secondary: #52646B;
-  --color-text-label: #00677F;
-  --color-placeholder: #8BAFB7;
-  --color-border: #B0BEC5;
-  --color-border-muted: #ECF5FF;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-danger-hover: #DC2626;
-  --color-info: #0EA5E9;
+  --color-text-primary: #0b1f2d;
+  --color-text-secondary: #52646b;
+  --color-text-label: #00677f;
+  --color-placeholder: #8bafb7;
+  --color-border: #b0bec5;
+  --color-border-muted: #ecf5ff;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-info: #0ea5e9;
   --color-overlay: rgb(11 31 45 / 48%);
-  --color-sidebar-text: #52646B;
-  --color-sidebar-text-active: #00677F;
-  --color-sidebar-divider: #C9DCF0;
+  --color-sidebar-text: #52646b;
+  --color-sidebar-text-active: #00677f;
+  --color-sidebar-divider: #c9dcf0;
   --color-danger-surface: rgb(239 68 68 / 8%);
   --color-danger-border: rgb(239 68 68 / 24%);
 
-  --font-family-sans: Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
-  --font-family-heading: Manrope, Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
-  
+  --font-family-sans:
+    Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+  --font-family-heading:
+    Manrope, Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
 
-    /* Mobile */
-  --text-xs: 0.6875rem;   /* 11px */
-  --text-sm: 0.8125rem;   /* 13px */
+  /* Mobile */
+  --text-xs: 0.6875rem; /* 11px */
+  --text-sm: 0.8125rem; /* 13px */
   --text-base: 0.9375rem; /* 15px */
-  --text-lg: 1rem;        /* 16px */
-  --text-xl: 1.125rem;    /* 18px */
-  --text-2xl: 1.25rem;    /* 20px */
-  --text-3xl: 1.5rem;     /* 24px */
+  --text-lg: 1rem; /* 16px */
+  --text-xl: 1.125rem; /* 18px */
+  --text-2xl: 1.25rem; /* 20px */
+  --text-3xl: 1.5rem; /* 24px */
 
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -112,13 +113,13 @@
 }
 
 @media (min-width: 768px) {
-  :root{
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.5rem;
-  --font-size-2xl: 2rem;
-  --font-size-3xl: 2.5rem;
+  :root {
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 2rem;
+    --font-size-3xl: 2.5rem;
   }
 }

@@ -1,93 +1,133 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
-import { routePaths } from '../../../app/routes/paths'
-import { Badge, Button } from '../../../components/atoms'
-import { Alert } from '../../../components/feedback'
-import { CirclePlusIcon, EditIcon, TrashIcon } from '../../../components/icons/icon'
-import { Card, SearchField, SectionHeader, TableToolbar } from '../../../components/molecules'
-import { ConfirmDialog, DataTable, type DataTableColumn } from '../../../components/organisms'
-import type { TenantUser } from '../../../dataobjects/tenant/auth'
-import { ResourceUsageBadge, usePermissions } from '../../auth'
-import { StaffMobileCard } from '../components/StaffMobileCard'
-import { getUserRoleName } from '../staffFormat'
-import { staffService } from '../services/staffService'
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { routePaths } from "../../../app/routes/paths";
+import { Badge, Button } from "../../../components/atoms";
+import { Alert } from "../../../components/feedback";
+import {
+  CirclePlusIcon,
+  EditIcon,
+  TrashIcon,
+} from "../../../components/icons/icon";
+import {
+  Card,
+  SearchField,
+  SectionHeader,
+  TableToolbar,
+} from "../../../components/molecules";
+import {
+  ConfirmDialog,
+  DataTable,
+  type DataTableColumn,
+} from "../../../components/organisms";
+import type { TenantUser } from "../../../dataobjects/tenant/auth";
+import { ResourceUsageBadge, usePermissions } from "../../auth";
+import { StaffMobileCard } from "../components/StaffMobileCard";
+import { getUserRoleName } from "../staffFormat";
+import { staffService } from "../services/staffService";
 
 export function StaffListPage() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { currentUser, hasPermission } = usePermissions()
-  const canCreate = hasPermission('create_user')
-  const canDelete = hasPermission('delete_user')
-  const canUpdate = hasPermission('update_user_info')
-  const canDeleteAdmin = hasPermission('delete_admin_user')
-  const canUpdateAdmin = hasPermission('update_admin_user')
-  const [users, setUsers] = useState<TenantUser[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(() => getRouteNotice(location.state))
-  const [userToDelete, setUserToDelete] = useState<TenantUser | null>(null)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser, hasPermission } = usePermissions();
+  const canCreate = hasPermission("create_user");
+  const canDelete = hasPermission("delete_user");
+  const canUpdate = hasPermission("update_user_info");
+  const canDeleteAdmin = hasPermission("delete_admin_user");
+  const canUpdateAdmin = hasPermission("update_admin_user");
+  const [users, setUsers] = useState<TenantUser[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(() =>
+    getRouteNotice(location.state),
+  );
+  const [userToDelete, setUserToDelete] = useState<TenantUser | null>(null);
 
   const loadUsers = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const response = await staffService.listUsers()
-      setUsers(response.items)
+      const response = await staffService.listUsers();
+      setUsers(response.items);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load staff users.')
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load staff users.",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (getRouteNotice(location.state)) {
-      navigate(location.pathname, { replace: true, state: null })
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location, navigate])
+  }, [location, navigate]);
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
-      void loadUsers()
-    }, 0)
+      void loadUsers();
+    }, 0);
 
-    return () => window.clearTimeout(loadTimer)
-  }, [loadUsers])
+    return () => window.clearTimeout(loadTimer);
+  }, [loadUsers]);
 
   const filteredUsers = users.filter((user) => {
-    const haystack = `${user.name} ${user.username} ${user.email ?? ''} ${user.phone} ${getUserRoleName(user)}`.toLowerCase()
+    const haystack =
+      `${user.name} ${user.username} ${user.email ?? ""} ${user.phone} ${getUserRoleName(user)}`.toLowerCase();
 
-    return haystack.includes(searchTerm.trim().toLowerCase())
-  })
+    return haystack.includes(searchTerm.trim().toLowerCase());
+  });
 
   const columns: Array<DataTableColumn<TenantUser>> = [
-    { header: 'Name', key: 'name', render: (user) => <strong>{user.name}</strong> },
-    { header: 'Username', key: 'username', render: (user) => user.username },
-    { header: 'Phone', key: 'phone', render: (user) => user.phone },
-    { header: 'Role', key: 'role', render: (user) => <Badge tone="info">{getUserRoleName(user)}</Badge> },
-    { header: 'Status', key: 'status', render: (user) => <Badge tone={user.status === 'active' ? 'success' : 'warning'}>{user.status}</Badge> },
-  ]
+    {
+      header: "Name",
+      key: "name",
+      render: (user) => <strong>{user.name}</strong>,
+    },
+    { header: "Username", key: "username", render: (user) => user.username },
+    { header: "Phone", key: "phone", render: (user) => user.phone },
+    {
+      header: "Role",
+      key: "role",
+      render: (user) => <Badge tone="info">{getUserRoleName(user)}</Badge>,
+    },
+    {
+      header: "Status",
+      key: "status",
+      render: (user) => (
+        <Badge tone={user.status === "active" ? "success" : "warning"}>
+          {user.status}
+        </Badge>
+      ),
+    },
+  ];
 
   async function handleDelete() {
     if (!userToDelete) {
-      return
+      return;
     }
 
-    setIsDeleting(true)
-    setError(null)
+    setIsDeleting(true);
+    setError(null);
 
     try {
-      await staffService.deleteUser(userToDelete.code)
-      setNotice('Staff account deactivated.')
-      setUserToDelete(null)
-      await loadUsers()
+      await staffService.deleteUser(userToDelete.code);
+      setNotice("Staff account deactivated.");
+      setUserToDelete(null);
+      await loadUsers();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Unable to deactivate staff account.')
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to deactivate staff account.",
+      );
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
@@ -103,7 +143,11 @@ export function StaffListPage() {
               disabled={!canCreate}
               leftIcon={<CirclePlusIcon />}
               onClick={() => navigate(routePaths.staffCreate)}
-              title={canCreate ? 'Add Staff' : 'You do not have permission to create staff accounts.'}
+              title={
+                canCreate
+                  ? "Add Staff"
+                  : "You do not have permission to create staff accounts."
+              }
               variant="primary"
             >
               Add Staff
@@ -112,10 +156,27 @@ export function StaffListPage() {
         }
       />
 
-      <Card title="Staff accounts" description={`${users.length} active account${users.length === 1 ? '' : 's'}`}>
+      <Card
+        title="Staff accounts"
+        description={`${users.length} active account${users.length === 1 ? "" : "s"}`}
+      >
         <div className="customer-management">
-          {error && <Alert message={error} onDismiss={() => setError(null)} title="Staff action failed" tone="danger" />}
-          {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Staff updated" tone="success" />}
+          {error && (
+            <Alert
+              message={error}
+              onDismiss={() => setError(null)}
+              title="Staff action failed"
+              tone="danger"
+            />
+          )}
+          {notice && (
+            <Alert
+              message={notice}
+              onDismiss={() => setNotice(null)}
+              title="Staff updated"
+              tone="success"
+            />
+          )}
 
           <TableToolbar
             actions={
@@ -136,16 +197,19 @@ export function StaffListPage() {
 
           <DataTable
             actions={(user) => {
-              const isOwner = isOwnerUser(user)
-              const isSelf = currentUser?.code === user.code
+              const isOwner = isOwnerUser(user);
+              const isSelf = currentUser?.code === user.code;
               const canEditUser = isOwner
                 ? isSelf
                 : isSelf
-                  ? hasPermission('update_user_self')
+                  ? hasPermission("update_user_self")
                   : isAdminUser(user)
-                  ? canUpdateAdmin
-                  : canUpdate
-              const canDeactivateUser = !isSelf && !isOwner && (isAdminUser(user) ? canDeleteAdmin : canDelete)
+                    ? canUpdateAdmin
+                    : canUpdate;
+              const canDeactivateUser =
+                !isSelf &&
+                !isOwner &&
+                (isAdminUser(user) ? canDeleteAdmin : canDelete);
 
               return (
                 <div className="row-actions">
@@ -154,7 +218,11 @@ export function StaffListPage() {
                     className="ui-button--icon"
                     disabled={!canEditUser}
                     onClick={() => navigate(routePaths.staffEdit(user.code))}
-                    title={canEditUser ? 'Edit staff' : 'You do not have permission to edit this staff account.'}
+                    title={
+                      canEditUser
+                        ? "Edit staff"
+                        : "You do not have permission to edit this staff account."
+                    }
                     variant="secondary"
                   >
                     <EditIcon />
@@ -164,13 +232,19 @@ export function StaffListPage() {
                     className="ui-button--icon"
                     disabled={!canDeactivateUser}
                     onClick={() => setUserToDelete(user)}
-                    title={isOwner ? 'Owner accounts cannot be deactivated.' : canDeactivateUser ? 'Deactivate staff' : 'You do not have permission to deactivate this staff account.'}
+                    title={
+                      isOwner
+                        ? "Owner accounts cannot be deactivated."
+                        : canDeactivateUser
+                          ? "Deactivate staff"
+                          : "You do not have permission to deactivate this staff account."
+                    }
                     variant="danger"
                   >
                     <TrashIcon />
                   </Button>
                 </div>
-              )
+              );
             }}
             columns={columns}
             emptyDescription="Create the first staff account."
@@ -195,27 +269,32 @@ export function StaffListPage() {
         confirmLabel="Deactivate"
         isLoading={isDeleting}
         isOpen={Boolean(userToDelete)}
-        message={`Deactivate ${userToDelete?.name ?? 'this staff account'}?`}
+        message={`Deactivate ${userToDelete?.name ?? "this staff account"}?`}
         onCancel={() => setUserToDelete(null)}
         onConfirm={() => void handleDelete()}
         title="Confirm staff deactivation"
       />
     </section>
-  )
+  );
 }
 
 function getRouteNotice(state: unknown) {
-  if (typeof state === 'object' && state !== null && 'notice' in state && typeof state.notice === 'string') {
-    return state.notice
+  if (
+    typeof state === "object" &&
+    state !== null &&
+    "notice" in state &&
+    typeof state.notice === "string"
+  ) {
+    return state.notice;
   }
 
-  return null
+  return null;
 }
 
 function isAdminUser(user: TenantUser) {
-  return getUserRoleName(user).toLowerCase() === 'admin'
+  return getUserRoleName(user).toLowerCase() === "admin";
 }
 
 function isOwnerUser(user: TenantUser) {
-  return getUserRoleName(user).toLowerCase() === 'owner'
+  return getUserRoleName(user).toLowerCase() === "owner";
 }

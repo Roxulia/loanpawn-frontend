@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { Button } from '../../../components/atoms'
+import { useEffect, useMemo, useRef } from "react";
+import { Button } from "../../../components/atoms";
 
 type ExpenseImageInputProps = {
-  existingImage: boolean
-  file: File | null
-  id: string
-  isRemoved: boolean
-  onChange: (file: File | null) => void
-  onRemoveChange: (removed: boolean) => void
-}
+  existingImage: boolean;
+  file: File | null;
+  id: string;
+  isRemoved: boolean;
+  onChange: (file: File | null) => void;
+  onRemoveChange: (removed: boolean) => void;
+};
 
 export function ExpenseImageInput({
   existingImage,
@@ -18,21 +18,21 @@ export function ExpenseImageInput({
   onChange,
   onRemoveChange,
 }: ExpenseImageInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const previewUrl = useObjectUrl(file)
+  const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useObjectUrl(file);
 
   function chooseImage() {
-    if (!inputRef.current) return
+    if (!inputRef.current) return;
 
-    inputRef.current.value = ''
-    inputRef.current.click()
+    inputRef.current.value = "";
+    inputRef.current.click();
   }
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const nextFile = event.target.files?.[0] ?? null
+    const nextFile = event.target.files?.[0] ?? null;
 
-    onChange(nextFile)
-    onRemoveChange(false)
+    onChange(nextFile);
+    onRemoveChange(false);
   }
 
   return (
@@ -47,15 +47,12 @@ export function ExpenseImageInput({
       />
 
       <Button onClick={chooseImage} variant="secondary">
-        {file ? 'Change reference image' : 'Add reference image'}
+        {file ? "Change reference image" : "Add reference image"}
       </Button>
 
       {previewUrl && file && (
         <div className="expense-image-input__preview">
-          <img
-            src={previewUrl}
-            alt="Expense reference preview"
-          />
+          <img src={previewUrl} alt="Expense reference preview" />
 
           <span>{file.name}</span>
         </div>
@@ -69,8 +66,8 @@ export function ExpenseImageInput({
         <Button
           variant="danger"
           onClick={() => {
-            onChange(null)
-            onRemoveChange(existingImage)
+            onChange(null);
+            onRemoveChange(existingImage);
           }}
         >
           Remove reference image
@@ -78,24 +75,22 @@ export function ExpenseImageInput({
       )}
 
       {isRemoved && (
-        <p>
-          The existing image will be removed when changes are saved.
-        </p>
+        <p>The existing image will be removed when changes are saved.</p>
       )}
 
       <p>JPG, PNG, or WebP. Maximum 5 MB.</p>
     </div>
-  )
+  );
 }
 
 function useObjectUrl(file: File | null) {
-  const url = useMemo(() => file ? URL.createObjectURL(file) : null, [file])
+  const url = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
 
   useEffect(() => {
     return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [url])
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [url]);
 
-  return url
+  return url;
 }

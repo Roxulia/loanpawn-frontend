@@ -1,184 +1,217 @@
-import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
-import { routePaths } from '../../app/routes/paths'
-import { Badge, Button, Input } from '../../components/atoms'
-import { Alert } from '../../components/feedback'
-import { Card, FormField, FormGroup } from '../../components/molecules'
-import { useTenantSession } from '../../contexts/useTenantSession'
-import { savedTenantStore, type SavedTenantProfile } from '../../services/tenant/savedTenantStore'
-import { tenantAuthService } from '../../services/tenant/authService'
-import { tenantResolverService } from '../../services/tenant/tenantResolverService'
+import { useState, type FormEvent } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router";
+import { routePaths } from "../../app/routes/paths";
+import { Badge, Button, Input } from "../../components/atoms";
+import { Alert } from "../../components/feedback";
+import { Card, FormField, FormGroup } from "../../components/molecules";
+import { useTenantSession } from "../../contexts/useTenantSession";
+import {
+  savedTenantStore,
+  type SavedTenantProfile,
+} from "../../services/tenant/savedTenantStore";
+import { tenantAuthService } from "../../services/tenant/authService";
+import { tenantResolverService } from "../../services/tenant/tenantResolverService";
 
 export function LoginPage() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { authStatus, isAuthenticated, setSession, tenantResolution, setTenantResolution } = useTenantSession()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    authStatus,
+    isAuthenticated,
+    setSession,
+    tenantResolution,
+    setTenantResolution,
+  } = useTenantSession();
   const resolvedTenant =
-    tenantResolution.status === 'resolved' ? tenantResolution.tenant : null
-  const isSubdomainLogin = tenantResolution.status === 'resolved' && Boolean(tenantResolution.subdomain)
-  const [savedTenants, setSavedTenants] = useState(() => savedTenantStore.listSavedTenants())
-  const [isAddingTenant, setIsAddingTenant] = useState(savedTenants.length === 0)
-  const [tenantCode, setTenantCode] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [tenantError, setTenantError] = useState('')
-  const [isResolvingTenant, setIsResolvingTenant] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+    tenantResolution.status === "resolved" ? tenantResolution.tenant : null;
+  const isSubdomainLogin =
+    tenantResolution.status === "resolved" &&
+    Boolean(tenantResolution.subdomain);
+  const [savedTenants, setSavedTenants] = useState(() =>
+    savedTenantStore.listSavedTenants(),
+  );
+  const [isAddingTenant, setIsAddingTenant] = useState(
+    savedTenants.length === 0,
+  );
+  const [tenantCode, setTenantCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [tenantError, setTenantError] = useState("");
+  const [isResolvingTenant, setIsResolvingTenant] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isTenantBlocked =
-    resolvedTenant?.tenant_license.status === 'expired' ||
-    resolvedTenant?.tenant_license.status === 'suspended'
+    resolvedTenant?.tenant_license.status === "expired" ||
+    resolvedTenant?.tenant_license.status === "suspended";
 
   const redirectTo =
-    typeof location.state === 'object' &&
+    typeof location.state === "object" &&
     location.state !== null &&
-    'from' in location.state &&
-    typeof location.state.from === 'object' &&
+    "from" in location.state &&
+    typeof location.state.from === "object" &&
     location.state.from !== null &&
-    'pathname' in location.state.from &&
-    typeof location.state.from.pathname === 'string'
+    "pathname" in location.state.from &&
+    typeof location.state.from.pathname === "string"
       ? location.state.from.pathname
-      : routePaths.dashboard
+      : routePaths.dashboard;
 
-  if (authStatus === 'checking') {
+  if (authStatus === "checking") {
     return (
-      <Card title="Checking session" description="Verifying your tenant access with the server.">
+      <Card
+        title="Checking session"
+        description="Verifying your tenant access with the server."
+      >
         <FormGroup columns={1}>
           <div className="status-pill">Please wait</div>
         </FormGroup>
       </Card>
-    )
+    );
   }
 
   if (isAuthenticated) {
-    return <Navigate to={redirectTo} replace />
+    return <Navigate to={redirectTo} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError('')
+    event.preventDefault();
+    setError("");
 
     if (!resolvedTenant) {
-      setError('Select or add a tenant before signing in.')
-      return
+      setError("Select or add a tenant before signing in.");
+      return;
     }
 
     if (isTenantBlocked) {
-      setError('This tenant cannot be opened because the license is not active.')
-      return
+      setError(
+        "This tenant cannot be opened because the license is not active.",
+      );
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       const response = isSubdomainLogin
-        ? await tenantAuthService.loginSubdomainSpa({ email, password }, resolvedTenant.code)
-        : await tenantAuthService.loginPublicSpa({ tenant_code: resolvedTenant.code, email, password })
-      const tenantResponse = await tenantResolverService.resolveByCode(response.tenant_code)
-      savedTenantStore.saveTenantProfile(tenantResponse)
-      savedTenantStore.setActiveTenantCode(tenantResponse.code)
-      setSavedTenants(savedTenantStore.listSavedTenants())
+        ? await tenantAuthService.loginSubdomainSpa(
+            { email, password },
+            resolvedTenant.code,
+          )
+        : await tenantAuthService.loginPublicSpa({
+            tenant_code: resolvedTenant.code,
+            email,
+            password,
+          });
+      const tenantResponse = await tenantResolverService.resolveByCode(
+        response.tenant_code,
+      );
+      savedTenantStore.saveTenantProfile(tenantResponse);
+      savedTenantStore.setActiveTenantCode(tenantResponse.code);
+      setSavedTenants(savedTenantStore.listSavedTenants());
       setTenantResolution({
-        status: 'resolved',
-        subdomain: isSubdomainLogin ? tenantResponse.subdomain ?? null : null,
+        status: "resolved",
+        subdomain: isSubdomainLogin ? (tenantResponse.subdomain ?? null) : null,
         tenant: tenantResponse,
         error: null,
-      })
-      setSession(response)
-      navigate(redirectTo)
+      });
+      setSession(response);
+      navigate(redirectTo);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Login failed.')
+      setError(caught instanceof Error ? caught.message : "Login failed.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   async function handleAddTenant(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    await resolveTenantCode(tenantCode)
+    event.preventDefault();
+    await resolveTenantCode(tenantCode);
   }
 
   async function handleSelectTenant(profile: SavedTenantProfile) {
-    await resolveTenantCode(profile.code)
+    await resolveTenantCode(profile.code);
   }
 
   function handleRemoveTenant(code: string) {
-    savedTenantStore.removeSavedTenant(code)
-    const nextTenants = savedTenantStore.listSavedTenants()
+    savedTenantStore.removeSavedTenant(code);
+    const nextTenants = savedTenantStore.listSavedTenants();
 
-    setSavedTenants(nextTenants)
+    setSavedTenants(nextTenants);
 
     if (resolvedTenant?.code === code) {
       setTenantResolution({
-        status: 'idle',
+        status: "idle",
         subdomain: null,
         tenant: null,
         error: null,
-      })
-      setIsAddingTenant(nextTenants.length === 0)
+      });
+      setIsAddingTenant(nextTenants.length === 0);
     }
   }
 
   function handleSwitchTenant() {
-    const nextTenants = savedTenantStore.listSavedTenants()
+    const nextTenants = savedTenantStore.listSavedTenants();
 
-    savedTenantStore.clearActiveTenantCode()
-    setSavedTenants(nextTenants)
+    savedTenantStore.clearActiveTenantCode();
+    setSavedTenants(nextTenants);
     setTenantResolution({
-      status: 'idle',
+      status: "idle",
       subdomain: null,
       tenant: null,
       error: null,
-    })
-    setIsAddingTenant(nextTenants.length === 0)
-    setEmail('')
-    setPassword('')
-    setError('')
+    });
+    setIsAddingTenant(nextTenants.length === 0);
+    setEmail("");
+    setPassword("");
+    setError("");
   }
 
   async function resolveTenantCode(code: string) {
-    const normalizedCode = code.trim()
+    const normalizedCode = code.trim();
 
     if (!normalizedCode) {
-      setTenantError('Enter a tenant code.')
-      return
+      setTenantError("Enter a tenant code.");
+      return;
     }
 
-    setTenantError('')
-    setError('')
-    setIsResolvingTenant(true)
+    setTenantError("");
+    setError("");
+    setIsResolvingTenant(true);
     setTenantResolution({
-      status: 'loading',
+      status: "loading",
       subdomain: null,
       tenant: null,
       error: null,
-    })
+    });
 
     try {
-      const tenant = await tenantResolverService.resolveByCode(normalizedCode)
+      const tenant = await tenantResolverService.resolveByCode(normalizedCode);
 
-      savedTenantStore.saveTenantProfile(tenant)
-      savedTenantStore.setActiveTenantCode(tenant.code)
-      setSavedTenants(savedTenantStore.listSavedTenants())
+      savedTenantStore.saveTenantProfile(tenant);
+      savedTenantStore.setActiveTenantCode(tenant.code);
+      setSavedTenants(savedTenantStore.listSavedTenants());
       setTenantResolution({
-        status: 'resolved',
+        status: "resolved",
         subdomain: null,
         tenant,
         error: null,
-      })
-      setTenantCode('')
-      setIsAddingTenant(false)
+      });
+      setTenantCode("");
+      setIsAddingTenant(false);
     } catch (caught) {
-      savedTenantStore.clearActiveTenantCode()
+      savedTenantStore.clearActiveTenantCode();
       setTenantResolution({
-        status: 'idle',
+        status: "idle",
         subdomain: null,
         tenant: null,
         error: null,
-      })
-      setTenantError(caught instanceof Error ? caught.message : 'Tenant could not be resolved.')
+      });
+      setTenantError(
+        caught instanceof Error
+          ? caught.message
+          : "Tenant could not be resolved.",
+      );
     } finally {
-      setIsResolvingTenant(false)
+      setIsResolvingTenant(false);
     }
   }
 
@@ -206,7 +239,14 @@ export function LoginPage() {
                       onClick={() => handleSelectTenant(tenant)}
                       type="button"
                     >
-                      <span className="tenant-list-item__mark" style={tenant.primaryColor ? { backgroundColor: tenant.primaryColor } : undefined}>
+                      <span
+                        className="tenant-list-item__mark"
+                        style={
+                          tenant.primaryColor
+                            ? { backgroundColor: tenant.primaryColor }
+                            : undefined
+                        }
+                      >
                         {tenant.name.slice(0, 1).toUpperCase()}
                       </span>
                       <span className="tenant-list-item__content">
@@ -215,7 +255,10 @@ export function LoginPage() {
                       </span>
                       <LicenseBadge status={tenant.licenseStatus} />
                     </button>
-                    <Button onClick={() => handleRemoveTenant(tenant.code)} variant="ghost">
+                    <Button
+                      onClick={() => handleRemoveTenant(tenant.code)}
+                      variant="ghost"
+                    >
                       Remove
                     </Button>
                   </div>
@@ -234,45 +277,75 @@ export function LoginPage() {
                     />
                   </FormField>
                 </FormGroup>
-                {tenantError && <Alert tone="danger" title="Tenant not found" message={tenantError} />}
+                {tenantError && (
+                  <Alert
+                    tone="danger"
+                    title="Tenant not found"
+                    message={tenantError}
+                  />
+                )}
                 <div className="tenant-access__actions">
                   {savedTenants.length > 0 && (
-                    <Button onClick={() => setIsAddingTenant(false)} variant="ghost">
+                    <Button
+                      onClick={() => setIsAddingTenant(false)}
+                      variant="ghost"
+                    >
                       Back
                     </Button>
                   )}
-                  <Button fullWidth={savedTenants.length === 0} isLoading={isResolvingTenant} type="submit" variant="primary">
+                  <Button
+                    fullWidth={savedTenants.length === 0}
+                    isLoading={isResolvingTenant}
+                    type="submit"
+                    variant="primary"
+                  >
                     Add tenant
                   </Button>
                 </div>
               </form>
             )}
-            {tenantError && !isAddingTenant && <Alert tone="danger" title="Tenant not found" message={tenantError} />}
+            {tenantError && !isAddingTenant && (
+              <Alert
+                tone="danger"
+                title="Tenant not found"
+                message={tenantError}
+              />
+            )}
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
     <div className="auth-login-page">
       <Card
-        title={resolvedTenant ? `Sign in to ${resolvedTenant.name}` : 'Sign in to LonePawn'}
+        title={
+          resolvedTenant
+            ? `Sign in to ${resolvedTenant.name}`
+            : "Sign in to LonePawn"
+        }
         description={
           isSubdomainLogin
             ? `Subdomain ${tenantResolution.subdomain} is verified for this shop.`
-            : 'Use your saved tenant and staff credentials.'
+            : "Use your saved tenant and staff credentials."
         }
-        action={!isSubdomainLogin ? <Button onClick={handleSwitchTenant} variant="ghost">Switch tenant</Button> : null}
+        action={
+          !isSubdomainLogin ? (
+            <Button onClick={handleSwitchTenant} variant="ghost">
+              Switch tenant
+            </Button>
+          ) : null
+        }
       >
         {isTenantBlocked && (
           <Alert
             tone="danger"
             title="Tenant license"
             message={
-              resolvedTenant?.tenant_license.status === 'expired'
-                ? 'This tenant license has expired. Contact the shop owner or administrator.'
-                : 'This tenant is suspended. Contact the shop owner or administrator.'
+              resolvedTenant?.tenant_license.status === "expired"
+                ? "This tenant license has expired. Contact the shop owner or administrator."
+                : "This tenant is suspended. Contact the shop owner or administrator."
             }
           />
         )}
@@ -302,19 +375,31 @@ export function LoginPage() {
             </FormField>
           </FormGroup>
 
-          {error && <Alert tone="danger" title="Login failed" message={error} />}
+          {error && (
+            <Alert tone="danger" title="Login failed" message={error} />
+          )}
 
-          <Button fullWidth disabled={isTenantBlocked} isLoading={isSubmitting} type="submit" variant="primary">
+          <Button
+            fullWidth
+            disabled={isTenantBlocked}
+            isLoading={isSubmitting}
+            type="submit"
+            variant="primary"
+          >
             Sign in
           </Button>
         </form>
       </Card>
     </div>
-  )
+  );
 }
 
-function LicenseBadge({ status }: { status: SavedTenantProfile['licenseStatus'] }) {
-  const tone = status === 'paid' || status === 'trial' ? 'success' : 'danger'
+function LicenseBadge({
+  status,
+}: {
+  status: SavedTenantProfile["licenseStatus"];
+}) {
+  const tone = status === "paid" || status === "trial" ? "success" : "danger";
 
-  return <Badge tone={tone}>{status}</Badge>
+  return <Badge tone={tone}>{status}</Badge>;
 }

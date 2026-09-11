@@ -1,209 +1,354 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { Button, Input } from '../../../components/atoms'
-import { Alert } from '../../../components/feedback'
-import { ArrowRightIcon, SearchIcon } from '../../../components/icons/icon'
-import { ActionBar, Card, FinancialAmountInput, FormField, KeyValueList, SectionHeader } from '../../../components/molecules'
-import { ConfirmDialog, DataTable, Modal, type DataTableColumn } from '../../../components/organisms'
-import { LocalizedText, useUiLocale } from '../../../locales/UiLocale'
-import { createIdempotencyKey } from '../../../services/http/idempotency'
-import { formatDate } from '../../slips/slipFormat'
-import { interestService, type InterestBreakdownRow, type InterestCalculationResult, type InterestPaymentHistoryItem, type InterestPaymentResult } from '../services/interestService'
-import { FinancialAccountSelect } from '../../financialAccounts/components/FinancialAccountSelect'
-import { financialAmountToBase, type FinancialUnitCode } from '../../finance/financialUnits'
-import { AccountCurrencyAmount } from '../../finance/AccountCurrencyAmount'
-import { ReportingExchangeRateField } from '../../finance/ReportingExchangeRateField'
-import { FinanceHistoryMobileCard } from '../../finance/FinanceHistoryMobileCard'
-import { formatTenantDateTime } from '../../../utils/localDateTime'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import { Button, Input } from "../../../components/atoms";
+import { Alert } from "../../../components/feedback";
+import { ArrowRightIcon, SearchIcon } from "../../../components/icons/icon";
+import {
+  ActionBar,
+  Card,
+  FinancialAmountInput,
+  FormField,
+  KeyValueList,
+  SectionHeader,
+} from "../../../components/molecules";
+import {
+  ConfirmDialog,
+  DataTable,
+  Modal,
+  type DataTableColumn,
+} from "../../../components/organisms";
+import { LocalizedText, useUiLocale } from "../../../locales/UiLocale";
+import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { formatDate } from "../../slips/slipFormat";
+import {
+  interestService,
+  type InterestBreakdownRow,
+  type InterestCalculationResult,
+  type InterestPaymentHistoryItem,
+  type InterestPaymentResult,
+} from "../services/interestService";
+import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
+import {
+  financialAmountToBase,
+  type FinancialUnitCode,
+} from "../../finance/financialUnits";
+import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
+import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateField";
+import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
+import { formatTenantDateTime } from "../../../utils/localDateTime";
 
-const perPage = 10
+const perPage = 10;
 
-type InterestTab = 'workflow' | 'history'
+type InterestTab = "workflow" | "history";
 
 export function InterestPaymentsPage() {
-  const { t } = useUiLocale()
-  const [activeTab, setActiveTab] = useState<InterestTab>('workflow')
-  const [slipNo, setSlipNo] = useState('')
-  const [paymentAmount, setPaymentAmount] = useState('')
-  const [paymentAmountUnit, setPaymentAmountUnit] = useState<FinancialUnitCode>('UNIT')
-  const [acceptAccountId, setAcceptAccountId] = useState('')
-  const [reportingExchangeRate, setReportingExchangeRate] = useState('')
-  const [reportingExchangeRateInversed, setReportingExchangeRateInversed] = useState(false)
-  const [recordDebt, setRecordDebt] = useState(false)
-  const [calculation, setCalculation] = useState<InterestCalculationResult | null>(null)
-  const [paymentResult, setPaymentResult] = useState<InterestPaymentResult | null>(null)
-  const [paymentResultAccountId, setPaymentResultAccountId] = useState<number | null>(null)
-  const [history, setHistory] = useState<InterestPaymentHistoryItem[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [lastPage, setLastPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [isCalculating, setIsCalculating] = useState(false)
-  const [isPaying, setIsPaying] = useState(false)
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
-  const [confirmDebt, setConfirmDebt] = useState(false)
-  const paymentIdempotencyKeyRef = useRef<string | null>(null)
+  const { t } = useUiLocale();
+  const [activeTab, setActiveTab] = useState<InterestTab>("workflow");
+  const [slipNo, setSlipNo] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentAmountUnit, setPaymentAmountUnit] =
+    useState<FinancialUnitCode>("UNIT");
+  const [acceptAccountId, setAcceptAccountId] = useState("");
+  const [reportingExchangeRate, setReportingExchangeRate] = useState("");
+  const [reportingExchangeRateInversed, setReportingExchangeRateInversed] =
+    useState(false);
+  const [recordDebt, setRecordDebt] = useState(false);
+  const [calculation, setCalculation] =
+    useState<InterestCalculationResult | null>(null);
+  const [paymentResult, setPaymentResult] =
+    useState<InterestPaymentResult | null>(null);
+  const [paymentResultAccountId, setPaymentResultAccountId] = useState<
+    number | null
+  >(null);
+  const [history, setHistory] = useState<InterestPaymentHistoryItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [confirmDebt, setConfirmDebt] = useState(false);
+  const paymentIdempotencyKeyRef = useRef<string | null>(null);
 
-  const rows = getBreakdown(calculation)
-  const totalInterest = getTotalInterest(calculation)
-  const normalizedSlipNo = getSlipNo(calculation) || slipNo.trim()
-  const paidAmount = financialAmountToBase({ amount: paymentAmount, unit: paymentAmountUnit })
-  const isInsufficient = calculation !== null && paidAmount > 0 && paidAmount < totalInterest
+  const rows = getBreakdown(calculation);
+  const totalInterest = getTotalInterest(calculation);
+  const normalizedSlipNo = getSlipNo(calculation) || slipNo.trim();
+  const paidAmount = financialAmountToBase({
+    amount: paymentAmount,
+    unit: paymentAmountUnit,
+  });
+  const isInsufficient =
+    calculation !== null && paidAmount > 0 && paidAmount < totalInterest;
 
   const loadHistory = useCallback(async (page: number) => {
-    setIsLoadingHistory(true)
-    setError(null)
+    setIsLoadingHistory(true);
+    setError(null);
 
     try {
-      const response = await interestService.listHistory({ page, perPage })
-      const pageData = response
-      const nextItems = pageData.items ?? []
-      const nextPerPage = pageData.per_page ?? pageData.perPage ?? perPage
+      const response = await interestService.listHistory({ page, perPage });
+      const pageData = response;
+      const nextItems = pageData.items ?? [];
+      const nextPerPage = pageData.per_page ?? pageData.perPage ?? perPage;
 
-      setHistory(nextItems)
-      setCurrentPage(pageData.current_page ?? pageData.currentPage ?? page)
-      setLastPage(pageData.last_page ?? pageData.lastPage ?? Math.max(1, Math.ceil((pageData.total ?? nextItems.length) / nextPerPage)))
-      setTotal(pageData.total ?? nextItems.length)
+      setHistory(nextItems);
+      setCurrentPage(pageData.current_page ?? pageData.currentPage ?? page);
+      setLastPage(
+        pageData.last_page ??
+          pageData.lastPage ??
+          Math.max(
+            1,
+            Math.ceil((pageData.total ?? nextItems.length) / nextPerPage),
+          ),
+      );
+      setTotal(pageData.total ?? nextItems.length);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load interest payment history.')
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load interest payment history.",
+      );
     } finally {
-      setIsLoadingHistory(false)
+      setIsLoadingHistory(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    if (activeTab === 'history') {
+    if (activeTab === "history") {
       const loadTimer = window.setTimeout(() => {
-        void loadHistory(currentPage)
-      }, 0)
+        void loadHistory(currentPage);
+      }, 0);
 
-      return () => window.clearTimeout(loadTimer)
+      return () => window.clearTimeout(loadTimer);
     }
-  }, [activeTab, currentPage, loadHistory])
+  }, [activeTab, currentPage, loadHistory]);
 
   async function handleCalculate(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault()
+    event?.preventDefault();
 
     if (!slipNo.trim()) {
-      setError('Slip number is required.')
-      return
+      setError("Slip number is required.");
+      return;
     }
 
-    setIsCalculating(true)
-    setError(null)
-    setNotice(null)
-    setPaymentResult(null)
-    setAcceptAccountId('')
+    setIsCalculating(true);
+    setError(null);
+    setNotice(null);
+    setPaymentResult(null);
+    setAcceptAccountId("");
 
     try {
-      const response = await interestService.calculate(slipNo.trim())
-      setCalculation(response)
-      setNotice(`Interest calculated for slip ${getSlipNo(response) || slipNo.trim()}.`)
+      const response = await interestService.calculate(slipNo.trim());
+      setCalculation(response);
+      setNotice(
+        `Interest calculated for slip ${getSlipNo(response) || slipNo.trim()}.`,
+      );
     } catch (calculateError) {
-      setCalculation(null)
-      setError(calculateError instanceof Error ? calculateError.message : 'Unable to calculate interest.')
+      setCalculation(null);
+      setError(
+        calculateError instanceof Error
+          ? calculateError.message
+          : "Unable to calculate interest.",
+      );
     } finally {
-      setIsCalculating(false)
+      setIsCalculating(false);
     }
   }
 
   async function submitPayment(forceDebt = recordDebt) {
     if (paymentIdempotencyKeyRef.current !== null) {
-      return
+      return;
     }
 
     if (!normalizedSlipNo) {
-      setError('Calculate a slip before recording payment.')
-      return
+      setError("Calculate a slip before recording payment.");
+      return;
     }
 
     if (paidAmount <= 0) {
-      setError('Payment amount must be greater than zero.')
-      return
+      setError("Payment amount must be greater than zero.");
+      return;
     }
 
     if (!calculation) {
-      setError('Calculate a slip before recording payment.')
-      return
+      setError("Calculate a slip before recording payment.");
+      return;
     }
 
-    const slipUpdateKey = getSlipUpdateKey(calculation)
+    const slipUpdateKey = getSlipUpdateKey(calculation);
     if (slipUpdateKey === null) {
-      setError('Slip calculation data is stale or incomplete. Refresh the calculation and try again.')
-      return
+      setError(
+        "Slip calculation data is stale or incomplete. Refresh the calculation and try again.",
+      );
+      return;
     }
 
-    setIsPaying(true)
-    setError(null)
-    paymentIdempotencyKeyRef.current = createIdempotencyKey()
+    setIsPaying(true);
+    setError(null);
+    paymentIdempotencyKeyRef.current = createIdempotencyKey();
 
     try {
-      const response = await interestService.pay(normalizedSlipNo, {
-        ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
-        ...(reportingExchangeRate ? { reporting_exchange_rate: Number(reportingExchangeRate), reporting_exchange_rate_inversed: reportingExchangeRateInversed } : {}),
-        slip_update_key: slipUpdateKey,
-        payment_amount: Number(paymentAmount),
-        payment_amount_unit: paymentAmountUnit,
-        record_debt: forceDebt,
-        interest_breakdown: rows.map(toPaymentBreakdownPayload),
-      }, undefined, {
-        idempotencyKey: paymentIdempotencyKeyRef.current,
-      })
-      setConfirmDebt(false)
-      setSlipNo('')
-      setPaymentAmount('')
-      setAcceptAccountId('')
-      setRecordDebt(false)
-      setCalculation(null)
-      setPaymentResultAccountId(acceptAccountId ? Number(acceptAccountId) : (calculation.account_id ?? calculation.accountId ?? null))
-      setPaymentResult(response)
-      setNotice('Interest payment processed successfully.')
-      if (activeTab === 'history') {
-        await loadHistory(1)
+      const response = await interestService.pay(
+        normalizedSlipNo,
+        {
+          ...(acceptAccountId
+            ? { accept_account_id: Number(acceptAccountId) }
+            : {}),
+          ...(reportingExchangeRate
+            ? {
+                reporting_exchange_rate: Number(reportingExchangeRate),
+                reporting_exchange_rate_inversed: reportingExchangeRateInversed,
+              }
+            : {}),
+          slip_update_key: slipUpdateKey,
+          payment_amount: Number(paymentAmount),
+          payment_amount_unit: paymentAmountUnit,
+          record_debt: forceDebt,
+          interest_breakdown: rows.map(toPaymentBreakdownPayload),
+        },
+        undefined,
+        {
+          idempotencyKey: paymentIdempotencyKeyRef.current,
+        },
+      );
+      setConfirmDebt(false);
+      setSlipNo("");
+      setPaymentAmount("");
+      setAcceptAccountId("");
+      setRecordDebt(false);
+      setCalculation(null);
+      setPaymentResultAccountId(
+        acceptAccountId
+          ? Number(acceptAccountId)
+          : (calculation.account_id ?? calculation.accountId ?? null),
+      );
+      setPaymentResult(response);
+      setNotice("Interest payment processed successfully.");
+      if (activeTab === "history") {
+        await loadHistory(1);
       }
     } catch (payError) {
-      setError(payError instanceof Error ? payError.message : 'Unable to record interest payment.')
+      setError(
+        payError instanceof Error
+          ? payError.message
+          : "Unable to record interest payment.",
+      );
     } finally {
-      paymentIdempotencyKeyRef.current = null
-      setIsPaying(false)
+      paymentIdempotencyKeyRef.current = null;
+      setIsPaying(false);
     }
   }
 
   function handlePaymentSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (isInsufficient && !recordDebt) {
-      setConfirmDebt(true)
-      return
+      setConfirmDebt(true);
+      return;
     }
 
-    void submitPayment(recordDebt)
+    void submitPayment(recordDebt);
   }
 
   const columns: Array<DataTableColumn<InterestBreakdownRow>> = [
-    { header: 'Start Date', key: 'start', render: (row) => formatTenantDateTime(row.start_period_at, row.period_timezone) },
-    { header: 'End Date', key: 'end', render: (row) => formatTenantDateTime(row.end_period_at, row.period_timezone) },
-    { header: 'Interest Amount', key: 'amount', render: (row) => <AccountCurrencyAmount accountId={calculation?.account_id ?? calculation?.accountId} amount={getInterestAmount(row)} /> },
-  ]
+    {
+      header: "Start Date",
+      key: "start",
+      render: (row) =>
+        formatTenantDateTime(row.start_period_at, row.period_timezone),
+    },
+    {
+      header: "End Date",
+      key: "end",
+      render: (row) =>
+        formatTenantDateTime(row.end_period_at, row.period_timezone),
+    },
+    {
+      header: "Interest Amount",
+      key: "amount",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={calculation?.account_id ?? calculation?.accountId}
+          amount={getInterestAmount(row)}
+        />
+      ),
+    },
+  ];
 
   const historyColumns: Array<DataTableColumn<InterestPaymentHistoryItem>> = [
-    { header: 'Slip No', key: 'slip', render: (row) => <strong>{row.slip_no ?? '-'}</strong> },
-    { header: 'Period', key: 'period', render: (row) => `${formatTenantDateTime(row.start_period_at, row.period_timezone)} - ${formatTenantDateTime(row.end_period_at, row.period_timezone)}` },
-    { header: 'Interest', key: 'interest', render: (row) => <AccountCurrencyAmount accountId={row.created_account_id ?? row.createdAccountId} amount={row.interest_amount} /> },
-    { header: 'Paid Amount', key: 'paid', render: (row) => <AccountCurrencyAmount accountId={row.accept_account_id ?? row.acceptAccountId} amount={row.payment_amount} fallbackAccountId={row.created_account_id ?? row.createdAccountId} /> },
-    { header: 'Change', key: 'change', render: (row) => <AccountCurrencyAmount accountId={row.accept_account_id ?? row.acceptAccountId} amount={row.change_amount} fallbackAccountId={row.created_account_id ?? row.createdAccountId} /> },
-    { header: 'Payment Date', key: 'paymentDate', render: (row) => formatDate(row.payment_at) },
-    { header: 'Notes', key: 'notes', render: (row) => row.notes || '-' },
-  ]
+    {
+      header: "Slip No",
+      key: "slip",
+      render: (row) => <strong>{row.slip_no ?? "-"}</strong>,
+    },
+    {
+      header: "Period",
+      key: "period",
+      render: (row) =>
+        `${formatTenantDateTime(row.start_period_at, row.period_timezone)} - ${formatTenantDateTime(row.end_period_at, row.period_timezone)}`,
+    },
+    {
+      header: "Interest",
+      key: "interest",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={row.created_account_id ?? row.createdAccountId}
+          amount={row.interest_amount}
+        />
+      ),
+    },
+    {
+      header: "Paid Amount",
+      key: "paid",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={row.accept_account_id ?? row.acceptAccountId}
+          amount={row.payment_amount}
+          fallbackAccountId={row.created_account_id ?? row.createdAccountId}
+        />
+      ),
+    },
+    {
+      header: "Change",
+      key: "change",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={row.accept_account_id ?? row.acceptAccountId}
+          amount={row.change_amount}
+          fallbackAccountId={row.created_account_id ?? row.createdAccountId}
+        />
+      ),
+    },
+    {
+      header: "Payment Date",
+      key: "paymentDate",
+      render: (row) => formatDate(row.payment_at),
+    },
+    { header: "Notes", key: "notes", render: (row) => row.notes || "-" },
+  ];
 
   return (
     <section className="page ops-page ops-page--cashier">
       <div className="ops-hero">
-        <SectionHeader title="Interest Payments" subtitle="Calculate due interest, record payment, and create debt when needed." />
-        <div className="ops-metrics" aria-label={t('Interest payment summary')}>
+        <SectionHeader
+          title="Interest Payments"
+          subtitle="Calculate due interest, record payment, and create debt when needed."
+        />
+        <div className="ops-metrics" aria-label={t("Interest payment summary")}>
           <div className="ops-metric ops-metric--amount">
             <span>Total interest</span>
-            <strong><AccountCurrencyAmount accountId={calculation?.account_id ?? calculation?.accountId} amount={totalInterest} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={calculation?.account_id ?? calculation?.accountId}
+                amount={totalInterest}
+              />
+            </strong>
           </div>
           <div className="ops-metric">
             <span>Accrual rows</span>
@@ -216,22 +361,69 @@ export function InterestPaymentsPage() {
         </div>
       </div>
 
-      <div className="module-tabs ops-tabs" role="tablist" aria-label={t('Interest payment sections')}>
-        <Button aria-pressed={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} variant={activeTab === 'workflow' ? 'primary' : 'secondary'}>Workflow</Button>
-        <Button aria-pressed={activeTab === 'history'} onClick={() => setActiveTab('history')} variant={activeTab === 'history' ? 'primary' : 'secondary'}>History</Button>
+      <div
+        className="module-tabs ops-tabs"
+        role="tablist"
+        aria-label={t("Interest payment sections")}
+      >
+        <Button
+          aria-pressed={activeTab === "workflow"}
+          onClick={() => setActiveTab("workflow")}
+          variant={activeTab === "workflow" ? "primary" : "secondary"}
+        >
+          Workflow
+        </Button>
+        <Button
+          aria-pressed={activeTab === "history"}
+          onClick={() => setActiveTab("history")}
+          variant={activeTab === "history" ? "primary" : "secondary"}
+        >
+          History
+        </Button>
       </div>
 
-      {error && <Alert message={error} onDismiss={() => setError(null)} title="Interest action failed" tone="danger" />}
-      {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Interest updated" tone="success" />}
+      {error && (
+        <Alert
+          message={error}
+          onDismiss={() => setError(null)}
+          title="Interest action failed"
+          tone="danger"
+        />
+      )}
+      {notice && (
+        <Alert
+          message={notice}
+          onDismiss={() => setNotice(null)}
+          title="Interest updated"
+          tone="success"
+        />
+      )}
 
-      {activeTab === 'workflow' ? (
+      {activeTab === "workflow" ? (
         <div className="workflow-stack">
           <Card title="Slip Lookup">
-            <form className="inline-form ops-lookup-form interest-lookup-form" onSubmit={(event) => void handleCalculate(event)}>
+            <form
+              className="inline-form ops-lookup-form interest-lookup-form"
+              onSubmit={(event) => void handleCalculate(event)}
+            >
               <FormField id="interest-slip-no" label="Slip Number or Barcode">
-                <Input id="interest-slip-no" value={slipNo} onChange={(event) => setSlipNo(event.target.value)} />
+                <Input
+                  id="interest-slip-no"
+                  value={slipNo}
+                  onChange={(event) => setSlipNo(event.target.value)}
+                />
               </FormField>
-              <Button aria-label="Load Slip" className="interest-lookup-submit" isLoading={isCalculating} leftIcon={<SearchIcon />} title="Load Slip" type="submit" variant="primary">Load Slip</Button>
+              <Button
+                aria-label="Load Slip"
+                className="interest-lookup-submit"
+                isLoading={isCalculating}
+                leftIcon={<SearchIcon />}
+                title="Load Slip"
+                type="submit"
+                variant="primary"
+              >
+                Load Slip
+              </Button>
             </form>
           </Card>
 
@@ -239,11 +431,26 @@ export function InterestPaymentsPage() {
             <div className="ops-post-lookup-grid">
               <Card title="Accrual Breakdown">
                 <div className="ops-amount-panel ops-amount-panel--summary interest-accrual-desktop-detail">
-                  <KeyValueList items={[
-                    { key: 'Slip No', value: normalizedSlipNo },
-                    { key: 'Current Date', value: formatDate(calculation.current_date) },
-                    { key: 'Total Interest', value: <AccountCurrencyAmount accountId={calculation.account_id ?? calculation.accountId} amount={totalInterest} /> },
-                  ]} />
+                  <KeyValueList
+                    items={[
+                      { key: "Slip No", value: normalizedSlipNo },
+                      {
+                        key: "Current Date",
+                        value: formatDate(calculation.current_date),
+                      },
+                      {
+                        key: "Total Interest",
+                        value: (
+                          <AccountCurrencyAmount
+                            accountId={
+                              calculation.account_id ?? calculation.accountId
+                            }
+                            amount={totalInterest}
+                          />
+                        ),
+                      },
+                    ]}
+                  />
                 </div>
                 <div className="interest-accrual-desktop-detail">
                   <DataTable
@@ -251,7 +458,9 @@ export function InterestPaymentsPage() {
                     emptyDescription="No unpaid interest is due for this slip."
                     emptyTitle="No interest due"
                     getItemId={(row) => row.id}
-                    getItemTitle={(row) => `${formatTenantDateTime(row.start_period_at, row.period_timezone)} to ${formatTenantDateTime(row.end_period_at, row.period_timezone)}`}
+                    getItemTitle={(row) =>
+                      `${formatTenantDateTime(row.start_period_at, row.period_timezone)} to ${formatTenantDateTime(row.end_period_at, row.period_timezone)}`
+                    }
                     items={rows}
                   />
                 </div>
@@ -266,28 +475,83 @@ export function InterestPaymentsPage() {
 
               <Card title="Record Payment">
                 <form className="workflow-stack" onSubmit={handlePaymentSubmit}>
-                  <FormField id="interest-payment-amount" label="Payment Amount">
-                    <FinancialAmountInput id="interest-payment-amount" min="0.01" step="0.01" value={{ amount: paymentAmount, unit: paymentAmountUnit }} onChange={(next) => { setPaymentAmount(next.amount); setPaymentAmountUnit(next.unit) }} />
+                  <FormField
+                    id="interest-payment-amount"
+                    label="Payment Amount"
+                  >
+                    <FinancialAmountInput
+                      id="interest-payment-amount"
+                      min="0.01"
+                      step="0.01"
+                      value={{ amount: paymentAmount, unit: paymentAmountUnit }}
+                      onChange={(next) => {
+                        setPaymentAmount(next.amount);
+                        setPaymentAmountUnit(next.unit);
+                      }}
+                    />
                   </FormField>
-                  <FormField id="interest-accept-account" label="Accepting Account" helperText="Only accounts using the loan currency are shown.">
+                  <FormField
+                    id="interest-accept-account"
+                    label="Accepting Account"
+                    helperText="Only accounts using the loan currency are shown."
+                  >
                     <FinancialAccountSelect
                       id="interest-accept-account"
-                      matchAccountId={calculation.account_id ?? calculation.accountId}
+                      matchAccountId={
+                        calculation.account_id ?? calculation.accountId
+                      }
                       onChange={setAcceptAccountId}
                       value={acceptAccountId}
                     />
                   </FormField>
-                  <ReportingExchangeRateField accountId={acceptAccountId || calculation.account_id || calculation.accountId} inversed={reportingExchangeRateInversed} manualRate={reportingExchangeRate} onInversedChange={setReportingExchangeRateInversed} onManualRateChange={setReportingExchangeRate} />
+                  <ReportingExchangeRateField
+                    accountId={
+                      acceptAccountId ||
+                      calculation.account_id ||
+                      calculation.accountId
+                    }
+                    inversed={reportingExchangeRateInversed}
+                    manualRate={reportingExchangeRate}
+                    onInversedChange={setReportingExchangeRateInversed}
+                    onManualRateChange={setReportingExchangeRate}
+                  />
                   <label className="checkbox-line">
-                    <input checked={recordDebt} onChange={(event) => setRecordDebt(event.target.checked)} type="checkbox" />
-                    <span><LocalizedText text="Create debt if payment is insufficient" /></span>
+                    <input
+                      checked={recordDebt}
+                      onChange={(event) => setRecordDebt(event.target.checked)}
+                      type="checkbox"
+                    />
+                    <span>
+                      <LocalizedText text="Create debt if payment is insufficient" />
+                    </span>
                   </label>
                   {isInsufficient && !recordDebt && (
-                    <Alert message="Payment is less than calculated interest. Confirm debt recording before submitting." title="Insufficient payment" tone="warning" />
+                    <Alert
+                      message="Payment is less than calculated interest. Confirm debt recording before submitting."
+                      title="Insufficient payment"
+                      tone="warning"
+                    />
                   )}
                   <ActionBar>
-                    <Button onClick={() => { setPaymentAmount(''); setAcceptAccountId(''); setRecordDebt(false); setPaymentResult(null) }} variant="secondary">Reset</Button>
-                    <Button disabled={!calculation} isLoading={isPaying} type="submit" variant="primary">Record Payment</Button>
+                    <Button
+                      onClick={() => {
+                        setPaymentAmount("");
+                        setAcceptAccountId("");
+                        setRecordDebt(false);
+                        setPaymentResult(null);
+                      }}
+                      variant="secondary"
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      disabled={!calculation}
+                      isLoading={isPaying}
+                      type="submit"
+                      variant="primary"
+                    >
+                      Record Payment
+                    </Button>
                   </ActionBar>
                 </form>
               </Card>
@@ -295,13 +559,20 @@ export function InterestPaymentsPage() {
           )}
         </div>
       ) : (
-        <Card title="Interest History" description={`${total} total payment${total === 1 ? '' : 's'}`}>
+        <Card
+          title="Interest History"
+          description={`${total} total payment${total === 1 ? "" : "s"}`}
+        >
           <DataTable
             columns={historyColumns}
             emptyDescription="Completed interest payments will appear here."
             emptyTitle="No interest payments yet"
             getItemId={(row) => row.id}
-            getItemTitle={(row) => row.slip_no ? `Slip ${row.slip_no}` : `Interest Payment #${row.id}`}
+            getItemTitle={(row) =>
+              row.slip_no
+                ? `Slip ${row.slip_no}`
+                : `Interest Payment #${row.id}`
+            }
             isLoading={isLoadingHistory}
             items={history}
             pagination={{
@@ -326,47 +597,96 @@ export function InterestPaymentsPage() {
         title="Confirm debt recording"
       />
       <Modal
-        footer={<Button onClick={() => setPaymentResult(null)} variant="primary">Done</Button>}
+        footer={
+          <Button onClick={() => setPaymentResult(null)} variant="primary">
+            Done
+          </Button>
+        }
         isOpen={Boolean(paymentResult)}
         onClose={() => setPaymentResult(null)}
         title="Interest Payment Result"
       >
         {paymentResult && (
-          <KeyValueList items={[
-            { key: 'Status', value: formatPaymentStatus(paymentResult.status) },
-            { key: 'Paid Amount', value: <AccountCurrencyAmount accountId={paymentResultAccountId} amount={paymentResult.paidAmount} /> },
-            { key: 'Debt Amount', value: <AccountCurrencyAmount accountId={paymentResultAccountId} amount={paymentResult.debtAmount} /> },
-            { key: 'Change', value: <AccountCurrencyAmount accountId={paymentResultAccountId} amount={paymentResult.changeAmount} /> },
-          ]} />
+          <KeyValueList
+            items={[
+              {
+                key: "Status",
+                value: formatPaymentStatus(paymentResult.status),
+              },
+              {
+                key: "Paid Amount",
+                value: (
+                  <AccountCurrencyAmount
+                    accountId={paymentResultAccountId}
+                    amount={paymentResult.paidAmount}
+                  />
+                ),
+              },
+              {
+                key: "Debt Amount",
+                value: (
+                  <AccountCurrencyAmount
+                    accountId={paymentResultAccountId}
+                    amount={paymentResult.debtAmount}
+                  />
+                ),
+              },
+              {
+                key: "Change",
+                value: (
+                  <AccountCurrencyAmount
+                    accountId={paymentResultAccountId}
+                    amount={paymentResult.changeAmount}
+                  />
+                ),
+              },
+            ]}
+          />
         )}
       </Modal>
     </section>
-  )
+  );
 }
 
-function InterestHistoryMobileCard({ item }: { item: InterestPaymentHistoryItem }) {
-  const createdAccountId = item.created_account_id ?? item.createdAccountId
-  const acceptAccountId = item.accept_account_id ?? item.acceptAccountId
-  return <FinanceHistoryMobileCard
-    amount={<AccountCurrencyAmount accountId={acceptAccountId} amount={item.payment_amount} fallbackAccountId={createdAccountId} />}
-    eyebrow={`${formatTenantDateTime(item.start_period_at, item.period_timezone)} – ${formatTenantDateTime(item.end_period_at, item.period_timezone)}`}
-    meta={formatDate(item.payment_at)}
-    status="Paid"
-    statusTone="active"
-    title={item.slip_no ? `Slip ${item.slip_no}` : `Payment #${item.id}`}
-  />
+function InterestHistoryMobileCard({
+  item,
+}: {
+  item: InterestPaymentHistoryItem;
+}) {
+  const createdAccountId = item.created_account_id ?? item.createdAccountId;
+  const acceptAccountId = item.accept_account_id ?? item.acceptAccountId;
+  return (
+    <FinanceHistoryMobileCard
+      amount={
+        <AccountCurrencyAmount
+          accountId={acceptAccountId}
+          amount={item.payment_amount}
+          fallbackAccountId={createdAccountId}
+        />
+      }
+      eyebrow={`${formatTenantDateTime(item.start_period_at, item.period_timezone)} – ${formatTenantDateTime(item.end_period_at, item.period_timezone)}`}
+      meta={formatDate(item.payment_at)}
+      status="Paid"
+      statusTone="active"
+      title={item.slip_no ? `Slip ${item.slip_no}` : `Payment #${item.id}`}
+    />
+  );
 }
 
 function formatPaymentStatus(status: string) {
-  switch (status){
-    case 'debt_created' : return "Debt Created with leftover interest";
-    case 'change_made' : return "Change Amount needed to be returned to customer";
-    case 'success' : return "Paid in full";
-    default: return status;
+  switch (status) {
+    case "debt_created":
+      return "Debt Created with leftover interest";
+    case "change_made":
+      return "Change Amount needed to be returned to customer";
+    case "success":
+      return "Paid in full";
+    default:
+      return status;
   }
 }
 function formatNumber(value: number) {
-  return new Intl.NumberFormat('en-US').format(value)
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function InterestAccrualMobileDetail({
@@ -376,23 +696,25 @@ function InterestAccrualMobileDetail({
   slipNo,
   totalInterest,
 }: {
-  accountId?: number | null
-  currentDate: string
-  rows: InterestBreakdownRow[]
-  slipNo: string
-  totalInterest: number
+  accountId?: number | null;
+  currentDate: string;
+  rows: InterestBreakdownRow[];
+  slipNo: string;
+  totalInterest: number;
 }) {
   return (
     <section className="interest-accrual-mobile-detail">
       <div className="interest-accrual-mobile-detail__header">
         <h3>Accrual Breakdown</h3>
-        <span>{rows.length} Record{rows.length === 1 ? '' : 's'} Found</span>
+        <span>
+          {rows.length} Record{rows.length === 1 ? "" : "s"} Found
+        </span>
       </div>
 
       <div className="interest-accrual-mobile-summary">
         <div className="interest-accrual-mobile-summary__header">
           <p>Slip No</p>
-          <strong>{slipNo || '-'}</strong>
+          <strong>{slipNo || "-"}</strong>
         </div>
         <div className="interest-accrual-mobile-summary__content">
           <div>
@@ -401,7 +723,12 @@ function InterestAccrualMobileDetail({
           </div>
           <div>
             <p>Total Interest</p>
-            <strong><AccountCurrencyAmount accountId={accountId} amount={totalInterest} /></strong>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={accountId}
+                amount={totalInterest}
+              />
+            </strong>
           </div>
         </div>
       </div>
@@ -409,55 +736,66 @@ function InterestAccrualMobileDetail({
       {rows.map((row, index) => (
         <article className="interest-accrual-mobile-row" key={row.id}>
           <div className="interest-accrual-mobile-row__top">
-            <span>{index === 0 ? 'Active Row' : `Row ${index + 1}`}</span>
-            <strong><AccountCurrencyAmount accountId={accountId} amount={getInterestAmount(row)} /></strong>
+            <span>{index === 0 ? "Active Row" : `Row ${index + 1}`}</span>
+            <strong>
+              <AccountCurrencyAmount
+                accountId={accountId}
+                amount={getInterestAmount(row)}
+              />
+            </strong>
           </div>
           <div className="interest-accrual-mobile-row__period">
             <div>
               <span>Start Date</span>
-              <strong>{formatTenantDateTime(row.start_period_at, row.period_timezone)}</strong>
+              <strong>
+                {formatTenantDateTime(row.start_period_at, row.period_timezone)}
+              </strong>
             </div>
             <ArrowRightIcon />
             <div>
               <span>End Date</span>
-              <strong>{formatTenantDateTime(row.end_period_at, row.period_timezone)}</strong>
+              <strong>
+                {formatTenantDateTime(row.end_period_at, row.period_timezone)}
+              </strong>
             </div>
           </div>
         </article>
       ))}
     </section>
-  )
+  );
 }
 
 function getBreakdown(calculation: InterestCalculationResult | null) {
-  return calculation?.interest_breakdown ?? []
+  return calculation?.interest_breakdown ?? [];
 }
 
 function getTotalInterest(calculation: InterestCalculationResult | null) {
-  return calculation?.total_interest_amount ?? 0
+  return calculation?.total_interest_amount ?? 0;
 }
 
 function getSlipNo(calculation: InterestCalculationResult | null) {
-  return calculation?.slip_no ?? ''
+  return calculation?.slip_no ?? "";
 }
 
 function getSlipUpdateKey(calculation: InterestCalculationResult | null) {
-  return calculation?.slip_update_key ?? null
+  return calculation?.slip_update_key ?? null;
 }
 
 function getInterestAmount(row: InterestBreakdownRow) {
-  return row.interest_amount
+  return row.interest_amount;
 }
 
 function getRowUpdateKey(row: InterestBreakdownRow) {
-  return row.update_key ?? null
+  return row.update_key ?? null;
 }
 
 function toPaymentBreakdownPayload(row: InterestBreakdownRow) {
-  const updateKey = getRowUpdateKey(row)
+  const updateKey = getRowUpdateKey(row);
 
   if (updateKey === null) {
-    throw new Error('Interest breakdown data is stale or incomplete. Refresh the calculation and try again.')
+    throw new Error(
+      "Interest breakdown data is stale or incomplete. Refresh the calculation and try again.",
+    );
   }
 
   return {
@@ -466,5 +804,5 @@ function toPaymentBreakdownPayload(row: InterestBreakdownRow) {
     interest_amount: getInterestAmount(row),
     start_period_at: row.start_period_at ?? null,
     end_period_at: row.end_period_at ?? null,
-  }
+  };
 }
