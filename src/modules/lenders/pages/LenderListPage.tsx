@@ -99,15 +99,6 @@ export function LenderListPage() {
   function actions(item: TenantLender) {
     return (
       <div className="lender-row-actions">
-        <Button
-          aria-label={`View ${item.name}`}
-          className="ui-button--icon"
-          onClick={() => navigate(routePaths.lenderDetail(item.code))}
-          title="View lender"
-          variant="ghost"
-        >
-          <ContactPageIcon />
-        </Button>
         {canUpdate && (
           <Button
             aria-label={`Edit ${item.name}`}
@@ -144,6 +135,7 @@ export function LenderListPage() {
         </div>
         {canCreate && (
           <Button
+            variant="primary"
             className="lender-registry-page__desktop-create"
             leftIcon={<CirclePlusIcon />}
             onClick={() => navigate(routePaths.lenderCreate)}
@@ -155,6 +147,7 @@ export function LenderListPage() {
       {canCreate && (
         <div className="lender-registry-page__mobile-create">
           <Button
+            variant="primary"
             leftIcon={<CirclePlusIcon />}
             onClick={() => navigate(routePaths.lenderCreate)}
           >
@@ -220,6 +213,7 @@ export function LenderListPage() {
               action={
                 canCreate ? (
                   <Button
+                    variant="primary"
                     leftIcon={<CirclePlusIcon />}
                     onClick={() => navigate(routePaths.lenderCreate)}
                   >
