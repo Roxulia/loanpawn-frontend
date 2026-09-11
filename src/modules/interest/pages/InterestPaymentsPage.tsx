@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { useSearchParams } from "react-router";
 import { Button, Input } from "../../../components/atoms";
 import { Alert } from "../../../components/feedback";
 import { ArrowRightIcon, SearchIcon } from "../../../components/icons/icon";
@@ -48,6 +49,8 @@ type InterestTab = "workflow" | "history";
 
 export function InterestPaymentsPage() {
   const { t } = useUiLocale();
+  const [searchParams] = useSearchParams();
+  const querySlipNo = searchParams.get("slip")?.trim() ?? "";
   const [activeTab, setActiveTab] = useState<InterestTab>("workflow");
   const [slipNo, setSlipNo] = useState("");
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -76,6 +79,7 @@ export function InterestPaymentsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmDebt, setConfirmDebt] = useState(false);
   const paymentIdempotencyKeyRef = useRef<string | null>(null);
+  const autoCalculatedSlipRef = useRef<string | null>(null);
 
   const rows = getBreakdown(calculation);
   const totalInterest = getTotalInterest(calculation);
@@ -129,10 +133,30 @@ export function InterestPaymentsPage() {
     }
   }, [activeTab, currentPage, loadHistory]);
 
+  useEffect(() => {
+    if (!querySlipNo || autoCalculatedSlipRef.current === querySlipNo) {
+      return;
+    }
+
+    autoCalculatedSlipRef.current = querySlipNo;
+    setActiveTab("workflow");
+    setSlipNo(querySlipNo);
+
+    const calculateTimer = window.setTimeout(() => {
+      void calculateSlip(querySlipNo);
+    }, 0);
+
+    return () => window.clearTimeout(calculateTimer);
+  }, [querySlipNo]);
+
   async function handleCalculate(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
 
-    if (!slipNo.trim()) {
+    await calculateSlip(slipNo.trim());
+  }
+
+  async function calculateSlip(nextSlipNo: string) {
+    if (!nextSlipNo) {
       setError("Slip number is required.");
       return;
     }
@@ -144,10 +168,10 @@ export function InterestPaymentsPage() {
     setAcceptAccountId("");
 
     try {
-      const response = await interestService.calculate(slipNo.trim());
+      const response = await interestService.calculate(nextSlipNo);
       setCalculation(response);
       setNotice(
-        `Interest calculated for slip ${getSlipNo(response) || slipNo.trim()}.`,
+        `Interest calculated for slip ${getSlipNo(response) || nextSlipNo}.`,
       );
     } catch (calculateError) {
       setCalculation(null);

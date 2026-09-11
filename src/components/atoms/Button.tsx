@@ -1,7 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { translateNode, useUiLocale } from "../../locales/UiLocale";
 
-type ButtonVariant = "primary" | "secondary" | "accent" | "danger" | "ghost";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "accent"
+  | "danger"
+  | "ghost";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   fullWidth?: boolean;

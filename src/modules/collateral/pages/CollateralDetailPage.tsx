@@ -17,9 +17,15 @@ import {
 } from "../collateralFormat";
 import { collateralService } from "../services/collateralService";
 import type { CollateralItem } from "../types";
+import { usePermissions } from "../../auth";
+import { EditIcon } from "../../../components/icons/icon";
+import { CollateralEditor } from "../components/CollateralEditor";
+import { PackItemsView } from "../components/PackItems";
 
 export function CollateralDetailPage() {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
+  const [editing, setEditing] = useState(false);
   const { itemId } = useParams();
   const itemCode = itemId?.trim() ?? "";
   const [item, setItem] = useState<CollateralItem | null>(null);
@@ -64,14 +70,16 @@ export function CollateralDetailPage() {
     <section className="page collateral-detail-page">
       <SectionHeader
         title="Collateral Detail"
-        subtitle="Read-only collateral information for audit and lookup."
         action={
+          <div className="row-actions">
+          {item && !editing && hasPermission("update_collateral") && <Button onClick={() => setEditing(true)} leftIcon={<EditIcon />}>Edit</Button>}
           <Button
             onClick={() => navigate(routePaths.collateral)}
             variant="secondary"
           >
             Back
           </Button>
+          </div>
         }
       />
 
@@ -87,11 +95,12 @@ export function CollateralDetailPage() {
       {isLoading ? (
         <LoadingState rows={5} />
       ) : item ? (
+        editing ? <CollateralEditor key={item.code} item={item} onSaved={(saved) => { setItem(saved); setEditing(false); }} onCancel={() => setEditing(false)} onReload={() => { setEditing(false); void loadItem(itemCode); }} /> :
         <>
-          <CollateralReferenceImage item={item} />
+          {getItemType(item) !== "Pack of Jewellery" && <CollateralReferenceImage item={item} />}
           <Card
             title={item.name}
-            description={item.description || "No description recorded."}
+            description={getItemType(item) === "Pack of Jewellery" ? undefined : item.description || "No description recorded."}
             action={
               <Badge tone={getStatusTone(getItemStatus(item))}>
                 {getItemStatus(item)}
@@ -134,8 +143,8 @@ export function CollateralDetailPage() {
             />
           </Card>
 
-          {getItemType(item).toLowerCase() === "jewellery" && (
-            <Card title="Jewellery Details">
+          {getItemType(item).toLowerCase() !== "normal" && (
+            <Card title={getItemType(item) === "Pack of Jewellery" ? "Pack Details" : "Jewellery Details"}>
               <KeyValueList
                 items={[
                   {
@@ -163,6 +172,7 @@ export function CollateralDetailPage() {
               />
             </Card>
           )}
+          {getItemType(item) === "Pack of Jewellery" && <PackItemsView items={item.sub_items ?? []} />}
         </>
       ) : (
         <Alert

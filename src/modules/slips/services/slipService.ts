@@ -29,6 +29,7 @@ export type SlipCollateralItem = {
   update_key?: number;
   type: string;
   name: string;
+  sub_items?: import("../../collateral/types").PackItem[];
   description?: string | null;
   brand_name?: string | null;
   estimated_value?: string | number;
@@ -108,7 +109,8 @@ export type ItemCategoryType = {
 };
 
 export type SlipCollateralPayload = {
-  type: "Normal" | "Jewellery";
+  type: "Normal" | "Jewellery" | "Pack of Jewellery";
+  sub_items?: Array<{ name: string; quantity: number }>;
   name: string;
   description?: string;
   brand_name?: string;

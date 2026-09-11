@@ -1,31 +1,35 @@
-import { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useCallback, useEffect, useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router";
+import { routePaths } from "../../../app/routes/paths";
 import { Badge, Button } from "../../../components/atoms";
-import type { DataTableColumn } from "../../../components/organisms";
+import { Alert } from "../../../components/feedback";
+import {
+  CirclePlusIcon,
+  TrashIcon,
+} from "../../../components/icons/icon";
+import {
+  Card,
+  SearchField,
+  SectionHeader,
+  TableToolbar,
+} from "../../../components/molecules";
+import {
+  ConfirmDialog,
+  DataTable,
+  type DataTableColumn,
+} from "../../../components/organisms";
 import type { TenantDebt } from "../../../dataobjects/tenant/finance";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
-import { routePaths } from "../../../app/routes/paths";
-import {
-  FinanceResourcePage,
-  type FinanceResourcePageConfig,
-} from "../../finance/FinanceResourcePage";
+import { usePermissions } from "../../auth";
+import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
 import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
 import {
   formatDate,
-  getNumberField,
   getStringField,
 } from "../../finance/financeFormat";
-import { DebtFormFields } from "../components/DebtForm";
-import {
-  debtFormToPayload,
-  emptyDebtForm,
-  validateDebtForm,
-  type DebtFormErrors,
-  type DebtFormState,
-} from "../components/debtFormModel";
-import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
-import { DebtPaymentWorkflow } from "../components/DebtPaymentWorkflow";
 import { formatDebtLink } from "../components/debtFormat";
+
+const perPage = 10;
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
   {
@@ -79,163 +83,256 @@ const columns: Array<DataTableColumn<TenantDebt>> = [
   },
 ];
 
-function makeConfig(
-  onPay: (debtCode: string) => void,
-): FinanceResourcePageConfig<TenantDebt, DebtFormState> {
-  return {
-    cardTitle: "Debt records",
-    columns,
-    createLabel: "Add Debt",
-    createPath: routePaths.debtCreate,
-    createPermission: "create_debt",
-    deleteLabel: "Delete Debt",
-    deleteMessage: (item) =>
-      `Delete debt record "${item.description}"? This action cannot be undone.`,
-    deletePermission: "delete_debt",
-    detailPath: (item) => routePaths.debtDetail(item.code),
-    emptyDescription: "No unpaid interest or other debt records found.",
-    emptyTitle: "No debts",
-    getItemId: (item) => item.id,
-    getItemTitle: (item) => item.code,
-    getSearchText: (item) =>
-      [
-        item.code,
-        item.description,
-        item.amount,
-        item.tag ?? "",
-        getStringField(item, "slip_no", "slipNo"),
-        getStringField(item, "customer_name", "customerName"),
-        getStringField(item, "customer_code", "customerCode"),
-        item.is_paid ? "paid" : "unpaid",
-      ].join(" "),
-    initialForm: emptyDebtForm,
-    itemToForm: (item) => ({
-      amount: item.amount,
-      apply_interest: item.apply_interest ?? item.applyInterest ?? false,
-      amount_unit: "UNIT",
-      created_account_id: String(
-        item.created_account_id ?? item.createdAccountId ?? "",
-      ),
-      customer_code: getStringField(item, "customer_code", "customerCode"),
-      description: item.description,
-      link_mode: getStringField(item, "customer_code", "customerCode")
-        ? "customer"
-        : "slip",
-      slip_code: getStringField(item, "slip_no", "slipNo"),
-      tag: item.tag ?? "",
-      interest_rate: String(item.interest_rate ?? item.interestRate ?? ""),
-      interest_type_id: String(
-        item.interest_type_id ?? item.interestTypeId ?? "",
-      ),
-      reporting_exchange_rate: "",
-      reporting_exchange_rate_inversed: false,
-    }),
-    list: (params) => tenantResourceService.listDebts(params),
-    listPermission: "list_debt",
-    modalTitle: (mode) => (mode === "create" ? "Add debt" : "Edit debt"),
-    onDelete: (item) => tenantResourceService.deleteDebt(item.code),
-    hideUpdateAction: true,
-    renderForm: (form, errors, updateField) => (
-      <DebtFormFields
-        errors={errors as DebtFormErrors}
-        onChange={(field, value) => updateField(field, value)}
-        value={form}
-      />
-    ),
-    renderItemActions: (item) =>
-      item.is_paid ? null : (
-        <Button onClick={() => onPay(item.code)} variant="secondary">
-          Pay Debt
-        </Button>
-      ),
-    renderItemActionsPermission: "update_debt",
-    renderMobileCard: (item, actions, onClick) => (
-      <FinanceHistoryMobileCard
-        actions={actions}
-        amount={
-          <AccountCurrencyAmount
-            accountId={item.created_account_id ?? item.createdAccountId}
-            amount={
-              item.principal_balance ?? item.principalBalance ?? item.amount
-            }
-          />
-        }
-        eyebrow={item.code}
-        meta={
-          <>
-            {formatDebtLink(item)} ·{" "}
-            {formatDate(getStringField(item, "created_at", "createdAt"))}
-          </>
-        }
-        onClick={onClick}
-        status={item.is_paid ? "Paid" : "Unpaid"}
-        statusTone={item.is_paid ? "active" : "due"}
-        title={item.description}
-      />
-    ),
-    save: (mode, form, item) =>
-      mode === "create"
-        ? tenantResourceService.createDebt(debtFormToPayload(form))
-        : tenantResourceService.updateDebt(item?.code ?? "", {
-            ...debtFormToPayload(form),
-            update_key:
-              getNumberField(item ?? {}, "update_key", "updateKey") ?? 0,
-          }),
-    searchPlaceholder:
-      "Debt code, slip code, tag, status, description, or amount",
-    subtitle:
-      "Track unpaid interest and debt records attached to pawn operations.",
-    title: "Debts",
-    totalLabel: "debt",
-    updatePermission: "update_debt",
-    validate: validateDebtForm,
-  };
-}
-
 export function DebtsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const params = new URLSearchParams(location.search);
-  const activeTab = params.get("tab") === "payment" ? "payment" : "list";
-  const debtCode = params.get("debt_code") ?? "";
-  const config = useMemo(
-    () => makeConfig((code) => navigate(routePaths.debtPayment(code))),
-    [navigate],
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission("create_debt");
+  const canUpdate = hasPermission("update_debt");
+  const canDelete = hasPermission("delete_debt");
+  const [items, setItems] = useState<TenantDebt[]>([]);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [debtToDelete, setDebtToDelete] = useState<TenantDebt | null>(null);
+
+  const legacyParams = new URLSearchParams(location.search);
+  const legacyDebtCode = legacyParams.get("debt_code") ?? "";
+  const shouldRedirectLegacyPayment =
+    legacyParams.get("tab") === "payment" && legacyDebtCode.trim();
+
+  const load = useCallback(
+    async (page: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await tenantResourceService.listDebts({
+          page,
+          perPage,
+          search: debouncedSearch,
+        });
+        setItems(result.items);
+        setCurrentPage(result.current_page);
+        setLastPage(result.last_page);
+        setTotal(result.total);
+      } catch (reason) {
+        setError(
+          reason instanceof Error ? reason.message : "Unable to load debts.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [debouncedSearch],
   );
 
-  function selectTab(tab: "list" | "payment") {
-    navigate(
-      tab === "payment" ? `${routePaths.debts}?tab=payment` : routePaths.debts,
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setCurrentPage(1);
+      setDebouncedSearch(search.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(currentPage), 0);
+
+    return () => window.clearTimeout(timer);
+  }, [currentPage, load]);
+
+  async function remove() {
+    if (!debtToDelete) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await tenantResourceService.deleteDebt(debtToDelete.code);
+      setNotice("Debt deleted successfully.");
+      setDebtToDelete(null);
+      await load(
+        items.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage,
+      );
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Unable to delete debt.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function actions(row: TenantDebt) {
+    return (
+      <div className="business-loan-row-actions">
+        {!row.is_paid && canUpdate && (
+          <Button
+            aria-label={`Record payment for ${row.code}`}
+            className="ui-button--icon"
+            onClick={() => navigate(routePaths.debtPayment(row.code))}
+            title="Record payment"
+            variant="primary"
+          >
+            $
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            aria-label={`Delete ${row.code}`}
+            className="ui-button--icon"
+            onClick={() => setDebtToDelete(row)}
+            title="Delete debt"
+            variant="danger"
+          >
+            <TrashIcon />
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (shouldRedirectLegacyPayment) {
+    return (
+      <Navigate
+        replace
+        to={routePaths.debtPayment(legacyDebtCode.trim())}
+      />
     );
   }
 
   return (
-    <section className="debt-management-tabs">
-      <div
-        className="module-tabs"
-        role="tablist"
-        aria-label="Debt management sections"
+    <section className="page business-loan-registry-page debt-registry-page">
+      <SectionHeader
+        title="Debts"
+        subtitle="Track unpaid interest and debt records attached to pawn operations."
+        action={
+          canCreate ? (
+            <Button
+              leftIcon={<CirclePlusIcon />}
+              onClick={() => navigate(routePaths.debtCreate)}
+              variant="primary"
+            >
+              Add Debt
+            </Button>
+          ) : null
+        }
+      />
+      <Card
+        title="Debt records"
+        description={`${total} total debt${total === 1 ? "" : "s"}`}
+        action={<Badge tone="info">Finance</Badge>}
       >
-        <Button
-          aria-pressed={activeTab === "list"}
-          onClick={() => selectTab("list")}
-          variant={activeTab === "list" ? "primary" : "secondary"}
-        >
-          Debt List
-        </Button>
-        <Button
-          aria-pressed={activeTab === "payment"}
-          onClick={() => selectTab("payment")}
-          variant={activeTab === "payment" ? "primary" : "secondary"}
-        >
-          Payment & Interest
-        </Button>
-      </div>
-      {activeTab === "list" ? (
-        <FinanceResourcePage config={config} />
-      ) : (
-        <DebtPaymentWorkflow initialDebtCode={debtCode} />
-      )}
+        <div className="business-loan-registry debt-registry">
+          {error && (
+            <Alert
+              message={error}
+              onDismiss={() => setError(null)}
+              title="Debt action failed"
+              tone="danger"
+            />
+          )}
+          {notice && (
+            <Alert
+              message={notice}
+              onDismiss={() => setNotice(null)}
+              title="Debt updated"
+              tone="success"
+            />
+          )}
+          <TableToolbar
+            actions={
+              <Button
+                onClick={() => void load(currentPage)}
+                variant="secondary"
+              >
+                Refresh
+              </Button>
+            }
+            search={
+              <SearchField
+                id="debt-search"
+                label="Filter debts"
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Debt code, slip code, tag, status, description, or amount"
+                value={search}
+              />
+            }
+          />
+          <DataTable
+            actions={actions}
+            columns={columns}
+            emptyAction={
+              canCreate ? (
+                <Button
+                  leftIcon={<CirclePlusIcon />}
+                  onClick={() => navigate(routePaths.debtCreate)}
+                  variant="primary"
+                >
+                  Add Debt
+                </Button>
+              ) : null
+            }
+            emptyDescription={
+              debouncedSearch
+                ? "No debts match this search."
+                : "No unpaid interest or other debt records found."
+            }
+            emptyTitle={debouncedSearch ? "No matching debts" : "No debts"}
+            getItemId={(row) => row.id}
+            getItemTitle={(row) => row.code}
+            isLoading={loading}
+            items={items}
+            onRowClick={(row) => navigate(routePaths.debtDetail(row.code))}
+            pagination={{
+              currentPage,
+              lastPage,
+              onNext: () => setCurrentPage((page) => page + 1),
+              onPrevious: () => setCurrentPage((page) => page - 1),
+              total,
+            }}
+            renderMobileCard={(row, rowActions) => (
+              <FinanceHistoryMobileCard
+                actions={rowActions}
+                amount={
+                  <AccountCurrencyAmount
+                    accountId={row.created_account_id ?? row.createdAccountId}
+                    amount={
+                      row.principal_balance ??
+                      row.principalBalance ??
+                      row.amount
+                    }
+                  />
+                }
+                eyebrow={row.code}
+                meta={
+                  <>
+                    {formatDebtLink(row)} -{" "}
+                    {formatDate(getStringField(row, "created_at", "createdAt"))}
+                  </>
+                }
+                onClick={() => navigate(routePaths.debtDetail(row.code))}
+                status={row.is_paid ? "Paid" : "Unpaid"}
+                statusTone={row.is_paid ? "active" : "due"}
+                title={row.description}
+              />
+            )}
+          />
+        </div>
+      </Card>
+      <ConfirmDialog
+        confirmLabel="Delete Debt"
+        isLoading={deleting}
+        isOpen={Boolean(debtToDelete)}
+        message={`Delete debt ${debtToDelete?.code ?? ""}? This action cannot be undone.`}
+        onCancel={() => setDebtToDelete(null)}
+        onConfirm={() => void remove()}
+        title="Confirm debt deletion"
+      />
     </section>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from "../../../components/atoms";
 import { Alert, LoadingState } from "../../../components/feedback";
 import {
+  CirclePlusIcon,
   ChevronRightIcon,
   PrinterIcon,
   TrashIcon,
@@ -65,6 +66,8 @@ import {
   type SlipCollateralPayload,
 } from "../services/slipService";
 import { ExpenseImageInput } from "../../expenses/components/ExpenseImageInput";
+import { PackItemsEditor } from "../../collateral/components/PackItems";
+import type { PackItemForm } from "../../collateral/types";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
 import {
   financialAmountToBase,
@@ -83,6 +86,7 @@ const paperTypeOptions = [
 type SlipTab = "application" | "management";
 type ItemForm = SlipCollateralPayload & {
   key: string;
+  packRows?: PackItemForm[];
   gemstone_grade?: string;
   gemstone_quantity?: number;
   gemstone_type?: string;
@@ -137,6 +141,9 @@ export function SlipsPage() {
   const [prefilledCustomerCode, setPrefilledCustomerCode] = useState("");
   const [loan, setLoan] = useState(emptyLoan);
   const [items, setItems] = useState<ItemForm[]>([]);
+  const [expandedCollateralKey, setExpandedCollateralKey] = useState<
+    string | null
+  >(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isCreating, setIsCreating] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -529,9 +536,22 @@ export function SlipsPage() {
     setCustomer(emptyCustomer);
     setLoan(emptyLoan);
     setItems([]);
+    setExpandedCollateralKey(null);
     setFormErrors({});
     setShouldPrintAfterCreate(false);
     setPaperType("A4");
+  }
+
+  function addCollateralItem(type: SlipCollateralPayload["type"]) {
+    const nextItem = makeItem(type);
+
+    setItems((current) => [...current, nextItem]);
+    setExpandedCollateralKey(nextItem.key);
+  }
+
+  function removeCollateralItem(key: string) {
+    setItems((current) => current.filter((candidate) => candidate.key !== key));
+    setExpandedCollateralKey((current) => (current === key ? null : current));
   }
 
   function updateItem(key: string, patch: Partial<ItemForm>) {
@@ -713,7 +733,7 @@ export function SlipsPage() {
 
           <Card
             title="Collateral Details"
-            description={`${normalItemCount} normal, ${jewelleryItemCount} jewellery`}
+            description={`${normalItemCount} normal, ${jewelleryItemCount} jewellery, ${items.filter((item) => item.type === "Pack of Jewellery").length} packs`}
           >
             <div className="workflow-stack">
               {formErrors.items && (
@@ -723,37 +743,63 @@ export function SlipsPage() {
                   tone="warning"
                 />
               )}
-              {items.length === 0 && (
-                <p className="muted">
-                  <LocalizedText text="Choose an item type to start adding collateral." />
-                </p>
-              )}
-              {items.map((item, index) => (
-                <section className="subform-panel" key={item.key}>
+              {items.map((item, index) => {
+                const isExpanded = expandedCollateralKey === item.key;
+
+                return (
+                <section
+                  className={`subform-panel slip-collateral-panel ${
+                    isExpanded
+                      ? "slip-collateral-panel--expanded"
+                      : "slip-collateral-panel--collapsed"
+                  } ${getCollateralPanelClassName(item.type)}`}
+                  key={item.key}
+                >
                   <header className="subform-panel__header">
-                    <strong>
-                      {item.type} Item {index + 1}
-                    </strong>
-                    <Button
-                      onClick={() =>
-                        setItems((current) =>
-                          current.filter(
-                            (candidate) => candidate.key !== item.key,
-                          ),
-                        )
-                      }
-                      variant="ghost"
-                    >
-                      Remove
-                    </Button>
+                    <div className="slip-collateral-panel__title">
+                      <strong>
+                        {item.type} Item {index + 1}
+                      </strong>
+                      {!isExpanded && (
+                        <span>{item.name.trim() || "Unnamed item"}</span>
+                      )}
+                    </div>
+                    <div className="row-actions slip-collateral-panel__actions">
+                      <Button
+                        aria-expanded={isExpanded}
+                        aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.type} Item ${index + 1}`}
+                        className={`ui-button--icon slip-collateral-panel__toggle ${
+                          isExpanded
+                            ? "slip-collateral-panel__toggle--expanded"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setExpandedCollateralKey((current) =>
+                            current === item.key ? null : item.key,
+                          )
+                        }
+                        title={isExpanded ? "Collapse details" : "Expand details"}
+                        variant="ghost"
+                      >
+                        <ChevronRightIcon />
+                      </Button>
+                      <Button
+                        onClick={() => removeCollateralItem(item.key)}
+                        variant="ghost"
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </header>
+                  {isExpanded ? (
+                    <>
                   <FormGroup
                     className="slip-form-collateral-base-grid"
                     columns={2}
                   >
                     <FormField
                       id={`${item.key}-name`}
-                      label="Item Name"
+                      label={item.type === "Pack of Jewellery" ? "Pack Name" : "Item Name"}
                       error={formErrors[`${item.key}.name`]}
                     >
                       <Input
@@ -802,7 +848,7 @@ export function SlipsPage() {
                         </Select>
                       </FormField>
                     )}
-                    <FormField
+                    {item.type !== "Pack of Jewellery" && <><FormField
                       className="slip-form-field--full"
                       id={`${item.key}-description`}
                       label="Description"
@@ -835,7 +881,7 @@ export function SlipsPage() {
                         }
                         onRemoveChange={() => undefined}
                       />
-                    </FormField>
+                    </FormField></>}
                   </FormGroup>
                   {item.type === "Normal" && (
                     <FormGroup
@@ -877,7 +923,7 @@ export function SlipsPage() {
                       <RetailPriceField item={item} />
                     </FormGroup>
                   )}
-                  {item.type === "Jewellery" && (
+                  {item.type !== "Normal" && (
                     <>
                       <FormGroup
                         className="slip-form-jewellery-material-grid"
@@ -1092,25 +1138,34 @@ export function SlipsPage() {
                       <RetailPriceField item={item} />
                     </FormGroup>
                   )}
+                  {item.type === "Pack of Jewellery" && <>
+                    {formErrors[`${item.key}.pack`] && <Alert tone="warning" title="Pack details" message={formErrors[`${item.key}.pack`]} />}
+                    <RetailPriceField item={item} />
+                    <PackItemsEditor rows={item.packRows ?? []} onChange={(packRows) => updateItem(item.key, { packRows })} />
+                  </>}
+                    </>
+                  ) : (
+                    <CollateralItemSummary item={item} />
+                  )}
                 </section>
-              ))}
-              <div className="row-actions ops-card-actions slip-collateral-add-actions">
-                <Button
-                  onClick={() =>
-                    setItems((current) => [...current, makeItem("Normal")])
-                  }
-                  variant="secondary"
-                >
-                  Add Normal Item
-                </Button>
-                <Button
-                  onClick={() =>
-                    setItems((current) => [...current, makeItem("Jewellery")])
-                  }
-                  variant="secondary"
-                >
-                  Add Jewellery Item
-                </Button>
+                );
+              })}
+              <div className="slip-collateral-empty-panel">
+                <CirclePlusIcon />
+                <strong>
+                  <LocalizedText text="Add more collateral item" />
+                </strong>
+                <div className="row-actions ops-card-actions slip-collateral-add-actions">
+                  <Button onClick={() => addCollateralItem("Normal")}>
+                    Add Normal Item
+                  </Button>
+                  <Button onClick={() => addCollateralItem("Jewellery")}>
+                    Add Jewellery Item
+                  </Button>
+                  <Button onClick={() => addCollateralItem("Pack of Jewellery")}>
+                    Add Jewellery Pack
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
@@ -1317,16 +1372,7 @@ export function SlipsPage() {
                 canList || canDelete
                   ? (slip) => (
                       <div className="row-actions">
-                        {canList && (
-                          <Button
-                            onClick={() =>
-                              navigate(routePaths.slipDetail(slip.slip_no))
-                            }
-                            variant="secondary"
-                          >
-                            View
-                          </Button>
-                        )}
+                        
                         {canList && (
                           <Button
                             aria-label={`Print ${slip.slip_no}`}
@@ -1457,6 +1503,48 @@ export function SlipsPage() {
   );
 }
 
+function CollateralItemSummary({ item }: { item: ItemForm }) {
+  const quantityLabel =
+    item.type === "Pack of Jewellery"
+      ? `${item.packRows?.length ?? 0} contained item${
+          (item.packRows?.length ?? 0) === 1 ? "" : "s"
+        }`
+      : `${item.quantity ?? 1} item${Number(item.quantity ?? 1) === 1 ? "" : "s"}`;
+
+  return (
+    <div className="slip-collateral-summary-row">
+      <span>
+        <LocalizedText text="Type" />
+        <strong>{item.type}</strong>
+      </span>
+      <span>
+        <LocalizedText text="Name" />
+        <strong>{item.name.trim() || "Unnamed item"}</strong>
+      </span>
+      <span>
+        <LocalizedText text="Quantity" />
+        <strong>{quantityLabel}</strong>
+      </span>
+      <span>
+        <LocalizedText text="Minimum Retail Price" />
+        <strong>{formatMoney(calculateMinimumRetailPrice(item))}</strong>
+      </span>
+    </div>
+  );
+}
+
+function getCollateralPanelClassName(type: SlipCollateralPayload["type"]) {
+  switch (type) {
+    case "Jewellery":
+      return "slip-collateral-panel--jewellery";
+    case "Pack of Jewellery":
+      return "slip-collateral-panel--pack";
+    case "Normal":
+    default:
+      return "slip-collateral-panel--normal";
+  }
+}
+
 function RetailPriceField({ item }: { item: ItemForm }) {
   return (
     <div className="ui-form-field slip-form-retail-field">
@@ -1473,7 +1561,7 @@ function RetailPriceField({ item }: { item: ItemForm }) {
   );
 }
 
-function makeItem(type: "Normal" | "Jewellery"): ItemForm {
+function makeItem(type: SlipCollateralPayload["type"]): ItemForm {
   return {
     key: `${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     type,
@@ -1523,6 +1611,17 @@ function validateSlipForm(
   }
 
   items.forEach((item) => {
+    if (item.type === "Pack of Jewellery") {
+      if (!item.material_type_id || Number(item.material_price_per_kyat ?? 0) <= 0 || calculateJewelleryWeightInKyat(item) <= 0) {
+        errors[`${item.key}.pack`] = "Enter total weight, material, and a positive material price per kyat.";
+      }
+      if ((item.packRows ?? []).some((row) => !row.name.trim() || row.name.trim().length > 120 || !Number.isInteger(row.quantity) || row.quantity < 1)) {
+        errors[`${item.key}.pack`] = "Each contained item needs a name and a positive whole-number quantity.";
+      }
+      if ([item.kyat, item.pal, item.yway].some((value) => Number(value ?? 0) < 0 || Number(value ?? 0) > 999999.99 || Math.abs(Number(value ?? 0) * 100 - Math.round(Number(value ?? 0) * 100)) > 0.00001)) {
+        errors[`${item.key}.pack`] = "Weights must be nonnegative and have at most two decimal places.";
+      }
+    }
     if (!item.name.trim()) {
       errors[`${item.key}.name`] = "Item name is required.";
     }
@@ -1633,20 +1732,21 @@ function optionalNrcPayload(value: typeof emptyNrcValue) {
 function toPayloadItem(item: ItemForm): SlipCollateralPayload {
   return {
     type: item.type,
+    sub_items: item.type === "Pack of Jewellery" ? (item.packRows ?? []).map((row) => ({ name: row.name.trim(), quantity: row.quantity })) : undefined,
     name: item.name.trim(),
-    description: item.description?.trim() || undefined,
+    description: item.type === "Pack of Jewellery" ? undefined : item.description?.trim() || undefined,
     brand_name:
-      item.type === "Jewellery" ? "None" : item.brand_name?.trim() || undefined,
+      item.type === "Jewellery" ? "None" : item.type === "Pack of Jewellery" ? undefined : item.brand_name?.trim() || undefined,
     estimated_value:
-      item.type === "Jewellery" ? 0 : Number(item.estimated_value ?? 0),
+      item.type !== "Normal" ? 0 : Number(item.estimated_value ?? 0),
     estimated_value_unit: item.estimated_value_unit ?? "UNIT",
     material_type_id: item.material_type_id,
     material_price_per_kyat:
-      item.type === "Jewellery"
+      item.type !== "Normal"
         ? Number(item.material_price_per_kyat ?? 0)
         : undefined,
     material_price_per_kyat_unit:
-      item.type === "Jewellery"
+      item.type !== "Normal"
         ? (item.material_price_per_kyat_unit ?? "UNIT")
         : undefined,
     item_category_type_id:
@@ -1731,14 +1831,14 @@ function makeGemstoneDetails(item: ItemForm) {
 }
 
 function calculateMinimumRetailPrice(item: ItemForm) {
-  if (item.type === "Jewellery") {
+  if (item.type !== "Normal") {
     return roundMoney(
       financialAmountToBase({
         amount: String(item.material_price_per_kyat ?? 0),
         unit: item.material_price_per_kyat_unit ?? "UNIT",
       }) *
         calculateJewelleryWeightInKyat(item) *
-        Number(item.quantity ?? 1),
+        (item.type === "Pack of Jewellery" ? 1 : Number(item.quantity ?? 1)),
     );
   }
 

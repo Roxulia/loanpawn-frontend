@@ -42,7 +42,7 @@ export const routePaths = {
   debtCreate: "/debts/create",
   debtDetail: (debtCode: string) => `/debts/${encodeURIComponent(debtCode)}`,
   debtPayment: (debtCode: string) =>
-    `/debts?tab=payment&debt_code=${encodeURIComponent(debtCode)}`,
+    `/debts/${encodeURIComponent(debtCode)}/payment`,
   businessLoans: "/business-loans",
   businessLoanCreate: "/business-loans/create",
   businessLoanDetail: (code: string) =>

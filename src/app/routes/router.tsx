@@ -39,7 +39,12 @@ import {
   CustomerEditPage,
   CustomerListPage,
 } from "../../modules/customers";
-import { DebtCreatePage, DebtDetailPage, DebtsPage } from "../../modules/debts";
+import {
+  DebtCreatePage,
+  DebtDetailPage,
+  DebtPaymentPage,
+  DebtsPage,
+} from "../../modules/debts";
 import {
   BusinessLoanCreatePage,
   BusinessLoanDetailPage,
@@ -458,6 +463,16 @@ export const router = createBrowserRouter([
           "Debts",
           <PermissionRoute permission="list_debt">
             <DebtDetailPage />
+          </PermissionRoute>,
+        ),
+      },
+      {
+        path: "/debts/:debtCode/payment",
+        element: featureGate(
+          "debt_management",
+          "Debts",
+          <PermissionRoute permission="update_debt">
+            <DebtPaymentPage />
           </PermissionRoute>,
         ),
       },

@@ -1,0 +1,28 @@
+.collateral-editor, .pack-items-editor, .pack-items-view { min-width: 0; }
+.collateral-editor h3, .pack-items-editor h3, .pack-items-view h3 { font-size: 1rem; letter-spacing: 0; margin: 0; }
+.collateral-editor-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.collateral-editor-fields > *, .pack-row-fields > * { min-width: 0; }
+.collateral-editor fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.pack-items-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0; }
+.pack-edit-row { border-top: 1px solid #d5dce0; padding: 1rem 0; }
+.pack-row-fields { display: grid; grid-template-columns: minmax(10rem, 2fr) repeat(4, minmax(4rem, 1fr)) minmax(8rem, 1.5fr) auto; gap: .75rem; align-items: end; }
+.pack-row-image { margin-top: .75rem; }
+.pack-row-image > img { width: 8rem; height: 6rem; object-fit: contain; }
+.pack-items-view { margin-top: 1rem; }
+.pack-items-desktop { overflow-x: auto; }
+.pack-items-desktop table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: .75rem; }
+.pack-items-desktop th, .pack-items-desktop td { padding: .65rem .4rem; text-align: left; border-bottom: 1px solid #d5dce0; overflow-wrap: anywhere; }
+.pack-items-desktop th:first-child { width: 25%; }
+.pack-items-view img { width: 4rem; height: 3rem; object-fit: contain; }
+.pack-items-mobile { display: none; }
+.collateral-weight-summary { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem 0; font-variant-numeric: tabular-nums; }
+.collateral-editor-actions { display: flex; gap: .75rem; padding-top: 1rem; flex-wrap: wrap; }
+@media (max-width: 64rem) { .pack-row-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 39.9375rem) {
+  .collateral-editor-fields, .pack-row-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pack-row-fields > :first-child { grid-column: 1 / -1; }
+  .pack-items-heading { flex-wrap: wrap; }
+  .pack-items-desktop { display: none; }
+  .pack-items-mobile { display: block; }
+  .pack-mobile-row { display: grid; gap: .4rem; padding: .75rem 0; border-bottom: 1px solid #d5dce0; overflow-wrap: anywhere; }
+}

@@ -1,9 +1,31 @@
-export type CollateralType = "Jewellery" | "Normal" | "jewellery" | "normal";
+export const collateralTypes = ["Jewellery", "Normal", "Pack of Jewellery"] as const;
+export type CollateralType = typeof collateralTypes[number] | "jewellery" | "normal";
+
+export type PackItem = {
+  id?: number;
+  name: string;
+  quantity: number;
+  kyat?: string | number | null;
+  pal?: string | number | null;
+  yway?: string | number | null;
+  material_type_id?: number | null;
+  material_type_name?: string | null;
+  image_url?: string | null;
+  has_image_reference?: boolean;
+};
+
+export type PackItemForm = PackItem & {
+  key: string;
+  image_reference?: File;
+  remove_image?: boolean;
+};
 
 export type CollateralItem = {
   id: number;
   code: string;
   update_key?: number;
+  material_price_per_kyat?: string | number | null;
+  sub_items?: PackItem[];
   itemType?: CollateralType;
   itemStatus?: string;
   imageUrl?: string | null;
@@ -18,7 +40,7 @@ export type CollateralItem = {
   itemCategoryTypeId?: number | null;
   itemCategoryTypeName?: string | null;
   containsGemstones?: boolean;
-  gemstoneDetails?: unknown[] | null;
+  gemstoneDetails?: import("../slips/services/slipService").GemstoneDetailsPayload | unknown[] | null;
   minimumRetailPrice?: string;
   isDeleted?: boolean;
   updatedAt?: string | null;
@@ -42,7 +64,7 @@ export type CollateralItem = {
   yway?: string;
   item_status: string;
   contains_gemstones?: boolean;
-  gemstone_details?: unknown[] | null;
+  gemstone_details?: import("../slips/services/slipService").GemstoneDetailsPayload | unknown[] | null;
   quantity?: number;
   minimum_retail_price?: string;
   is_deleted?: boolean;
@@ -75,7 +97,17 @@ export type CollateralItemPayload = {
   yway?: number;
   item_status?: string;
   contains_gemstones?: boolean;
-  gemstone_details?: unknown[] | null;
+  gemstone_details?: import("../slips/services/slipService").GemstoneDetailsPayload | null;
   quantity?: number;
   minimum_retail_price?: number;
+};
+
+export type CollateralUpdatePayload = Omit<Partial<CollateralItemPayload>, "type" | "item_status" | "image_url" | "minimum_retail_price"> & {
+  update_key: number;
+  material_price_per_kyat?: number;
+  material_price_per_kyat_unit?: import("../finance/financialUnits").FinancialUnitCode;
+  estimated_value_unit?: import("../finance/financialUnits").FinancialUnitCode;
+  image_reference?: File;
+  remove_image?: boolean;
+  sub_items?: Array<Omit<PackItemForm, "key" | "image_url" | "has_image_reference" | "material_type_name">>;
 };

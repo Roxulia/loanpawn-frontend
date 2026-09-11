@@ -5,7 +5,6 @@ import { Badge, Button } from "../../../components/atoms";
 import { Alert, EmptyState, LoadingState } from "../../../components/feedback";
 import {
   CirclePlusIcon,
-  ContactPageIcon,
   EditIcon,
   RefreshIcon,
   TrashIcon,
