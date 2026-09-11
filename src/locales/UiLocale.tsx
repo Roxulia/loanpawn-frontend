@@ -338,6 +338,342 @@ const mmTranslations: Record<string, string> = {
   "Total Interest": "စုစုပေါင်း အတိုး",
   Weight: "အလေးချိန်",
   Yway: "ရွေး",
+  "Abort Currency Change": "ငွေကြေးပြောင်းလဲမှု ပယ်ဖျက်ရန်",
+  "Abort reporting currency change": "အစီရင်ခံငွေကြေး ပြောင်းလဲမှု ပယ်ဖျက်ရန်",
+  "Account action failed": "အကောင့် လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Account Detail": "အကောင့် အသေးစိတ်",
+  "Account history failed": "အကောင့်မှတ်တမ်း မအောင်မြင်ပါ",
+  "Account not found": "အကောင့် မတွေ့ပါ",
+  "Account number": "အကောင့်နံပါတ်",
+  "Account Status": "အကောင့်အခြေအနေ",
+  "Account transfer completed.": "အကောင့်လွှဲပြောင်းမှု ပြီးစီးပါပြီ။",
+  "Account type": "အကောင့်အမျိုးအစား",
+  "Accounting action failed": "စာရင်းကိုင် လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Accounting day updated": "စာရင်းကိုင်ရက် အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  "Accounting filters": "စာရင်းကိုင် စစ်ထုတ်မှုများ",
+  "Accounting overview": "စာရင်းကိုင် အနှစ်ချုပ်",
+  "Accounts updated": "အကောင့်များ အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  "Active Loan Amount": "လက်ရှိချေးငွေပမာဏ",
+  "Active Loans": "လက်ရှိချေးငွေများ",
+  "Active Pawn Loans": "လက်ရှိအပေါင်ချေးငွေများ",
+  "Add another cash, bank, or online payment account.":
+    "ငွေသား၊ ဘဏ် သို့မဟုတ် အွန်လိုင်းငွေပေးချေမှု အကောင့်အသစ် ထည့်ပါ။",
+  "Add capital": "အရင်းအနှီး ထည့်ရန်",
+  "Add Capital": "အရင်းအနှီး ထည့်ရန်",
+  "Add Currency": "ငွေကြေး ထည့်ရန်",
+  "Add Lender": "ငွေချေးသူ ထည့်ရန်",
+  "Admin closing prices": "အက်ဒမင် ပိတ်ဈေးများ",
+  "Allocate a payment against this business loan.":
+    "ဤလုပ်ငန်းချေးငွေအတွက် ပေးချေမှုကို ခွဲဝေမှတ်တမ်းတင်ပါ။",
+  "An active customer with the same email, phone, or NRC already exists.":
+    "အီးမေးလ်၊ ဖုန်း သို့မဟုတ် NRC တူညီသော လက်ရှိဖောက်သည် ရှိပြီးသားဖြစ်ပါသည်။",
+  "Asset Inflow": "ပိုင်ဆိုင်မှု အဝင်",
+  "Assign buying and selling prices and review daily observations and trends.":
+    "ဝယ်ဈေး၊ ရောင်းဈေး သတ်မှတ်ပြီး နေ့စဉ်မှတ်တမ်းနှင့် လမ်းကြောင်းများကို စစ်ဆေးပါ။",
+  "Assign this account from a staff edit page.":
+    "ဤအကောင့်ကို ဝန်ထမ်းပြင်ဆင်စာမျက်နှာမှ ချထားပါ။",
+  "Assigned Staff": "ချထားသော ဝန်ထမ်းများ",
+  "Average Loan Term": "ပျမ်းမျှချေးငွေကာလ",
+  "Avg. Trust Score": "ပျမ်းမျှယုံကြည်မှုအမှတ်",
+  "Bad Repayment History Count": "မကောင်းသော ပြန်ဆပ်မှတ်တမ်း အရေအတွက်",
+  "Base currency": "အခြေခံငွေကြေး",
+  "Before finalizing": "အပြီးသတ်မီ",
+  "Built-in platform currencies are read-only. Tenant currencies can be maintained here.":
+    "စနစ်ပါငွေကြေးများကို ဖတ်ရန်သာရပြီး ဆိုင်ငွေကြေးများကို ဤနေရာတွင် ထိန်းသိမ်းနိုင်ပါသည်။",
+  "Business funding profile": "လုပ်ငန်းရန်ပုံငွေ ပရိုဖိုင်",
+  "Business loan action failed": "လုပ်ငန်းချေးငွေ လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Business loan compound schedule saved.":
+    "လုပ်ငန်းချေးငွေ အတိုးပေါင်းထည့် အချိန်ဇယား သိမ်းပြီးပါပြီ။",
+  "Business loan deleted successfully.": "လုပ်ငန်းချေးငွေ ဖျက်ပြီးပါပြီ။",
+  "Business Loan Detail": "လုပ်ငန်းချေးငွေ အသေးစိတ်",
+  "Business Loan Payment": "လုပ်ငန်းချေးငွေ ပေးချေမှု",
+  "Business loan payment recorded.":
+    "လုပ်ငန်းချေးငွေ ပေးချေမှု မှတ်တမ်းတင်ပြီးပါပြီ။",
+  "Business loan records": "လုပ်ငန်းချေးငွေ မှတ်တမ်းများ",
+  "Business loan updated": "လုပ်ငန်းချေးငွေ အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  "Business Loans": "လုပ်ငန်းချေးငွေများ",
+  "Buying price": "ဝယ်ဈေး",
+  "Calculate a slip before redeeming.": "ရွေးယူမီ စာချုပ်ကို တွက်ချက်ပါ။",
+  "Calculate redemption totals, receive payment, and review redemption records.":
+    "ရွေးယူရန် စုစုပေါင်းကို တွက်ချက်၊ ငွေလက်ခံပြီး ရွေးယူမှုမှတ်တမ်းများကို စစ်ဆေးပါ။",
+  "Capital action failed": "အရင်းအနှီး လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Capital details": "အရင်းအနှီး အသေးစိတ်",
+  "capital entry": "အရင်းအနှီးမှတ်တမ်း",
+  "Capital Management": "အရင်းအနှီး စီမံခန့်ခွဲမှု",
+  "Capital records create incoming accounting entries server-side.":
+    "အရင်းအနှီးမှတ်တမ်းများသည် ဆာဗာဘက်တွင် အဝင်စာရင်းများ ဖန်တီးပါသည်။",
+  "Capitalize outstanding interest into the business loan principal.":
+    "မပေးချေရသေးသော အတိုးကို လုပ်ငန်းချေးငွေ မူရင်းထဲသို့ ပေါင်းထည့်ပါ။",
+  "Cash Available": "ရရှိနိုင်သော ငွေသား",
+  "Changes update the shared customer and lender identity.":
+    "ပြောင်းလဲမှုများသည် မျှဝေထားသော ဖောက်သည်နှင့် ငွေချေးသူ အချက်အလက်ကို အပ်ဒိတ်လုပ်ပါသည်။",
+  "Chart series": "ဇယားစီးရီး",
+  "Choose a pair and enter buying and selling prices.":
+    "ငွေကြေးအတွဲကို ရွေးပြီး ဝယ်ဈေးနှင့် ရောင်းဈေး ထည့်ပါ။",
+  "Choose base and quote currencies.": "အခြေခံနှင့် ကိုးကားငွေကြေးကို ရွေးပါ။",
+  "Choose both start date and end date.":
+    "စတင်ရက်နှင့် ပြီးဆုံးရက် နှစ်ခုလုံးကို ရွေးပါ။",
+  "Choose different accounts and enter valid transfer values.":
+    "ကွဲပြားသော အကောင့်များကို ရွေးပြီး မှန်ကန်သော လွှဲပြောင်းတန်ဖိုးများ ထည့်ပါ။",
+  "Clear or change the filters to see more results.":
+    "ရလဒ်များ ပိုမိုကြည့်ရန် စစ်ထုတ်မှုများကို ရှင်းပါ သို့မဟုတ် ပြောင်းပါ။",
+  "Close accounting day": "စာရင်းကိုင်ရက် ပိတ်ရန်",
+  "Close Accounting Day": "စာရင်းကိုင်ရက် ပိတ်ရန်",
+  "Close detail view": "အသေးစိတ်မြင်ကွင်း ပိတ်ရန်",
+  "Code, name, or account number": "ကုဒ်၊ အမည် သို့မဟုတ် အကောင့်နံပါတ်",
+  "Collateral category donut chart": "အပေါင်အမျိုးအစား ဒိုးနတ်ဇယား",
+  "Collateral Items Needing Review": "စစ်ဆေးရန်လိုသော အပေါင်ပစ္စည်းများ",
+  "Collateral Situation": "အပေါင်အခြေအနေ",
+  "Collateral values, LTV, and items that need review.":
+    "အပေါင်တန်ဖိုးများ၊ LTV နှင့် စစ်ဆေးရန်လိုသော ပစ္စည်းများ။",
+  "Compound schedule": "အတိုးပေါင်းထည့် အချိန်ဇယား",
+  "Configure explicit base and quote currency directions.":
+    "အခြေခံနှင့် ကိုးကားငွေကြေး ဦးတည်ချက်များကို တိတိကျကျ သတ်မှတ်ပါ။",
+  "Confirm business loan deletion": "လုပ်ငန်းချေးငွေ ဖျက်မှု အတည်ပြုရန်",
+  "Confirm customer deletion": "ဖောက်သည် ဖျက်မှု အတည်ပြုရန်",
+  "Confirm historical rates": "သမိုင်းဝင်နှုန်းထားများ အတည်ပြုရန်",
+  "Confirm lender deletion": "ငွေချေးသူ ဖျက်မှု အတည်ပြုရန်",
+  "Contact Details": "ဆက်သွယ်ရန် အသေးစိတ်",
+  "Correction reason": "ပြင်ဆင်ရသည့် အကြောင်းရင်း",
+  "Create a business loan to record lender funding.":
+    "ငွေချေးသူရန်ပုံငွေ မှတ်တမ်းတင်ရန် လုပ်ငန်းချေးငွေ ဖန်တီးပါ။",
+  "Create a customer record before using it in loan slip workflows.":
+    "ချေးငွေစာချုပ်လုပ်ငန်းစဉ်တွင် အသုံးမပြုမီ ဖောက်သည်မှတ်တမ်း ဖန်တီးပါ။",
+  "Create a lender to begin recording business funding.":
+    "လုပ်ငန်းရန်ပုံငွေ မှတ်တမ်းတင်ရန် ငွေချေးသူ ဖန်တီးပါ။",
+  "Create a shared person profile for business loan funding.":
+    "လုပ်ငန်းချေးငွေ ရန်ပုံငွေအတွက် လူပုဂ္ဂိုလ်ပရိုဖိုင် ဖန်တီးပါ။",
+  "Create an active direct or reverse exchange pair for every requested currency direction.":
+    "လိုအပ်သော ငွေကြေးဦးတည်ချက်တိုင်းအတွက် လက်ရှိတိုက်ရိုက် သို့မဟုတ် ပြောင်းပြန် ငွေလဲအတွဲ ဖန်တီးပါ။",
+  "Create Business Loan": "လုပ်ငန်းချေးငွေ ဖန်တီးရန်",
+  "Create failed": "ဖန်တီးမှု မအောင်မြင်ပါ",
+  "Create Financial Account": "ငွေစာရင်းအကောင့် ဖန်တီးရန်",
+  "Create Lender": "ငွေချေးသူ ဖန်တီးရန်",
+  "Create the first customer record.": "ပထမဆုံး ဖောက်သည်မှတ်တမ်း ဖန်တီးပါ။",
+  "Created By": "ဖန်တီးသူ",
+  "Creation failed": "ဖန်တီးမှု မအောင်မြင်ပါ",
+  "Currencies updated": "ငွေကြေးများ အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  "Currency action failed": "ငွေကြေး လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Currency code and name are required.": "ငွေကြေးကုဒ်နှင့် အမည် လိုအပ်ပါသည်။",
+  "Currency Management": "ငွေကြေး စီမံခန့်ခွဲမှု",
+  "Currency set inactive.": "ငွေကြေးကို အသုံးမပြုတော့ပါ။",
+  "Current accounting day": "လက်ရှိ စာရင်းကိုင်ရက်",
+  "Current principal and accrued interest.":
+    "လက်ရှိ မူရင်းနှင့် တိုးလာသော အတိုး။",
+  "Customer action failed": "ဖောက်သည် လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Customer created": "ဖောက်သည် ဖန်တီးပြီးပါပြီ",
+  "Customer created successfully.": "ဖောက်သည် ဖန်တီးပြီးပါပြီ။",
+  "Customer deleted": "ဖောက်သည် ဖျက်ပြီးပါပြီ",
+  "Customer deleted successfully.": "ဖောက်သည် ဖျက်ပြီးပါပြီ။",
+  "Customer detail breadcrumb": "ဖောက်သည်အသေးစိတ် လမ်းကြောင်း",
+  "Customer lookup failed": "ဖောက်သည် ရှာဖွေမှု မအောင်မြင်ပါ",
+  "Customer Name": "ဖောက်သည်အမည်",
+  "Customer profile": "ဖောက်သည်ပရိုဖိုင်",
+  "Customer records hidden": "ဖောက်သည်မှတ်တမ်းများ ဖျောက်ထားသည်",
+  "Customer registry": "ဖောက်သည်စာရင်း",
+  "Customer updated": "ဖောက်သည် အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  "Customer updated successfully.": "ဖောက်သည် အပ်ဒိတ်လုပ်ပြီးပါပြီ။",
+  "Customer was not found.": "ဖောက်သည် မတွေ့ပါ။",
+  "Daily Rate Assignment": "နေ့စဉ်နှုန်းထား သတ်မှတ်ခြင်း",
+  "Dashboard data is not available yet.": "ဒက်ရှ်ဘုတ်ဒေတာ မရရှိသေးပါ။",
+  "Dashboard failed to load": "ဒက်ရှ်ဘုတ် ဖွင့်မရပါ",
+  "Date range": "ရက်အပိုင်းအခြား",
+  "Destination receives": "လက်ခံမည့် အကောင့်ရရှိမည့်ငွေ",
+  "Direction is explicit: one base currency equals the entered rate in quote currency.":
+    "ဦးတည်ချက်ကို တိတိကျကျ သတ်မှတ်ထားသည်။ အခြေခံငွေကြေး ၁ ခုသည် ကိုးကားငွေကြေးဖြင့် ထည့်ထားသောနှုန်းနှင့် ညီသည်။",
+  "Download ledger": "စာရင်းဒေါင်းလုဒ်ရန်",
+  "Edit Account": "အကောင့် ပြင်ရန်",
+  "Edit Business Loan": "လုပ်ငန်းချေးငွေ ပြင်ရန်",
+  "Edit Currency": "ငွေကြေး ပြင်ရန်",
+  "Edit Customer": "ဖောက်သည် ပြင်ရန်",
+  "Edit Lender": "ငွေချေးသူ ပြင်ရန်",
+  "Edit lender details": "ငွေချေးသူအသေးစိတ် ပြင်ရန်",
+  "End date": "ပြီးဆုံးရက်",
+  "Enter opening prices before accepting same-day transactions.":
+    "ယနေ့စာရင်းများ လက်ခံမီ အဖွင့်ဈေးများ ထည့်ပါ။",
+  "Exchange pair action failed": "ငွေလဲအတွဲ လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Exchange pair created.": "ငွေလဲအတွဲ ဖန်တီးပြီးပါပြီ။",
+  "Exchange pair deleted.": "ငွေလဲအတွဲ ဖျက်ပြီးပါပြီ။",
+  "Exchange pairs updated": "ငွေလဲအတွဲများ အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  "Exchange Pair Management": "ငွေလဲအတွဲ စီမံခန့်ခွဲမှု",
+  "Exchange Pairs": "ငွေလဲအတွဲများ",
+  "Financial Accounts": "ငွေစာရင်းအကောင့်များ",
+  "Filter transactions": "စာရင်းများ စစ်ထုတ်ရန်",
+  "Find customers by identity, contact, and trust signals.":
+    "အချက်အလက်၊ ဆက်သွယ်ရန်နှင့် ယုံကြည်မှုအမှတ်များဖြင့် ဖောက်သည်များ ရှာပါ။",
+  "Find lenders by name, phone, or notes.":
+    "အမည်၊ ဖုန်း သို့မဟုတ် မှတ်ချက်များဖြင့် ငွေချေးသူများ ရှာပါ။",
+  "From date": "စတင်ရက်",
+  "Full settlement": "အပြည့်အဝ ပေးချေမှု",
+  "Generate ledger": "စာရင်းထုတ်ရန်",
+  "Historical Rates": "သမိုင်းဝင်နှုန်းထားများ",
+  "Ledger Report": "စာရင်းအစီရင်ခံစာ",
+  "Lender action failed": "ငွေချေးသူ လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
+  "Lender deleted": "ငွေချေးသူ ဖျက်ပြီးပါပြီ",
+  "Lender deleted successfully.": "ငွေချေးသူ ဖျက်ပြီးပါပြီ။",
+  "Lender details": "ငွေချေးသူ အသေးစိတ်",
+  "Lender records": "ငွေချေးသူ မှတ်တမ်းများ",
+  "Lender registry": "ငွေချေးသူစာရင်း",
+  "Lender updated": "ငွေချေးသူ အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+  Lenders: "ငွေချေးသူများ",
+  "Loan portfolio": "ချေးငွေစုစည်းမှု",
+  "Manage cash, bank, and online payment balances.":
+    "ငွေသား၊ ဘဏ်နှင့် အွန်လိုင်းငွေပေးချေမှု လက်ကျန်များကို စီမံပါ။",
+  "Manage platform and tenant currencies used throughout financial operations.":
+    "ငွေကြေးလုပ်ငန်းများတစ်လျှောက် အသုံးပြုသည့် စနစ်နှင့် ဆိုင်ငွေကြေးများကို စီမံပါ။",
+  "No business loans": "လုပ်ငန်းချေးငွေ မရှိပါ",
+  "No business loans match this search.":
+    "ဤရှာဖွေမှုနှင့် ကိုက်ညီသော လုပ်ငန်းချေးငွေ မရှိပါ။",
+  "No customers": "ဖောက်သည် မရှိပါ",
+  "No customers match this search.":
+    "ဤရှာဖွေမှုနှင့် ကိုက်ညီသော ဖောက်သည် မရှိပါ။",
+  "No exchange pairs": "ငွေလဲအတွဲ မရှိပါ",
+  "No financial accounts": "ငွေစာရင်းအကောင့် မရှိပါ",
+  "No lenders match this search.":
+    "ဤရှာဖွေမှုနှင့် ကိုက်ညီသော ငွေချေးသူ မရှိပါ။",
+  "No lenders yet": "ငွေချေးသူ မရှိသေးပါ",
+  "No matching customers": "ကိုက်ညီသော ဖောက်သည် မရှိပါ",
+  "No matching lenders": "ကိုက်ညီသော ငွေချေးသူ မရှိပါ",
+  "No matching loans": "ကိုက်ညီသော ချေးငွေ မရှိပါ",
+  "No matching transactions": "ကိုက်ညီသော စာရင်း မရှိပါ",
+  "No payments": "ပေးချေမှု မရှိပါ",
+  "No transactions": "စာရင်း မရှိပါ",
+  "Only compatible accounts are available.":
+    "ကိုက်ညီသော အကောင့်များသာ ရရှိနိုင်ပါသည်။",
+  "Outstanding Balance": "ကျန်ရှိလက်ကျန်",
+  "Payment Account": "ပေးချေမည့် အကောင့်",
+  "Payment failed": "ပေးချေမှု မအောင်မြင်ပါ",
+  "Payment History": "ပေးချေမှုမှတ်တမ်း",
+  "Payment recorded": "ပေးချေမှု မှတ်တမ်းတင်ပြီးပါပြီ",
+  "Payments recorded against this loan.":
+    "ဤချေးငွေအတွက် မှတ်တမ်းတင်ထားသော ပေးချေမှုများ။",
+  "Payments will appear here after they are recorded.":
+    "ပေးချေမှုများ မှတ်တမ်းတင်ပြီးပါက ဤနေရာတွင် ပေါ်လာပါမည်။",
+  "Payments will appear here.": "ပေးချေမှုများ ဤနေရာတွင် ပေါ်လာပါမည်။",
+  "Principal balance": "မူရင်းလက်ကျန်",
+  "Quote currency": "ကိုးကားငွေကြေး",
+  "Receiving Account": "လက်ခံမည့် အကောင့်",
+  "Record capital against an assigned financial account.":
+    "ချထားသော ငွေစာရင်းအကောင့်အပေါ် အရင်းအနှီး မှတ်တမ်းတင်ပါ။",
+  "Record Details": "မှတ်တမ်း အသေးစိတ်",
+  "Record money received from a lender as a liability.":
+    "ငွေချေးသူထံမှ ရရှိသောငွေကို တာဝန်ရှိငွေအဖြစ် မှတ်တမ်းတင်ပါ။",
+  "Record owner or shop capital and keep its accounting impact traceable.":
+    "ပိုင်ရှင် သို့မဟုတ် ဆိုင်အရင်းအနှီးကို မှတ်တမ်းတင်ပြီး စာရင်းသက်ရောက်မှုကို ခြေရာခံနိုင်အောင်ထားပါ။",
+  "Record payment": "ပေးချေမှု မှတ်တမ်းတင်ရန်",
+  "Record the received amount, receiving account, and final redemption details.":
+    "လက်ခံငွေ၊ လက်ခံအကောင့်နှင့် နောက်ဆုံးရွေးယူမှုအသေးစိတ်များကို မှတ်တမ်းတင်ပါ။",
+  "Redemption summary": "ရွေးယူမှု အနှစ်ချုပ်",
+  "Refresh customer records": "ဖောက်သည်မှတ်တမ်းများ ပြန်ဖွင့်ရန်",
+  "Refresh lender records": "ငွေချေးသူမှတ်တမ်းများ ပြန်ဖွင့်ရန်",
+  "Reporting currency update pending":
+    "အစီရင်ခံငွေကြေး အပ်ဒိတ် စောင့်ဆိုင်းနေသည်",
+  "Required Historical Rates": "လိုအပ်သော သမိုင်းဝင်နှုန်းထားများ",
+  "Residential Address": "နေထိုင်ရာလိပ်စာ",
+  "Review account information and immutable transaction history.":
+    "အကောင့်အချက်အလက်နှင့် မပြောင်းလဲနိုင်သော စာရင်းမှတ်တမ်းကို စစ်ဆေးပါ။",
+  "Risk Flagged": "အန္တရာယ် သတ်မှတ်ထားသည်",
+  "Risk Level": "အန္တရာယ်အဆင့်",
+  "Risk Situation": "အန္တရာယ်အခြေအနေ",
+  "Save Currency": "ငွေကြေး သိမ်းရန်",
+  "Search accounts": "အကောင့်များ ရှာရန်",
+  "Search ledger": "စာရင်း ရှာရန်",
+  "Search lenders": "ငွေချေးသူများ ရှာရန်",
+  "Selling price": "ရောင်းဈေး",
+  "Set inactive": "အသုံးမပြုတော့ရန်",
+  "Set Opening Prices": "အဖွင့်ဈေး သတ်မှတ်ရန်",
+  "Set today's opening prices": "ယနေ့အဖွင့်ဈေး သတ်မှတ်ရန်",
+  "Shop capital": "ဆိုင်အရင်းအနှီး",
+  "Slip details": "စာချုပ်အသေးစိတ်",
+  "Source Account": "မူလအကောင့်",
+  "Start date": "စတင်ရက်",
+  "Submit Permanent Rates": "အမြဲတမ်းနှုန်းထားများ တင်သွင်းရန်",
+  "Supply only the exact dates requested by the reporting currency recalculation.":
+    "အစီရင်ခံငွေကြေး ပြန်တွက်ချက်မှုက တောင်းထားသော ရက်များကိုသာ ဖြည့်ပါ။",
+  "Tenant closing prices": "ဆိုင် ပိတ်ဈေးများ",
+  "Tenant currency": "ဆိုင်ငွေကြေး",
+  "Tenant pair": "ဆိုင်ငွေလဲအတွဲ",
+  "Tenant rate": "ဆိုင်နှုန်းထား",
+  "The first financial transaction will open today’s accounting day.":
+    "ပထမဆုံး ငွေကြေးစာရင်းသည် ယနေ့စာရင်းကိုင်ရက်ကို ဖွင့်ပါမည်။",
+  "The request could not be completed.": "တောင်းဆိုချက်ကို ဆောင်ရွက်၍ မရပါ။",
+  "This financial account is unavailable.":
+    "ဤငွေစာရင်းအကောင့်ကို မရရှိနိုင်ပါ။",
+  "This lender is unavailable.": "ဤငွေချေးသူကို မရရှိနိုင်ပါ။",
+  "To date": "ပြီးဆုံးရက်",
+  "To date must be on or after from date.":
+    "ပြီးဆုံးရက်သည် စတင်ရက်နှင့်တူ သို့မဟုတ် နောက်ကျရပါမည်။",
+  "Total Clients": "ဖောက်သည်စုစုပေါင်း",
+  "Total Collateral Value": "အပေါင်တန်ဖိုး စုစုပေါင်း",
+  "Total Expenses": "အသုံးစရိတ် စုစုပေါင်း",
+  "Total Income": "ဝင်ငွေ စုစုပေါင်း",
+  "Total Interest Paid": "ပေးချေပြီး အတိုးစုစုပေါင်း",
+  "Total Liquid Capital": "လက်လွယ်ငွေအရင်းအနှီး စုစုပေါင်း",
+  "Total Loans": "ချေးငွေစုစုပေါင်း",
+  "Total outstanding": "ကျန်ရှိငွေ စုစုပေါင်း",
+  "Total source deduction": "မူလအကောင့်မှ ဖြတ်မည့်စုစုပေါင်း",
+  "Track lender funding, interest expense, and repayments.":
+    "ငွေချေးသူရန်ပုံငွေ၊ အတိုးအသုံးစရိတ်နှင့် ပြန်ဆပ်မှုများကို ခြေရာခံပါ။",
+  "Transaction History": "စာရင်းမှတ်တမ်း",
+  "Transaction ID": "စာရင်းနံပါတ်",
+  "Transactions posted to this account will appear here.":
+    "ဤအကောင့်တွင် တင်ထားသော စာရင်းများ ဤနေရာတွင် ပေါ်လာပါမည်။",
+  "Transfer Between Accounts": "အကောင့်အချင်းချင်း လွှဲပြောင်းရန်",
+  "Transfer complete": "လွှဲပြောင်းမှု ပြီးစီးပါပြီ",
+  "Transfer Details": "လွှဲပြောင်းမှု အသေးစိတ်",
+  "Transfer failed": "လွှဲပြောင်းမှု မအောင်မြင်ပါ",
+  "Trend period": "လမ်းကြောင်းကာလ",
+  "Trust Score": "ယုံကြည်မှုအမှတ်",
+  "Type, reference, or note": "အမျိုးအစား၊ ရည်ညွှန်းချက် သို့မဟုတ် မှတ်ချက်",
+  "Unable to calculate redemption.": "ရွေးယူမှု တွက်ချက်၍ မရပါ။",
+  "Unable to close the accounting day.": "စာရင်းကိုင်ရက် ပိတ်၍ မရပါ။",
+  "Unable to complete transfer.": "လွှဲပြောင်းမှု ပြီးမြောက်၍ မရပါ။",
+  "Unable to compound interest.": "အတိုးပေါင်းထည့်၍ မရပါ။",
+  "Unable to create business loan.": "လုပ်ငန်းချေးငွေ ဖန်တီး၍ မရပါ။",
+  "Unable to create customer.": "ဖောက်သည် ဖန်တီး၍ မရပါ။",
+  "Unable to create financial account.": "ငွေစာရင်းအကောင့် ဖန်တီး၍ မရပါ။",
+  "Unable to create lender.": "ငွေချေးသူ ဖန်တီး၍ မရပါ။",
+  "Unable to delete business loan.": "လုပ်ငန်းချေးငွေ ဖျက်၍ မရပါ။",
+  "Unable to delete customer.": "ဖောက်သည် ဖျက်၍ မရပါ။",
+  "Unable to delete financial account.": "ငွေစာရင်းအကောင့် ဖျက်၍ မရပါ။",
+  "Unable to delete lender.": "ငွေချေးသူ ဖျက်၍ မရပါ။",
+  "Unable to download ledger report.": "စာရင်းအစီရင်ခံစာ ဒေါင်းလုဒ်လုပ်၍ မရပါ။",
+  "Unable to load account options.": "အကောင့်ရွေးချယ်စရာများ ဖွင့်၍ မရပါ။",
+  "Unable to load accounting ledger.": "စာရင်းကိုင်စာရင်း ဖွင့်၍ မရပါ။",
+  "Unable to load business loan.": "လုပ်ငန်းချေးငွေ ဖွင့်၍ မရပါ။",
+  "Unable to load business loans.": "လုပ်ငန်းချေးငွေများ ဖွင့်၍ မရပါ။",
+  "Unable to load capital record.": "အရင်းအနှီးမှတ်တမ်း ဖွင့်၍ မရပါ။",
+  "Unable to load customer.": "ဖောက်သည် ဖွင့်၍ မရပါ။",
+  "Unable to load customers.": "ဖောက်သည်များ ဖွင့်၍ မရပါ။",
+  "Unable to load dashboard summary.": "ဒက်ရှ်ဘုတ်အနှစ်ချုပ် ဖွင့်၍ မရပါ။",
+  "Unable to load financial account.": "ငွေစာရင်းအကောင့် ဖွင့်၍ မရပါ။",
+  "Unable to load financial accounts.": "ငွေစာရင်းအကောင့်များ ဖွင့်၍ မရပါ။",
+  "Unable to load lender.": "ငွေချေးသူ ဖွင့်၍ မရပါ။",
+  "Unable to load lenders.": "ငွေချေးသူများ ဖွင့်၍ မရပါ။",
+  "Unable to load payment details.": "ပေးချေမှုအသေးစိတ် ဖွင့်၍ မရပါ။",
+  "Unable to load redemption history.": "ရွေးယူမှုမှတ်တမ်း ဖွင့်၍ မရပါ။",
+  "Unable to load transaction history.": "စာရင်းမှတ်တမ်း ဖွင့်၍ မရပါ။",
+  "Unable to load transfer data.": "လွှဲပြောင်းမှုဒေတာ ဖွင့်၍ မရပါ။",
+  "Unable to record payment.": "ပေးချေမှု မှတ်တမ်းတင်၍ မရပါ။",
+  "Unable to redeem slip.": "စာချုပ် ရွေးယူ၍ မရပါ။",
+  "Unable to save capital record.": "အရင်းအနှီးမှတ်တမ်း သိမ်း၍ မရပါ။",
+  "Unable to save compound schedule.":
+    "အတိုးပေါင်းထည့် အချိန်ဇယား သိမ်း၍ မရပါ။",
+  "Unable to update business loan.": "လုပ်ငန်းချေးငွေ အပ်ဒိတ်လုပ်၍ မရပါ။",
+  "Unable to update customer.": "ဖောက်သည် အပ်ဒိတ်လုပ်၍ မရပါ။",
+  "Unable to update financial account.": "ငွေစာရင်းအကောင့် အပ်ဒိတ်လုပ်၍ မရပါ။",
+  "Unable to update lender.": "ငွေချေးသူ အပ်ဒိတ်လုပ်၍ မရပါ။",
+  "Unknown currency": "မသိသောငွေကြေး",
+  "Update contact details, trust score, and internal notes.":
+    "ဆက်သွယ်ရန်အသေးစိတ်၊ ယုံကြည်မှုအမှတ်နှင့် အတွင်းမှတ်ချက်များကို အပ်ဒိတ်လုပ်ပါ။",
+  "Update current prices": "လက်ရှိဈေးများ အပ်ဒိတ်လုပ်ရန်",
+  "Update failed": "အပ်ဒိတ် မအောင်မြင်ပါ",
+  "Update Financial Account": "ငွေစာရင်းအကောင့် အပ်ဒိတ်လုပ်ရန်",
+  "Update Prices": "ဈေးနှုန်းများ အပ်ဒိတ်လုပ်ရန်",
+  "Verified against ledger": "စာရင်းနှင့် စစ်ဆေးပြီး",
+  "View lender": "ငွေချေးသူ ကြည့်ရန်",
+  "Your account can create customers, but cannot view customer records.":
+    "သင့်အကောင့်သည် ဖောက်သည်များ ဖန်တီးနိုင်သော်လည်း ဖောက်သည်မှတ်တမ်းများ မကြည့်နိုင်ပါ။",
 };
 
 const moduleTranslations: Record<
@@ -511,6 +847,170 @@ function translateDynamicMm(text: string): string | null {
   );
   if (suggestedRetailMatch) {
     return `အကြံပြု အနည်းဆုံး လက်လီစုစုပေါင်း: ${suggestedRetailMatch[1]}`;
+  }
+
+  const daysAgoMatch = text.match(/^(\d+) days ago$/);
+  if (daysAgoMatch) {
+    return `လွန်ခဲ့သော ${daysAgoMatch[1]} ရက်`;
+  }
+
+  const hoursAgoMatch = text.match(/^(\d+) hr(s)? ago$/);
+  if (hoursAgoMatch) {
+    return `လွန်ခဲ့သော ${hoursAgoMatch[1]} နာရီ`;
+  }
+
+  const minutesAgoMatch = text.match(/^(\d+) min ago$/);
+  if (minutesAgoMatch) {
+    return `လွန်ခဲ့သော ${minutesAgoMatch[1]} မိနစ်`;
+  }
+
+  const totalBusinessLoanMatch = text.match(/^(\d+) total business loan(s)?$/);
+  if (totalBusinessLoanMatch) {
+    return `လုပ်ငန်းချေးငွေ စုစုပေါင်း ${totalBusinessLoanMatch[1]} ခု`;
+  }
+
+  const totalRedemptionMatch = text.match(/^(\d+) total redemption(s)?$/);
+  if (totalRedemptionMatch) {
+    return `ရွေးယူမှု စုစုပေါင်း ${totalRedemptionMatch[1]} ခု`;
+  }
+
+  const totalFinancialAccountMatch = text.match(
+    /^(\d+) financial account(s)?$/,
+  );
+  if (totalFinancialAccountMatch) {
+    return `ငွေစာရင်းအကောင့် ${totalFinancialAccountMatch[1]} ခု`;
+  }
+
+  const totalLedgerMatch = text.match(/^(\d+) ledger (entry|entries)$/);
+  if (totalLedgerMatch) {
+    return `စာရင်းမှတ်တမ်း ${totalLedgerMatch[1]} ခု`;
+  }
+
+  const staffAccountAccessMatch = text.match(
+    /^(\d+) staff member(s)? can use this account\.$/,
+  );
+  if (staffAccountAccessMatch) {
+    return `ဤအကောင့်ကို ဝန်ထမ်း ${staffAccountAccessMatch[1]} ဦး အသုံးပြုနိုင်သည်။`;
+  }
+
+  const customerSinceMatch = text.match(/^Customer since (.+)$/);
+  if (customerSinceMatch) {
+    return `${customerSinceMatch[1]} မှစ၍ ဖောက်သည်ဖြစ်သည်`;
+  }
+
+  const activeSlipsMatch = text.match(/^(\d+) active slips$/);
+  if (activeSlipsMatch) {
+    return `လက်ရှိစာချုပ် ${activeSlipsMatch[1]} ခု`;
+  }
+
+  const averageLoanTermMatch = text.match(/^(\d+) Days$/);
+  if (averageLoanTermMatch) {
+    return `${averageLoanTermMatch[1]} ရက်`;
+  }
+
+  const dashboardLoansMatch = text.match(/^(\d+) loans$/);
+  if (dashboardLoansMatch) {
+    return `ချေးငွေ ${dashboardLoansMatch[1]} ခု`;
+  }
+
+  const defaultOutstandingMatch = text.match(/^(.+) outstanding$/);
+  if (defaultOutstandingMatch) {
+    return `${defaultOutstandingMatch[1]} ကျန်ရှိငွေ`;
+  }
+
+  const currencyPerKyatMatch = text.match(/^(.+) per kyat$/);
+  if (currencyPerKyatMatch) {
+    return `တစ်ကျပ်သားလျှင် ${currencyPerKyatMatch[1]}`;
+  }
+
+  const ratePairMatch = text.match(/^(.+) to (.+)$/);
+  if (ratePairMatch) {
+    return `${ratePairMatch[1]} မှ ${ratePairMatch[2]} သို့`;
+  }
+
+  const accountingClosedMatch = text.match(
+    /^Accounting day (.+) was closed successfully\.$/,
+  );
+  if (accountingClosedMatch) {
+    return `${accountingClosedMatch[1]} စာရင်းကိုင်ရက် ပိတ်ပြီးပါပြီ။`;
+  }
+
+  const closeAccountingDayMatch = text.match(
+    /^Close accounting day (.+)\? Financial amounts for this day will become immutable\.$/,
+  );
+  if (closeAccountingDayMatch) {
+    return `${closeAccountingDayMatch[1]} စာရင်းကိုင်ရက်ကို ပိတ်မည်လား။ ဤနေ့အတွက် ငွေပမာဏများကို ပြောင်းလဲ၍ မရတော့ပါ။`;
+  }
+
+  const capitalSavedMatch = text.match(
+    /^Capital (created|updated) successfully\.$/,
+  );
+  if (capitalSavedMatch) {
+    return capitalSavedMatch[1] === "created"
+      ? "အရင်းအနှီး ဖန်တီးပြီးပါပြီ။"
+      : "အရင်းအနှီး အပ်ဒိတ်လုပ်ပြီးပါပြီ။";
+  }
+
+  const currencySavedMatch = text.match(/^Currency (updated|created)\.$/);
+  if (currencySavedMatch) {
+    return currencySavedMatch[1] === "created"
+      ? "ငွေကြေး ဖန်တီးပြီးပါပြီ။"
+      : "ငွေကြေး အပ်ဒိတ်လုပ်ပြီးပါပြီ။";
+  }
+
+  const setCurrencyInactiveMatch = text.match(
+    /^Set (.+) inactive\? Historical references will be preserved\.$/,
+  );
+  if (setCurrencyInactiveMatch) {
+    return `${setCurrencyInactiveMatch[1]} ကို အသုံးမပြုတော့ရန် သတ်မှတ်မည်လား။ သမိုင်းဝင်ရည်ညွှန်းချက်များကို ထိန်းသိမ်းထားပါမည်။`;
+  }
+
+  const setItemInactiveMatch = text.match(/^Set (.+) inactive$/);
+  if (setItemInactiveMatch) {
+    return `${setItemInactiveMatch[1]} ကို အသုံးမပြုတော့ရန်`;
+  }
+
+  const deleteBusinessLoanMatch = text.match(
+    /^Delete business loan (.+)\? This action cannot be undone\.$/,
+  );
+  if (deleteBusinessLoanMatch) {
+    return `လုပ်ငန်းချေးငွေ ${deleteBusinessLoanMatch[1]} ကို ဖျက်မည်လား။ ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍ မရပါ။`;
+  }
+
+  const returnReportingCurrencyMatch = text.match(
+    /^Return reporting currency to (.+)\? Historical rates already submitted will be retained\.$/,
+  );
+  if (returnReportingCurrencyMatch) {
+    return `အစီရင်ခံငွေကြေးကို ${returnReportingCurrencyMatch[1]} သို့ ပြန်ထားမည်လား။ တင်သွင်းပြီးသော သမိုင်းဝင်နှုန်းထားများကို ဆက်လက်ထိန်းသိမ်းပါမည်။`;
+  }
+
+  const recordPaymentForMatch = text.match(/^Record payment for (.+)$/);
+  if (recordPaymentForMatch) {
+    return `${recordPaymentForMatch[1]} အတွက် ပေးချေမှု မှတ်တမ်းတင်ရန်`;
+  }
+
+  const viewItemMatch = text.match(/^View (.+)$/);
+  if (viewItemMatch) {
+    return `${viewItemMatch[1]} ကြည့်ရန်`;
+  }
+
+  const slipNumberMatch = text.match(/^Slip (.+)$/);
+  if (slipNumberMatch) {
+    return `စာချုပ် ${slipNumberMatch[1]}`;
+  }
+
+  const compoundedInterestMatch = text.match(
+    /^Compounded (.+) into principal\.$/,
+  );
+  if (compoundedInterestMatch) {
+    return `${compoundedInterestMatch[1]} ကို မူရင်းထဲသို့ ပေါင်းထည့်ပြီးပါပြီ။`;
+  }
+
+  const redemptionCalculatedMatch = text.match(
+    /^Redemption calculated for slip (.+)\.$/,
+  );
+  if (redemptionCalculatedMatch) {
+    return `စာချုပ် ${redemptionCalculatedMatch[1]} အတွက် ရွေးယူမှု တွက်ချက်ပြီးပါပြီ။`;
   }
 
   return null;
