@@ -1,4 +1,5 @@
 import { apiClient } from "../../../services/http/apiClient";
+import type { PaginatedResult } from "../../../dataobjects/common/api";
 
 export type BusinessLoan = {
   id: number;
@@ -26,6 +27,18 @@ export type BusinessLoan = {
   created_at?: string | null;
 };
 
+export type BusinessLoanInterestRow = {
+  id: number;
+  principal_amount: number;
+  interest_amount: number;
+  paid_amount: number;
+  compounded_amount: number;
+  outstanding_amount: number;
+  start_period_at: string;
+  end_period_at: string;
+  period_timezone?: string;
+};
+
 export type BusinessLoanCalculation = {
   loan_code: string;
   loan_update_key: number;
@@ -38,17 +51,8 @@ export type BusinessLoanCalculation = {
   interest_type_name?: string | null;
   allow_partial_payments: boolean;
   compounding_enabled: boolean;
-  interest_breakdown: Array<{
-    id: number;
-    principal_amount: number;
-    interest_amount: number;
-    paid_amount: number;
-    compounded_amount: number;
-    outstanding_amount: number;
-    start_period_at: string;
-    end_period_at: string;
-    period_timezone?: string;
-  }>;
+  interest_breakdown: BusinessLoanInterestRow[];
+  interest_rows?: PaginatedResult<BusinessLoanInterestRow>;
 };
 
 export type BusinessLoanPayment = {
@@ -104,9 +108,21 @@ export const businessLoanService = {
       `/tenant/business-loans/${encodeURIComponent(code)}/interest`,
     );
   },
+  calculationPage(code: string, params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<BusinessLoanCalculation>(
+      `/tenant/business-loans/${encodeURIComponent(code)}/interest`,
+      { params: { page: params.page, per_page: params.perPage } },
+    );
+  },
   payments(code: string) {
-    return apiClient.get<BusinessLoanPayment[]>(
+    return apiClient.get<PaginatedResult<BusinessLoanPayment>>(
       `/tenant/business-loans/${encodeURIComponent(code)}/payments`,
+    ).then((page) => page.items);
+  },
+  paymentPage(code: string, params: { page?: number; perPage?: number } = {}) {
+    return apiClient.get<PaginatedResult<BusinessLoanPayment>>(
+      `/tenant/business-loans/${encodeURIComponent(code)}/payments`,
+      { params: { page: params.page, per_page: params.perPage } },
     );
   },
   pay(code: string, payload: unknown, idempotencyKey: string) {

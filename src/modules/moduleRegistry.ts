@@ -102,6 +102,10 @@ export const moduleRegistry: ModuleDefinition[] = [
       "create_expense",
       "update_expense",
       "delete_expense",
+      "list_scheduled_expense",
+      "create_scheduled_expense",
+      "update_scheduled_expense",
+      "delete_scheduled_expense",
     ],
   },
   {

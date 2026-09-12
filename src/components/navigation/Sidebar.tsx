@@ -161,11 +161,39 @@ const navigationGroups: NavigationGroup[] = [
         label: "Expenses",
         to: routePaths.expenses,
         icon: "expenses",
+        features: ["expense_management"],
         permissions: [
           "list_expense",
           "create_expense",
           "update_expense",
           "delete_expense",
+          "list_scheduled_expense",
+          "create_scheduled_expense",
+          "update_scheduled_expense",
+          "delete_scheduled_expense",
+        ],
+        children: [
+          {
+            label: "Expense Records",
+            to: routePaths.expenses,
+            permissions: [
+              "list_expense",
+              "create_expense",
+              "update_expense",
+              "delete_expense",
+            ],
+          },
+          {
+            label: "Scheduled Expenses",
+            to: routePaths.scheduledExpenses,
+            permissions: [
+              "list_scheduled_expense",
+              "create_scheduled_expense",
+              "update_scheduled_expense",
+              "delete_scheduled_expense",
+            ],
+            features: ["scheduled_expense_management"],
+          },
         ],
       },
       {
@@ -382,6 +410,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                                     : "nav-child-link"
                                 }
                                 key={child.to}
+                                end={child.to === item.to}
                                 to={child.to}
                                 onClick={onNavigate}
                               >

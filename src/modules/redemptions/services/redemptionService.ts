@@ -81,6 +81,8 @@ export type RedemptionCalculationResult = {
   excludedDebtTotal?: number;
   total_amount_to_pay: number;
   interest_payments?: RedemptionInterestPayment[];
+  interest_rows?: { items: RedemptionInterestPayment[]; current_page: number; last_page: number; per_page: number; total: number };
+  interest_row_versions?: Array<{ id: number; update_key: number }>;
   debts?: RedemptionDebt[];
   excluded_debts?: RedemptionDebt[];
   excludedDebts?: RedemptionDebt[];
@@ -95,13 +97,14 @@ export type RedemptionCreatePayload = {
   calculated_total: number;
   payment_amount: number;
   payment_amount_unit?: import("../../finance/financialUnits").FinancialUnitCode;
-  interests: Array<{
+  interests?: Array<{
     id: number;
     update_key: number;
     interest_amount: number;
     start_period_at?: string | null;
     end_period_at?: string | null;
   }>;
+  interest_row_versions?: Array<{ id: number; update_key: number }>;
   debts: Array<{
     id: number;
     update_key: number;
@@ -154,10 +157,10 @@ export const redemptionService = {
     );
   },
 
-  calculate(slipNo: string, auth?: TenantAuth) {
+  calculate(slipNo: string, params: { interestPage?: number; interestPerPage?: number } = {}, auth?: TenantAuth) {
     return apiClient.get<RedemptionCalculationResult>(
       `/tenant/redemptions/${encodeURIComponent(slipNo)}/calculate`,
-      authOptions(auth),
+      { ...authOptions(auth), params: { interest_page: params.interestPage, interest_per_page: params.interestPerPage } },
     );
   },
 

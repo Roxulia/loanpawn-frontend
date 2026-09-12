@@ -62,6 +62,10 @@ import {
   ExpenseCreatePage,
   ExpenseEditPage,
   ExpensesPage,
+  ScheduledExpensesPage,
+  ScheduledExpenseFormPage,
+  ScheduledExpenseDetailPage,
+  ScheduledExpenseUpdatePage,
 } from "../../modules/expenses";
 import { InterestPaymentsPage } from "../../modules/interest";
 import { moduleRegistry } from "../../modules/moduleRegistry";
@@ -433,6 +437,34 @@ export const router = createBrowserRouter([
             <ExpenseEditPage />
           </PermissionRoute>,
         ),
+      },
+      {
+        path: routePaths.scheduledExpenses,
+        element: featureGate("expense_management", "Expenses", featureGate(
+          "scheduled_expense_management", "Scheduled Expenses",
+          <PermissionRoute permission="list_scheduled_expense"><ScheduledExpensesPage /></PermissionRoute>,
+        )),
+      },
+      {
+        path: routePaths.scheduledExpenseCreate,
+        element: featureGate("expense_management", "Expenses", featureGate(
+          "scheduled_expense_management", "Scheduled Expenses",
+          <PermissionRoute permission="create_scheduled_expense"><ScheduledExpenseFormPage /></PermissionRoute>,
+        )),
+      },
+      {
+        path: "/expenses/scheduled/:scheduleCode",
+        element: featureGate("expense_management", "Expenses", featureGate(
+          "scheduled_expense_management", "Scheduled Expenses",
+          <PermissionRoute permission="list_scheduled_expense"><ScheduledExpenseDetailPage /></PermissionRoute>,
+        )),
+      },
+      {
+        path: "/expenses/scheduled/:scheduleCode/edit",
+        element: featureGate("expense_management", "Expenses", featureGate(
+          "scheduled_expense_management", "Scheduled Expenses",
+          <PermissionRoute permission="update_scheduled_expense"><ScheduledExpenseUpdatePage /></PermissionRoute>,
+        )),
       },
       {
         path: routePaths.debts,

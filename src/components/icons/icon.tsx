@@ -29,6 +29,32 @@ export function TrashIcon() {
   );
 }
 
+export function ViewIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+    </svg>
+  );
+}
+
+export function PauseIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="M8 5v14" />
+      <path d="M16 5v14" />
+    </svg>
+  );
+}
+
+export function PlayIcon() {
+  return (
+    <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">
+      <path d="m8 5 11 7-11 7V5Z" />
+    </svg>
+  );
+}
+
 export function PrinterIcon() {
   return (
     <svg aria-hidden="true" className="button-icon" viewBox="0 0 24 24">

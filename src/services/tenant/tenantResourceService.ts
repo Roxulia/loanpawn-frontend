@@ -11,6 +11,8 @@ import type {
   TenantCapital,
   TenantDebt,
   TenantExpense,
+  TenantScheduledExpense,
+  TenantScheduledExpenseOccurrence,
 } from "../../dataobjects/tenant/finance";
 import type { TenantUser } from "../../dataobjects/tenant/auth";
 import { apiClient } from "../http/apiClient";
@@ -235,6 +237,32 @@ export const tenantResourceService = {
     );
   },
 
+  listScheduledExpenses(params?: ListParams, auth?: TenantAuth) {
+    return apiClient.get<PaginatedResult<TenantScheduledExpense>>("/tenant/scheduled-expenses", listOptions(params, auth));
+  },
+  getScheduledExpense(code: string, auth?: TenantAuth) {
+    return apiClient.get<TenantScheduledExpense>(`/tenant/scheduled-expenses/${encodeURIComponent(code)}`, authOptions(auth));
+  },
+  listScheduledExpenseOccurrences(code: string, params?: ListParams, auth?: TenantAuth) {
+    return apiClient.get<PaginatedResult<TenantScheduledExpenseOccurrence>>(
+      `/tenant/scheduled-expenses/${encodeURIComponent(code)}/occurrences`, listOptions(params, auth));
+  },
+  createScheduledExpense(payload: unknown, auth?: TenantAuth) {
+    return apiClient.post<TenantScheduledExpense>("/tenant/scheduled-expenses", payload, authOptions(auth));
+  },
+  updateScheduledExpense(code: string, payload: unknown, auth?: TenantAuth) {
+    return apiClient.put<TenantScheduledExpense>(`/tenant/scheduled-expenses/${encodeURIComponent(code)}`, payload, authOptions(auth));
+  },
+  pauseScheduledExpense(code: string, auth?: TenantAuth) {
+    return apiClient.post<TenantScheduledExpense>(`/tenant/scheduled-expenses/${encodeURIComponent(code)}/pause`, {}, authOptions(auth));
+  },
+  resumeScheduledExpense(code: string, auth?: TenantAuth) {
+    return apiClient.post<TenantScheduledExpense>(`/tenant/scheduled-expenses/${encodeURIComponent(code)}/resume`, {}, authOptions(auth));
+  },
+  deleteScheduledExpense(code: string, auth?: TenantAuth) {
+    return apiClient.deleteMessage(`/tenant/scheduled-expenses/${encodeURIComponent(code)}`, authOptions(auth));
+  },
+
   listCapitals(params?: ListParams, auth?: TenantAuth) {
     return apiClient.get<PaginatedResult<TenantCapital>>(
       "/tenant/capitals",
@@ -335,12 +363,32 @@ export const tenantResourceService = {
     );
   },
 
+  calculateDebtInterestPage(
+    debtCode: string,
+    params: { page?: number; perPage?: number } = {},
+    auth?: TenantAuth,
+  ) {
+    return apiClient.get<import("../../dataobjects/tenant/finance").DebtInterestCalculation>(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/interest`,
+      listOptions(params, auth),
+    );
+  },
+
   listDebtPayments(debtCode: string, auth?: TenantAuth) {
-    return apiClient.get<
-      import("../../dataobjects/tenant/finance").DebtPaymentHistoryItem[]
-    >(
+    return apiClient.get<import("../../dataobjects/common/api").PaginatedResult<import("../../dataobjects/tenant/finance").DebtPaymentHistoryItem>>(
       `/tenant/debts/${encodeURIComponent(debtCode)}/payments`,
       authOptions(auth),
+    ).then((page) => page.items);
+  },
+
+  listDebtPaymentsPage(
+    debtCode: string,
+    params: { page?: number; perPage?: number } = {},
+    auth?: TenantAuth,
+  ) {
+    return apiClient.get<import("../../dataobjects/common/api").PaginatedResult<import("../../dataobjects/tenant/finance").DebtPaymentHistoryItem>>(
+      `/tenant/debts/${encodeURIComponent(debtCode)}/payments`,
+      listOptions(params, auth),
     );
   },
 

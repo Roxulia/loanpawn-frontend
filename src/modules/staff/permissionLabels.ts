@@ -86,6 +86,10 @@ export const permissionGroups: PermissionGroup[] = [
       option("create_expense", "Create expenses"),
       option("update_expense", "Edit expenses"),
       option("delete_expense", "Delete expenses"),
+      option("list_scheduled_expense", "View scheduled expenses"),
+      option("create_scheduled_expense", "Create scheduled expenses"),
+      option("update_scheduled_expense", "Edit, pause, and resume scheduled expenses"),
+      option("delete_scheduled_expense", "Delete scheduled expenses"),
     ],
   },
   {

@@ -153,6 +153,54 @@ export type TenantExpense = {
   updated_at?: string | null;
 };
 
+export type TenantScheduledExpense = {
+  id: number;
+  code: string;
+  update_key: number;
+  account_id: number;
+  account_name?: string | null;
+  currency_code?: string | null;
+  currency_symbol?: string | null;
+  description: string;
+  amount: string;
+  expense_type_id?: number | null;
+  expense_type_name?: string | null;
+  recurrence_type: "one_time" | "daily" | "weekly" | "monthly";
+  start_date: string;
+  scheduled_time: string;
+  end_date?: string | null;
+  weekly_day?: number | null;
+  monthly_anchor_day?: number | null;
+  status: "active" | "paused" | "completed";
+  next_due_date?: string | null;
+  last_due_date?: string | null;
+  last_paid_at?: string | null;
+  last_result?: "paid" | "failed" | null;
+  last_error?: string | null;
+  pending_count: number;
+  creator_name?: string | null;
+  created_at?: string | null;
+};
+
+export type TenantScheduledExpenseOccurrence = {
+  id: number;
+  due_date: string;
+  due_time: string;
+  description: string;
+  amount: string;
+  account_id: number;
+  account_name?: string | null;
+  currency_code?: string | null;
+  currency_symbol?: string | null;
+  expense_type_name?: string | null;
+  expense_code?: string | null;
+  status: "paid" | "pending" | "failed" | "cancelled";
+  attempt_count: number;
+  last_error?: string | null;
+  executed_at?: string | null;
+  cancelled_at?: string | null;
+};
+
 export type TenantCapital = {
   id: number;
   code: string;
@@ -249,6 +297,8 @@ export type DebtInterestAccrual = {
   is_paid: boolean;
 };
 
+import type { PaginatedResult } from "../common/api";
+
 export type DebtInterestCalculation = {
   debt_code: string;
   debt_update_key: number;
@@ -265,6 +315,7 @@ export type DebtInterestCalculation = {
   allow_partial_payments: boolean;
   compounding_enabled: boolean;
   interest_breakdown: DebtInterestAccrual[];
+  interest_rows?: PaginatedResult<DebtInterestAccrual>;
 };
 
 export type DebtPaymentHistoryItem = {

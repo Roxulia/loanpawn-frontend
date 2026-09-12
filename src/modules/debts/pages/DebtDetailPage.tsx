@@ -82,6 +82,12 @@ export function DebtDetailPage() {
   const [calculation, setCalculation] =
     useState<DebtInterestCalculation | null>(null);
   const [history, setHistory] = useState<DebtPaymentHistoryItem[]>([]);
+  const [accrualPage, setAccrualPage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [accrualLastPage, setAccrualLastPage] = useState(1);
+  const [paymentLastPage, setPaymentLastPage] = useState(1);
+  const [paymentTotal, setPaymentTotal] = useState(0);
+  const detailPageSize = 5;
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -98,8 +104,8 @@ export function DebtDetailPage() {
     try {
       const [nextDebt, nextCalculation, nextHistory] = await Promise.all([
         tenantResourceService.getDebt(debtCode),
-        tenantResourceService.calculateDebtInterest(debtCode),
-        tenantResourceService.listDebtPayments(debtCode),
+        tenantResourceService.calculateDebtInterestPage(debtCode, { page: accrualPage, perPage: detailPageSize }),
+        tenantResourceService.listDebtPaymentsPage(debtCode, { page: paymentPage, perPage: detailPageSize }),
       ]);
       setDebt(nextDebt);
       setScheduleEnabled(
@@ -118,7 +124,10 @@ export function DebtDetailPage() {
         toDateInput(nextDebt.next_compound_at ?? nextDebt.nextCompoundAt),
       );
       setCalculation(nextCalculation);
-      setHistory(nextHistory);
+      setHistory(nextHistory.items);
+      setAccrualLastPage(nextCalculation.interest_rows?.last_page ?? 1);
+      setPaymentLastPage(nextHistory.last_page ?? 1);
+      setPaymentTotal(nextHistory.total ?? 0);
     } catch (loadError) {
       setDebt(null);
       setCalculation(null);
@@ -131,7 +140,7 @@ export function DebtDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [debtCode]);
+  }, [accrualPage, debtCode, paymentPage]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadDebt(), 0);
@@ -178,6 +187,23 @@ export function DebtDetailPage() {
       });
       await loadDebt();
       setNotice("Debt compound schedule saved.");
+    });
+  }
+
+  async function toggleAutomaticCompounding() {
+    if (!debt) return;
+    if (!scheduleEnabled) { setScheduleEnabled(true); return; }
+
+    await runAction("schedule", async () => {
+      await tenantResourceService.updateDebtCompoundSchedule(debt.code, {
+        debt_update_key: debt.update_key ?? debt.updateKey ?? 0,
+        enabled: false,
+        compound_every: null,
+        compound_every_type: null,
+        next_compound_at: null,
+      });
+      await loadDebt();
+      setNotice("Automatic compounding disabled.");
     });
   }
 
@@ -291,7 +317,7 @@ export function DebtDetailPage() {
                 eyebrow="Customer / Debtor"
                 meta={[
                   getDebtCounterpartyMeta(debt),
-                  `${history.length} collection${history.length === 1 ? "" : "s"} recorded`,
+                  `${history.length} collection${history.length === 1 ? "" : "s"} on this page`,
                 ]}
                 title={getDebtCounterpartyName(debt)}
               />
@@ -340,7 +366,7 @@ export function DebtDetailPage() {
 
               <section className="finance-detail-panel">
                 <PanelHeading
-                  eyebrow={`${calculation.interest_breakdown.length} cycle${calculation.interest_breakdown.length === 1 ? "" : "s"}`}
+                  eyebrow={`${calculation.interest_rows?.total ?? calculation.interest_breakdown.length} cycles`}
                   title="Interest Accruals Ledger"
                 />
                 <DataTable
@@ -349,13 +375,14 @@ export function DebtDetailPage() {
                   emptyTitle="No accrued interest"
                   getItemId={(row) => row.id}
                   getItemTitle={(row) => `Accrual ${row.id}`}
-                  items={calculation.interest_breakdown}
+                  items={calculation.interest_rows?.items ?? calculation.interest_breakdown}
+                  pagination={{ currentPage: accrualPage, lastPage: accrualLastPage, total: calculation.interest_rows?.total, onPrevious: () => setAccrualPage((page) => Math.max(1, page - 1)), onNext: () => setAccrualPage((page) => Math.min(accrualLastPage, page + 1)) }}
                 />
               </section>
 
               <section className="finance-detail-panel">
                 <PanelHeading
-                  eyebrow={`${history.length} transaction${history.length === 1 ? "" : "s"}`}
+                  eyebrow={`${history.length} transaction${history.length === 1 ? "" : "s"} on this page`}
                   title="Collection History"
                 />
                 <DataTable
@@ -365,6 +392,7 @@ export function DebtDetailPage() {
                   getItemId={(row) => row.id}
                   getItemTitle={(row) => row.code}
                   items={history}
+                  pagination={{ currentPage: paymentPage, lastPage: paymentLastPage, total: paymentTotal, onPrevious: () => setPaymentPage((page) => Math.max(1, page - 1)), onNext: () => setPaymentPage((page) => Math.min(paymentLastPage, page + 1)) }}
                 />
               </section>
             </main>
@@ -403,7 +431,7 @@ export function DebtDetailPage() {
                       onNextDateChange={setNextCompoundAt}
                       onPeriodChange={setCompoundEveryType}
                       onSave={() => void saveSchedule()}
-                      onToggle={setScheduleEnabled}
+                      onToggle={() => void toggleAutomaticCompounding()}
                       scheduleEnabled={scheduleEnabled}
                     />
                   </section>
@@ -624,7 +652,7 @@ type DebtCompoundingFormProps = {
   onNextDateChange: (value: string) => void;
   onPeriodChange: (value: string) => void;
   onSave: () => void;
-  onToggle: (value: boolean) => void;
+  onToggle: () => void;
 };
 
 function DebtCompoundingForm(props: DebtCompoundingFormProps) {
@@ -648,18 +676,14 @@ function DebtCompoundingForm(props: DebtCompoundingFormProps) {
       )}
       {props.canManageSchedule && (
         <>
-          <label className="finance-detail-toggle">
-            <span>Auto-Compounding</span>
-            <input
-              checked={props.scheduleEnabled}
-              onChange={(event) => props.onToggle(event.target.checked)}
-              type="checkbox"
-            />
-          </label>
+          <Button aria-pressed={props.scheduleEnabled} fullWidth isLoading={props.isSaving === "schedule"}
+            onClick={props.onToggle} variant={props.scheduleEnabled ? "primary" : "secondary"}>
+            Automatic Compounding: {props.scheduleEnabled ? "On" : "Off"}
+          </Button>
+          {props.scheduleEnabled && <>
           <FormGroup columns={2}>
             <FormField id="debt-compound-every" label="Every">
               <Input
-                disabled={!props.scheduleEnabled}
                 id="debt-compound-every"
                 min="1"
                 onChange={(event) => props.onEveryChange(event.target.value)}
@@ -669,7 +693,6 @@ function DebtCompoundingForm(props: DebtCompoundingFormProps) {
             </FormField>
             <FormField id="debt-compound-period" label="Period">
               <Select
-                disabled={!props.scheduleEnabled}
                 id="debt-compound-period"
                 onChange={(event) => props.onPeriodChange(event.target.value)}
                 value={props.compoundEveryType}
@@ -682,7 +705,6 @@ function DebtCompoundingForm(props: DebtCompoundingFormProps) {
           </FormGroup>
           <FormField id="debt-next-compound" label="Next Date">
             <Input
-              disabled={!props.scheduleEnabled}
               id="debt-next-compound"
               onChange={(event) => props.onNextDateChange(event.target.value)}
               type="date"
@@ -699,6 +721,7 @@ function DebtCompoundingForm(props: DebtCompoundingFormProps) {
               Save Schedule
             </Button>
           </ActionBar>
+          </>}
         </>
       )}
     </div>

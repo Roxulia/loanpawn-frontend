@@ -26,7 +26,7 @@ export type InterestPaymentPayload = {
   payment_amount: number;
   payment_amount_unit?: import("../../finance/financialUnits").FinancialUnitCode;
   record_debt: boolean;
-  interest_breakdown: Array<{
+  interest_breakdown?: Array<{
     id: number;
     update_key: number;
     interest_amount: number;
@@ -34,6 +34,7 @@ export type InterestPaymentPayload = {
     end_period_at?: string | null;
     period_timezone?: string | null;
   }>;
+  interest_row_versions?: Array<{ id: number; update_key: number }>;
 };
 
 export type InterestCalculationResult = {
@@ -43,6 +44,8 @@ export type InterestCalculationResult = {
   slip_update_key?: number;
   current_date?: string;
   interest_breakdown?: InterestBreakdownRow[];
+  interest_rows?: { items: InterestBreakdownRow[]; current_page: number; last_page: number; per_page: number; total: number };
+  interest_row_versions?: Array<{ id: number; update_key: number }>;
   total_interest_amount?: number;
 };
 
@@ -106,10 +109,10 @@ export const interestService = {
     );
   },
 
-  calculate(slipNo: string, auth?: TenantAuth) {
+  calculate(slipNo: string, params: { interestPage?: number; interestPerPage?: number } = {}, auth?: TenantAuth) {
     return apiClient.get<InterestCalculationResult>(
       `/tenant/interest-payments/${encodeURIComponent(slipNo)}/calculate`,
-      authOptions(auth),
+      { ...authOptions(auth), params: { interest_page: params.interestPage, interest_per_page: params.interestPerPage } },
     );
   },
 

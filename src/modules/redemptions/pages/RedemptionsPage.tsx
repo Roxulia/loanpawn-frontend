@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { useSearchParams } from "react-router";
 import { Badge, Button, Input, Textarea } from "../../../components/atoms";
 import { Alert, EmptyState, LoadingState } from "../../../components/feedback";
 import {
@@ -50,7 +51,7 @@ import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
 import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateField";
 import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
 
-const perPage = 10;
+const perPage = 5;
 
 type RedemptionTab = "workflow" | "history";
 
@@ -74,6 +75,9 @@ function initialMonthStartDate() {
 }
 
 export function RedemptionsPage() {
+  const [searchParams] = useSearchParams();
+  const querySlipNo = searchParams.get("slip")?.trim() ?? "";
+  const autoCalculatedSlipRef = useRef<string | null>(null);
   const { t } = useUiLocale();
   const [activeTab, setActiveTab] = useState<RedemptionTab>("workflow");
   const [slipNo, setSlipNo] = useState("");
@@ -95,6 +99,7 @@ export function RedemptionsPage() {
     null,
   );
   const [currentPage, setCurrentPage] = useState(1);
+  const [interestPage, setInterestPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [managementStartDate, setManagementStartDate] = useState(
@@ -178,7 +183,13 @@ export function RedemptionsPage() {
   async function handleCalculate(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
 
-    if (!slipNo.trim()) {
+    setInterestPage(1);
+    await calculateSlip(slipNo.trim(), 1);
+  }
+
+  async function calculateSlip(nextSlipNo: string, page = 1, preserveForm = false) {
+
+    if (!nextSlipNo) {
       setError("Slip number is required.");
       return;
     }
@@ -186,13 +197,13 @@ export function RedemptionsPage() {
     setIsCalculating(true);
     setError(null);
     setNotice(null);
-    setRedemptionResult(null);
-    setAccountId("");
+    if (!preserveForm) { setRedemptionResult(null); setAccountId(""); }
 
     try {
-      const response = await redemptionService.calculate(slipNo.trim());
+      const response = await redemptionService.calculate(nextSlipNo, { interestPage: page, interestPerPage: perPage });
       setCalculation(response);
-      setPaymentAmount(String(response.total_amount_to_pay));
+      setInterestPage(response.interest_rows?.current_page ?? page);
+      if (!preserveForm) setPaymentAmount(String(response.total_amount_to_pay));
       setNotice(`Redemption calculated for slip ${response.slip.slip_no}.`);
     } catch (calculateError) {
       setCalculation(null);
@@ -205,6 +216,14 @@ export function RedemptionsPage() {
       setIsCalculating(false);
     }
   }
+
+  useEffect(() => {
+    if (!querySlipNo || autoCalculatedSlipRef.current === querySlipNo) return;
+    autoCalculatedSlipRef.current = querySlipNo;
+    setActiveTab("workflow"); setSlipNo(querySlipNo); setInterestPage(1);
+    const timer = window.setTimeout(() => void calculateSlip(querySlipNo, 1), 0);
+    return () => window.clearTimeout(timer);
+  }, [querySlipNo]);
 
   async function handleRedeem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -228,9 +247,6 @@ export function RedemptionsPage() {
     redemptionIdempotencyKeyRef.current = createIdempotencyKey();
 
     try {
-      const interests = getInterestPayments(calculation).map(
-        toRedemptionInterestPayload,
-      );
       const debts = getUnpaidDebts(calculation).map(toRedemptionDebtPayload);
       const response = await redemptionService.create(
         {
@@ -245,7 +261,7 @@ export function RedemptionsPage() {
           calculated_total: totalToPay,
           payment_amount: Number(paymentAmount),
           payment_amount_unit: paymentAmountUnit,
-          interests,
+          interest_row_versions: calculation.interest_row_versions ?? getInterestPayments(calculation).map((row) => ({ id: row.id, update_key: getInterestUpdateKey(row) ?? 0 })),
           debts,
           redemption_at: redemptionDate || undefined,
           notes: notes.trim() || undefined,
@@ -477,7 +493,9 @@ export function RedemptionsPage() {
 
             {calculation && (
               <Card title="Redemption Detail">
-                <RedemptionSummary calculation={calculation} />
+                <RedemptionSummary calculation={calculation} currentPage={interestPage}
+                  onNext={() => void calculateSlip(calculation.slip.slip_no, interestPage + 1, true)}
+                  onPrevious={() => void calculateSlip(calculation.slip.slip_no, interestPage - 1, true)} />
               </Card>
             )}
           </RedemptionCreationStep>
@@ -958,8 +976,14 @@ function RedemptionManagementMobileList({
 
 function RedemptionSummary({
   calculation,
+  currentPage,
+  onNext,
+  onPrevious,
 }: {
   calculation: RedemptionCalculationResult;
+  currentPage: number;
+  onNext: () => void;
+  onPrevious: () => void;
 }) {
   const interestPayments = getInterestPayments(calculation);
   const unpaidDebts = getUnpaidDebts(calculation);
@@ -1198,7 +1222,7 @@ function RedemptionSummary({
           <strong>
             <LocalizedText text="Interest Snapshot" />
           </strong>
-          <span>{interestPayments.length} row(s)</span>
+          <span>{calculation.interest_rows?.total ?? interestPayments.length} row(s)</span>
         </header>
         {interestPayments.length === 0 ? (
           <p className="muted">
@@ -1245,6 +1269,13 @@ function RedemptionSummary({
               `${formatDate(getInterestStartDate(payment))} - ${formatDate(getInterestEndDate(payment))}`
             }
             items={interestPayments}
+            pagination={{
+              currentPage,
+              lastPage: calculation.interest_rows?.last_page ?? 1,
+              total: calculation.interest_rows?.total ?? interestPayments.length,
+              onNext,
+              onPrevious,
+            }}
           />
         )}
       </section>
@@ -1496,7 +1527,7 @@ function getRedemptionAmount(
 }
 
 function getInterestPayments(calculation: RedemptionCalculationResult | null) {
-  return calculation?.interest_payments ?? [];
+  return calculation?.interest_rows?.items ?? calculation?.interest_payments ?? [];
 }
 
 function getUnpaidDebts(calculation: RedemptionCalculationResult | null) {
@@ -1525,24 +1556,6 @@ function getInterestEndDate(payment: RedemptionInterestPayment) {
 
 function getDebtUpdateKey(debt: RedemptionDebt) {
   return debt.update_key ?? null;
-}
-
-function toRedemptionInterestPayload(payment: RedemptionInterestPayment) {
-  const updateKey = getInterestUpdateKey(payment);
-
-  if (updateKey === null) {
-    throw new Error(
-      "Interest snapshot data is stale or incomplete. Refresh the calculation and try again.",
-    );
-  }
-
-  return {
-    id: payment.id,
-    update_key: updateKey,
-    interest_amount: getInterestAmount(payment),
-    start_period_at: getInterestStartDate(payment),
-    end_period_at: getInterestEndDate(payment),
-  };
 }
 
 function toRedemptionDebtPayload(debt: RedemptionDebt) {

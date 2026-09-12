@@ -43,7 +43,7 @@ import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateF
 import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
 import { formatTenantDateTime } from "../../../utils/localDateTime";
 
-const perPage = 10;
+const perPage = 5;
 
 type InterestTab = "workflow" | "history";
 
@@ -69,6 +69,7 @@ export function InterestPaymentsPage() {
     number | null
   >(null);
   const [history, setHistory] = useState<InterestPaymentHistoryItem[]>([]);
+  const [interestPage, setInterestPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -152,10 +153,11 @@ export function InterestPaymentsPage() {
   async function handleCalculate(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
 
-    await calculateSlip(slipNo.trim());
+    setInterestPage(1);
+    await calculateSlip(slipNo.trim(), 1);
   }
 
-  async function calculateSlip(nextSlipNo: string) {
+  async function calculateSlip(nextSlipNo: string, page = 1, preserveForm = false) {
     if (!nextSlipNo) {
       setError("Slip number is required.");
       return;
@@ -164,12 +166,12 @@ export function InterestPaymentsPage() {
     setIsCalculating(true);
     setError(null);
     setNotice(null);
-    setPaymentResult(null);
-    setAcceptAccountId("");
+    if (!preserveForm) { setPaymentResult(null); setAcceptAccountId(""); }
 
     try {
-      const response = await interestService.calculate(nextSlipNo);
+      const response = await interestService.calculate(nextSlipNo, { interestPage: page, interestPerPage: perPage });
       setCalculation(response);
+      setInterestPage(response.interest_rows?.current_page ?? page);
       setNotice(
         `Interest calculated for slip ${getSlipNo(response) || nextSlipNo}.`,
       );
@@ -234,7 +236,7 @@ export function InterestPaymentsPage() {
           payment_amount: Number(paymentAmount),
           payment_amount_unit: paymentAmountUnit,
           record_debt: forceDebt,
-          interest_breakdown: rows.map(toPaymentBreakdownPayload),
+          interest_row_versions: calculation.interest_row_versions ?? rows.map((row) => ({ id: row.id, update_key: getRowUpdateKey(row) ?? 0 })),
         },
         undefined,
         {
@@ -376,7 +378,7 @@ export function InterestPaymentsPage() {
           </div>
           <div className="ops-metric">
             <span>Accrual rows</span>
-            <strong>{rows.length}</strong>
+            <strong>{calculation?.interest_rows?.total ?? rows.length}</strong>
           </div>
           <div className="ops-metric">
             <span>History total</span>
@@ -486,6 +488,13 @@ export function InterestPaymentsPage() {
                       `${formatTenantDateTime(row.start_period_at, row.period_timezone)} to ${formatTenantDateTime(row.end_period_at, row.period_timezone)}`
                     }
                     items={rows}
+                    pagination={{
+                      currentPage: calculation.interest_rows?.current_page ?? interestPage,
+                      lastPage: calculation.interest_rows?.last_page ?? 1,
+                      total: calculation.interest_rows?.total ?? rows.length,
+                      onNext: () => void calculateSlip(normalizedSlipNo, interestPage + 1, true),
+                      onPrevious: () => void calculateSlip(normalizedSlipNo, interestPage - 1, true),
+                    }}
                   />
                 </div>
                 <InterestAccrualMobileDetail
@@ -494,6 +503,11 @@ export function InterestPaymentsPage() {
                   rows={rows}
                   slipNo={normalizedSlipNo}
                   totalInterest={totalInterest}
+                  currentPage={calculation.interest_rows?.current_page ?? interestPage}
+                  lastPage={calculation.interest_rows?.last_page ?? 1}
+                  totalRows={calculation.interest_rows?.total ?? rows.length}
+                  onNext={() => void calculateSlip(normalizedSlipNo, interestPage + 1, true)}
+                  onPrevious={() => void calculateSlip(normalizedSlipNo, interestPage - 1, true)}
                 />
               </Card>
 
@@ -719,19 +733,29 @@ function InterestAccrualMobileDetail({
   rows,
   slipNo,
   totalInterest,
+  currentPage,
+  lastPage,
+  totalRows,
+  onNext,
+  onPrevious,
 }: {
   accountId?: number | null;
   currentDate: string;
   rows: InterestBreakdownRow[];
   slipNo: string;
   totalInterest: number;
+  currentPage: number;
+  lastPage: number;
+  totalRows: number;
+  onNext: () => void;
+  onPrevious: () => void;
 }) {
   return (
     <section className="interest-accrual-mobile-detail">
       <div className="interest-accrual-mobile-detail__header">
         <h3>Accrual Breakdown</h3>
         <span>
-          {rows.length} Record{rows.length === 1 ? "" : "s"} Found
+          {totalRows} Record{totalRows === 1 ? "" : "s"} Found
         </span>
       </div>
 
@@ -785,12 +809,17 @@ function InterestAccrualMobileDetail({
           </div>
         </article>
       ))}
+      <div className="ui-pagination">
+        <span className="ui-pagination__meta">Page {currentPage} of {lastPage}</span>
+        <Button disabled={currentPage <= 1} onClick={onPrevious} variant="secondary">Previous</Button>
+        <Button disabled={currentPage >= lastPage} onClick={onNext} variant="secondary">Next</Button>
+      </div>
     </section>
   );
 }
 
 function getBreakdown(calculation: InterestCalculationResult | null) {
-  return calculation?.interest_breakdown ?? [];
+  return calculation?.interest_rows?.items ?? calculation?.interest_breakdown ?? [];
 }
 
 function getTotalInterest(calculation: InterestCalculationResult | null) {
@@ -811,22 +840,4 @@ function getInterestAmount(row: InterestBreakdownRow) {
 
 function getRowUpdateKey(row: InterestBreakdownRow) {
   return row.update_key ?? null;
-}
-
-function toPaymentBreakdownPayload(row: InterestBreakdownRow) {
-  const updateKey = getRowUpdateKey(row);
-
-  if (updateKey === null) {
-    throw new Error(
-      "Interest breakdown data is stale or incomplete. Refresh the calculation and try again.",
-    );
-  }
-
-  return {
-    id: row.id,
-    update_key: updateKey,
-    interest_amount: getInterestAmount(row),
-    start_period_at: row.start_period_at ?? null,
-    end_period_at: row.end_period_at ?? null,
-  };
 }

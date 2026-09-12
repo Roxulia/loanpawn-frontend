@@ -73,6 +73,8 @@ export function SlipDetailPage() {
     hasAdvancedInterestProcess && hasPermission("compound_slip_interest");
   const canCollectPartialPrincipal =
     hasAdvancedInterestProcess && hasPermission("collect_partial_principal");
+  const canRedeem = hasEnabledFeature("redemption_management") &&
+    hasPermission("create_loan_contract");
 
   const loadSlip = useCallback(async (nextSlipNo: string) => {
     setIsLoading(true);
@@ -238,6 +240,26 @@ export function SlipDetailPage() {
     );
   }
 
+  function goToRedemption(nextSlip: LoanContractSlip) {
+    navigate(`${routePaths.redemptions}?slip=${encodeURIComponent(nextSlip.slip_no)}`);
+  }
+
+  async function toggleAutomaticCompounding() {
+    if (!slip) return;
+    if (!scheduleEnabled) { setScheduleEnabled(true); return; }
+
+    await runSlipAction("compound-schedule", async () => {
+      await slipService.updateCompoundSchedule(slip.slip_no, {
+        slip_update_key: slip.update_key ?? 0,
+        enabled: false,
+        compound_every: null,
+        compound_every_type: null,
+        next_compound_at: null,
+      });
+      await loadSlip(slip.slip_no);
+    }, "Automatic compounding disabled.");
+  }
+
   function copySlipNo(nextSlip: LoanContractSlip) {
     void navigator.clipboard?.writeText(nextSlip.slip_no);
     setNotice(`Copied ${nextSlip.slip_no} to clipboard.`);
@@ -322,6 +344,9 @@ export function SlipDetailPage() {
               >
                 Pay Interest
               </Button>
+              {canRedeem && slip.status === "active" && (
+                <Button onClick={() => goToRedemption(slip)} variant="accent">Redeem</Button>
+              )}
             </div>
           </section>
 
@@ -491,20 +516,14 @@ export function SlipDetailPage() {
 
                   {canManageCompoundSchedule && (
                     <div className="slip-detail-schedule">
-                      <label className="slip-detail-toggle">
-                        <span>Automated Compounding</span>
-                        <input
-                          checked={scheduleEnabled}
-                          onChange={(event) =>
-                            setScheduleEnabled(event.target.checked)
-                          }
-                          type="checkbox"
-                        />
-                      </label>
+                      <Button aria-pressed={scheduleEnabled} isLoading={savingAction === "compound-schedule"}
+                        onClick={() => void toggleAutomaticCompounding()} variant={scheduleEnabled ? "primary" : "secondary"}>
+                        Automatic Compounding: {scheduleEnabled ? "On" : "Off"}
+                      </Button>
+                      {scheduleEnabled && <>
                       <FormGroup columns={2}>
                         <FormField id="slip-compound-every" label="Every">
                           <Input
-                            disabled={!scheduleEnabled}
                             id="slip-compound-every"
                             min="1"
                             onChange={(event) =>
@@ -516,7 +535,6 @@ export function SlipDetailPage() {
                         </FormField>
                         <FormField id="slip-compound-type" label="Period">
                           <Select
-                            disabled={!scheduleEnabled}
                             id="slip-compound-type"
                             onChange={(event) =>
                               setCompoundEveryType(event.target.value)
@@ -531,7 +549,6 @@ export function SlipDetailPage() {
                       </FormGroup>
                       <FormField id="slip-next-compound-at" label="Next Date">
                         <Input
-                          disabled={!scheduleEnabled}
                           id="slip-next-compound-at"
                           onChange={(event) =>
                             setNextCompoundAt(event.target.value)
@@ -548,6 +565,7 @@ export function SlipDetailPage() {
                       >
                         Save Schedule
                       </Button>
+                      </>}
                     </div>
                   )}
                 </section>

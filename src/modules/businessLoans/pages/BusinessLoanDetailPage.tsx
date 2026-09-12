@@ -81,6 +81,12 @@ export function BusinessLoanDetailPage() {
   const [calculation, setCalculation] =
     useState<BusinessLoanCalculation | null>(null);
   const [payments, setPayments] = useState<BusinessLoanPayment[]>([]);
+  const [accrualPage, setAccrualPage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [accrualLastPage, setAccrualLastPage] = useState(1);
+  const [paymentLastPage, setPaymentLastPage] = useState(1);
+  const [paymentTotal, setPaymentTotal] = useState(0);
+  const detailPageSize = 5;
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [compoundEvery, setCompoundEvery] = useState("1");
   const [compoundEveryType, setCompoundEveryType] = useState("Month");
@@ -95,12 +101,15 @@ export function BusinessLoanDetailPage() {
     try {
       const [nextLoan, nextCalculation, nextPayments] = await Promise.all([
         businessLoanService.get(loanCode),
-        businessLoanService.calculation(loanCode),
-        businessLoanService.payments(loanCode),
+        businessLoanService.calculationPage(loanCode, { page: accrualPage, perPage: detailPageSize }),
+        businessLoanService.paymentPage(loanCode, { page: paymentPage, perPage: detailPageSize }),
       ]);
       setLoan(nextLoan);
       setCalculation(nextCalculation);
-      setPayments(nextPayments);
+      setPayments(nextPayments.items);
+      setAccrualLastPage(nextCalculation.interest_rows?.last_page ?? 1);
+      setPaymentLastPage(nextPayments.last_page ?? 1);
+      setPaymentTotal(nextPayments.total ?? 0);
       setScheduleEnabled(Boolean(nextLoan.compound_schedule_enabled));
       setCompoundEvery(String(nextLoan.compound_every ?? 1));
       setCompoundEveryType(nextLoan.compound_every_type ?? "Month");
@@ -112,7 +121,7 @@ export function BusinessLoanDetailPage() {
           : "Unable to load business loan.",
       );
     }
-  }, [loanCode]);
+  }, [accrualPage, loanCode, paymentPage]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -162,6 +171,26 @@ export function BusinessLoanDetailPage() {
     } finally {
       setWorking(null);
     }
+  }
+
+  async function toggleAutomaticCompounding() {
+    if (!loan) return;
+    if (!scheduleEnabled) { setScheduleEnabled(true); return; }
+
+    setWorking("schedule"); setError(null);
+    try {
+      await businessLoanService.updateCompoundSchedule(loan.code, {
+        loan_update_key: loan.update_key,
+        enabled: false,
+        compound_every: null,
+        compound_every_type: null,
+        next_compound_at: null,
+      });
+      setNotice("Automatic compounding disabled.");
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to disable automatic compounding.");
+    } finally { setWorking(null); }
   }
 
   const canManageInterest = Boolean(
@@ -325,7 +354,7 @@ export function BusinessLoanDetailPage() {
 
               <section className="finance-detail-panel">
                 <PanelHeading
-                  eyebrow={`${calculation.interest_breakdown.length} cycle${calculation.interest_breakdown.length === 1 ? "" : "s"}`}
+                  eyebrow={`${calculation.interest_rows?.total ?? calculation.interest_breakdown.length} cycles`}
                   title="Interest Accruals Ledger"
                 />
                 <DataTable
@@ -334,7 +363,8 @@ export function BusinessLoanDetailPage() {
                   emptyTitle="No accrued interest"
                   getItemId={(row) => row.id}
                   getItemTitle={(row) => `Accrual ${row.id}`}
-                  items={calculation.interest_breakdown}
+                  items={calculation.interest_rows?.items ?? calculation.interest_breakdown}
+                  pagination={{ currentPage: accrualPage, lastPage: accrualLastPage, total: calculation.interest_rows?.total, onPrevious: () => setAccrualPage((page) => Math.max(1, page - 1)), onNext: () => setAccrualPage((page) => Math.min(accrualLastPage, page + 1)) }}
                 />
               </section>
 
@@ -350,6 +380,7 @@ export function BusinessLoanDetailPage() {
                   getItemId={(row) => row.id}
                   getItemTitle={(row) => row.code}
                   items={payments}
+                  pagination={{ currentPage: paymentPage, lastPage: paymentLastPage, total: paymentTotal, onPrevious: () => setPaymentPage((page) => Math.max(1, page - 1)), onNext: () => setPaymentPage((page) => Math.min(paymentLastPage, page + 1)) }}
                 />
               </section>
             </main>
@@ -386,7 +417,7 @@ export function BusinessLoanDetailPage() {
                     onNextDateChange={setNextCompoundAt}
                     onPeriodChange={setCompoundEveryType}
                     onSave={() => void saveSchedule()}
-                    onToggle={setScheduleEnabled}
+                    onToggle={() => void toggleAutomaticCompounding()}
                     scheduleEnabled={scheduleEnabled}
                   />
                 </section>
@@ -593,7 +624,7 @@ type CompoundingProps = {
   onNextDateChange: (value: string) => void;
   onPeriodChange: (value: string) => void;
   onSave: () => void;
-  onToggle: (value: boolean) => void;
+  onToggle: () => void;
 };
 
 function BusinessLoanCompoundingForm(props: CompoundingProps) {
@@ -611,18 +642,14 @@ function BusinessLoanCompoundingForm(props: CompoundingProps) {
       >
         Compound Now
       </Button>
-      <label className="finance-detail-toggle">
-        <span>Auto-Compounding</span>
-        <input
-          checked={props.scheduleEnabled}
-          onChange={(event) => props.onToggle(event.target.checked)}
-          type="checkbox"
-        />
-      </label>
+      <Button aria-pressed={props.scheduleEnabled} fullWidth isLoading={props.isSaving === "schedule"}
+        onClick={props.onToggle} variant={props.scheduleEnabled ? "primary" : "secondary"}>
+        Automatic Compounding: {props.scheduleEnabled ? "On" : "Off"}
+      </Button>
+      {props.scheduleEnabled && <>
       <FormGroup columns={2}>
         <FormField id="business-loan-compound-every" label="Every">
           <Input
-            disabled={!props.scheduleEnabled}
             id="business-loan-compound-every"
             min="1"
             onChange={(event) => props.onEveryChange(event.target.value)}
@@ -632,7 +659,6 @@ function BusinessLoanCompoundingForm(props: CompoundingProps) {
         </FormField>
         <FormField id="business-loan-compound-period" label="Period">
           <Select
-            disabled={!props.scheduleEnabled}
             id="business-loan-compound-period"
             onChange={(event) => props.onPeriodChange(event.target.value)}
             value={props.compoundEveryType}
@@ -645,7 +671,6 @@ function BusinessLoanCompoundingForm(props: CompoundingProps) {
       </FormGroup>
       <FormField id="business-loan-compound-date" label="Next Date">
         <Input
-          disabled={!props.scheduleEnabled}
           id="business-loan-compound-date"
           onChange={(event) => props.onNextDateChange(event.target.value)}
           type="date"
@@ -662,6 +687,7 @@ function BusinessLoanCompoundingForm(props: CompoundingProps) {
           Save Schedule
         </Button>
       </ActionBar>
+      </>}
     </div>
   );
 }
