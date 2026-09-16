@@ -12,7 +12,7 @@ import {
   KeyValueList,
   SectionHeader,
 } from "../../../components/molecules";
-import { DataTable, type DataTableColumn } from "../../../components/organisms";
+import { DataTable, Modal, type DataTableColumn } from "../../../components/organisms";
 import type {
   DebtInterestAccrual,
   DebtInterestCalculation,
@@ -22,7 +22,10 @@ import { createIdempotencyKey } from "../../../services/http/idempotency";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
 import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
-import type { FinancialUnitCode } from "../../finance/financialUnits";
+import {
+  financialAmountToBase,
+  type FinancialUnitCode,
+} from "../../finance/financialUnits";
 import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateField";
 import { formatDate } from "../../finance/financeFormat";
 import { formatTenantDateTime } from "../../../utils/localDateTime";
@@ -98,7 +101,11 @@ export function DebtPaymentPage() {
     useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [paymentResult, setPaymentResult] = useState<{
+    result: NonNullable<Awaited<ReturnType<typeof tenantResourceService.payDebt>>>;
+    enteredAmount: string;
+    enteredUnit: FinancialUnitCode;
+  } | null>(null);
 
   const load = useCallback(async () => {
     if (!debtCode) return;
@@ -140,6 +147,8 @@ export function DebtPaymentPage() {
     setLoading(true);
     setError(null);
     try {
+      const enteredAmount = amount;
+      const enteredUnit = calculation.allow_partial_payments ? unit : "UNIT";
       const result = await tenantResourceService.payDebt(
         calculation.debt_code,
         {
@@ -160,9 +169,11 @@ export function DebtPaymentPage() {
         },
         { idempotencyKey: createIdempotencyKey() },
       );
-      setNotice(
-        `Principal paid: ${result.principal_paid}; interest paid: ${result.interest_paid}; change: ${result.change_amount}.`,
-      );
+      setPaymentResult({
+        result,
+        enteredAmount,
+        enteredUnit,
+      });
       setAmount("");
       await load();
     } catch (reason) {
@@ -196,13 +207,60 @@ export function DebtPaymentPage() {
           tone="danger"
         />
       )}
-      {notice && (
-        <Alert
-          message={notice}
-          onDismiss={() => setNotice(null)}
+      {paymentResult && (
+        <Modal
+          isOpen
+          onClose={() => setPaymentResult(null)}
           title="Payment recorded"
-          tone="success"
-        />
+        >
+          <KeyValueList
+            items={[
+              {
+                key: "Payment",
+                value: paymentResult.result.debt_code,
+              },
+              {
+                key: "Entered amount",
+                value: `${paymentResult.enteredAmount} ${paymentResult.enteredUnit}`,
+              },
+              {
+                key: "Payment amount",
+                value: (
+                  <AccountCurrencyAmount
+                    accountId={paymentResult.result.accept_account_id ?? calculation?.account_id}
+                    amount={paymentResult.result.payment_amount}
+                  />
+                ),
+              },
+              {
+                key: "Principal paid",
+                value: paymentResult.result.principal_paid,
+              },
+              {
+                key: "Interest paid",
+                value: paymentResult.result.interest_paid,
+              },
+              {
+                key: "Change",
+                value: paymentResult.result.change_amount,
+              },
+              {
+                key: "Remaining principal",
+                value: paymentResult.result.remaining_principal,
+              },
+              {
+                key: "Remaining interest",
+                value: paymentResult.result.remaining_interest,
+              },
+            ]}
+          />
+          <small>
+            Converted amount: {financialAmountToBase({
+              amount: paymentResult.enteredAmount,
+              unit: paymentResult.enteredUnit,
+            })}
+          </small>
+        </Modal>
       )}
       {loading && !calculation ? (
         <LoadingState rows={6} />
