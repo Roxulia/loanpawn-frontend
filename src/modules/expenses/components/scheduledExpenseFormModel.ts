@@ -1,8 +1,9 @@
 import type { TenantScheduledExpense } from "../../../dataobjects/tenant/finance";
+import type { FinancialUnitCode } from "../../finance/financialUnits";
 
 export type WeekOrdinal = "1" | "2" | "3" | "4" | "last";
 export type ScheduledExpenseFormState = {
-  account_id: string; amount: string; description: string; expense_type_id: string;
+  account_id: string; amount: string; amount_unit: FinancialUnitCode; description: string; expense_type_id: string;
   recurrence_type: TenantScheduledExpense["recurrence_type"];
   start_date: string; scheduled_time: string; end_date: string;
   weekly_day: string; weekly_start_month: string; weekly_start_ordinal: WeekOrdinal;
@@ -11,7 +12,7 @@ export type ScheduledExpenseFormState = {
 };
 
 export const emptyScheduledExpenseForm: ScheduledExpenseFormState = {
-  account_id: "", amount: "", description: "", expense_type_id: "", recurrence_type: "one_time",
+  account_id: "", amount: "", amount_unit: "UNIT", description: "", expense_type_id: "", recurrence_type: "one_time",
   start_date: "", scheduled_time: "09:00", end_date: "", weekly_day: "1", weekly_start_month: "",
   weekly_start_ordinal: "1", weekly_end_month: "", weekly_end_ordinal: "1", monthly_day: "1",
   monthly_start_month: "", monthly_end_month: "",
@@ -31,7 +32,7 @@ export function scheduledExpenseToForm(item: TenantScheduledExpense): ScheduledE
 
 export function scheduledExpensePayload(value: ScheduledExpenseFormState, updateKey?: number) {
   const boundaries = resolveBoundaries(value);
-  return { account_id: Number(value.account_id), amount: Number(value.amount), amount_unit: "UNIT", description: value.description.trim(),
+  return { account_id: Number(value.account_id), amount: Number(value.amount), amount_unit: value.amount_unit, description: value.description.trim(),
     expense_type_id: value.expense_type_id ? Number(value.expense_type_id) : null, recurrence_type: value.recurrence_type,
     start_date: boundaries.start, scheduled_time: value.scheduled_time, end_date: boundaries.end,
     weekly_day: value.recurrence_type === "weekly" ? Number(value.weekly_day) : null,

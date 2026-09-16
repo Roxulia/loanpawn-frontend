@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode } from "react";
 import { Button, Input, Select, Textarea } from "../../../components/atoms";
-import { ActionBar, Card, FormField, FormGroup } from "../../../components/molecules";
+import { ActionBar, Card, FinancialAmountInput, FormField, FormGroup } from "../../../components/molecules";
 import type { ExpenseTypeOption } from "../../../dataobjects/tenant/finance";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
 import { formatResolvedDate, resolveBoundaries, type ScheduledExpenseFormState, type WeekOrdinal } from "./scheduledExpenseFormModel";
@@ -24,7 +24,7 @@ export function ScheduledExpenseForm({ value, errors, expenseTypes, saving, onCa
   return <Card title="Schedule details" description="Times use the tenant timezone. Payments run on the first eligible 15-minute scheduler cycle.">
     <form className="ui-form scheduled-expense-form" onSubmit={onSubmit}><FormGroup columns={2}>
       <FormField id="scheduled-expense-account" label="Payment Account" error={errors.account_id}><FinancialAccountSelect id="scheduled-expense-account" value={value.account_id} onChange={(next) => onChange("account_id", next)} /></FormField>
-      <FormField id="scheduled-expense-amount" label="Amount" error={errors.amount}><Input id="scheduled-expense-amount" type="number" min="0.01" step="0.01" value={value.amount} onChange={(e) => onChange("amount", e.target.value)} /></FormField>
+      <FormField id="scheduled-expense-amount" label="Amount" error={errors.amount}><FinancialAmountInput id="scheduled-expense-amount" min="0.01" step="0.01" value={{ amount: value.amount, unit: value.amount_unit }} onChange={(next) => { onChange("amount", next.amount); onChange("amount_unit", next.unit); }} /></FormField>
       <FormField id="scheduled-expense-type" label="Expense type"><Select id="scheduled-expense-type" value={value.expense_type_id} onChange={(e) => onChange("expense_type_id", e.target.value)}><option value="">No expense type</option>{expenseTypes.map((type) => <option value={type.id} key={type.id}>{type.name}</option>)}</Select></FormField>
       <FormField id="scheduled-expense-recurrence" label="Recurrence"><Select id="scheduled-expense-recurrence" value={value.recurrence_type} onChange={(e) => changeRecurrence(e.target.value as ScheduledExpenseFormState["recurrence_type"])}><option value="one_time">One time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></Select></FormField>
       <ScheduleTimingFields value={value} errors={errors} onChange={onChange} />

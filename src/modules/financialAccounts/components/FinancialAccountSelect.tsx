@@ -12,6 +12,7 @@ type FinancialAccountSelectProps = {
   locked?: boolean;
   matchAccountId?: number | null;
   onChange: (accountId: string) => void;
+  portalMenu?: boolean;
   value: string;
 };
 
@@ -21,6 +22,7 @@ export function FinancialAccountSelect({
   locked = false,
   matchAccountId,
   onChange,
+  portalMenu = false,
   value,
 }: FinancialAccountSelectProps) {
   const { tenantResolution } = useTenantSession();
@@ -148,6 +150,7 @@ export function FinancialAccountSelect({
       id={id}
       isLoading={isLoading}
       loadingMessage="Loading accounts..."
+      menuPortal={portalMenu}
       onChange={handleAccountChange}
       onSearchChange={() => setIsEditingSearch(true)}
       options={options}

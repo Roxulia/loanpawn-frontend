@@ -140,6 +140,7 @@ export function BusinessLoanForm({
         <FinancialAccountSelect
           id={`${idPrefix}-account`}
           onChange={(id) => onChange("receipt_account_id", id)}
+          portalMenu
           value={value.receipt_account_id}
         />
       </FormField>

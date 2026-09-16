@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "../atoms";
 
 type SearchableSelectProps<TOption> = {
@@ -12,6 +13,7 @@ type SearchableSelectProps<TOption> = {
   id: string;
   isLoading?: boolean;
   loadingMessage?: string;
+  menuPortal?: boolean;
   onChange: (value: string) => void;
   onSearchChange?: (query: string) => void;
   options: TOption[];
@@ -30,6 +32,7 @@ export function SearchableSelect<TOption>({
   id,
   isLoading = false,
   loadingMessage = "Loading options...",
+  menuPortal = false,
   onChange,
   onSearchChange,
   options,
@@ -39,7 +42,9 @@ export function SearchableSelect<TOption>({
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const selected =
     options.find((option) => getOptionValue(option) === value) ?? null;
   const visibleOptions = useMemo(() => {
@@ -54,18 +59,57 @@ export function SearchableSelect<TOption>({
     );
   }, [getOptionDescription, getOptionLabel, onSearchChange, options, query]);
   const menuId = `${id}-options`;
+  const updateMenuPosition = useCallback(() => {
+    if (!menuPortal || !rootRef.current) return;
+
+    const rect = rootRef.current.getBoundingClientRect();
+    const gap = 4;
+    const maxHeight = 280;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const height = Math.min(maxHeight, Math.max(120, Math.max(spaceBelow, spaceAbove)));
+    const shouldOpenAbove = spaceBelow < 160 && spaceAbove > spaceBelow;
+
+    setMenuStyle({
+      left: rect.left,
+      maxHeight: height,
+      top: shouldOpenAbove
+        ? Math.max(gap, rect.top - height - gap)
+        : rect.bottom + gap,
+      width: rect.width,
+    });
+  }, [menuPortal]);
 
   useEffect(() => {
     function closeOnOutsideClick(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
+      const target = event.target as Node;
+      if (
+        !rootRef.current?.contains(target) &&
+        !menuRef.current?.contains(target)
+      )
+        setIsOpen(false);
     }
     document.addEventListener("mousedown", closeOnOutsideClick);
     return () => document.removeEventListener("mousedown", closeOnOutsideClick);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen || !menuPortal) return;
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [isOpen, menuPortal, updateMenuPosition]);
+
   function updateQuery(nextQuery: string) {
     if (disabled) return;
     setQuery(nextQuery);
+    updateMenuPosition();
     setIsOpen(true);
     setActiveIndex(-1);
     onSearchChange?.(nextQuery);
@@ -79,6 +123,56 @@ export function SearchableSelect<TOption>({
     setIsOpen(false);
     setActiveIndex(-1);
   }
+
+  const menu = (
+    <div
+      className={[
+        "ui-searchable-select__menu",
+        menuPortal ? "ui-searchable-select__menu--portal" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      id={menuId}
+      ref={menuRef}
+      role="listbox"
+      style={menuPortal ? menuStyle : undefined}
+    >
+      {isLoading ? (
+        <span className="ui-searchable-select__status">
+          {loadingMessage}
+        </span>
+      ) : error ? (
+        <span className="ui-searchable-select__status ui-searchable-select__status--error">
+          {error}
+        </span>
+      ) : visibleOptions.length ? (
+        visibleOptions.map((option, index) => (
+          <button
+            aria-selected={getOptionValue(option) === value}
+            className={[
+              "ui-searchable-select__option",
+              activeIndex === index ? "is-active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            id={`${menuId}-${index}`}
+            key={getOptionValue(option)}
+            onClick={() => choose(option)}
+            onMouseEnter={() => setActiveIndex(index)}
+            role="option"
+            type="button"
+          >
+            <strong>{getOptionLabel(option)}</strong>
+            {getOptionDescription && (
+              <span>{getOptionDescription(option)}</span>
+            )}
+          </button>
+        ))
+      ) : (
+        <span className="ui-searchable-select__status">{emptyMessage}</span>
+      )}
+    </div>
+  );
 
   return (
     <div className="ui-searchable-select" ref={rootRef}>
@@ -95,7 +189,10 @@ export function SearchableSelect<TOption>({
         id={id}
         onChange={(event) => updateQuery(event.target.value)}
         onFocus={() => {
-          if (!disabled) setIsOpen(true);
+          if (!disabled) {
+            updateMenuPosition();
+            setIsOpen(true);
+          }
         }}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
@@ -104,6 +201,7 @@ export function SearchableSelect<TOption>({
           }
           if (event.key === "ArrowDown") {
             event.preventDefault();
+            updateMenuPosition();
             setIsOpen(true);
             setActiveIndex((index) =>
               Math.min(index + 1, visibleOptions.length - 1),
@@ -130,42 +228,9 @@ export function SearchableSelect<TOption>({
         value={selected ? getOptionLabel(selected) : query}
       />
       {isOpen && !disabled && (
-        <div className="ui-searchable-select__menu" id={menuId} role="listbox">
-          {isLoading ? (
-            <span className="ui-searchable-select__status">
-              {loadingMessage}
-            </span>
-          ) : error ? (
-            <span className="ui-searchable-select__status ui-searchable-select__status--error">
-              {error}
-            </span>
-          ) : visibleOptions.length ? (
-            visibleOptions.map((option, index) => (
-              <button
-                aria-selected={getOptionValue(option) === value}
-                className={[
-                  "ui-searchable-select__option",
-                  activeIndex === index ? "is-active" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                id={`${menuId}-${index}`}
-                key={getOptionValue(option)}
-                onClick={() => choose(option)}
-                onMouseEnter={() => setActiveIndex(index)}
-                role="option"
-                type="button"
-              >
-                <strong>{getOptionLabel(option)}</strong>
-                {getOptionDescription && (
-                  <span>{getOptionDescription(option)}</span>
-                )}
-              </button>
-            ))
-          ) : (
-            <span className="ui-searchable-select__status">{emptyMessage}</span>
-          )}
-        </div>
+        menuPortal && typeof document !== "undefined"
+          ? createPortal(menu, document.body)
+          : menu
       )}
     </div>
   );
