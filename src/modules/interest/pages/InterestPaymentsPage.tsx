@@ -305,6 +305,46 @@ export function InterestPaymentsPage() {
         />
       ),
     },
+    {
+      header: "Paid",
+      key: "paid",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={calculation?.account_id ?? calculation?.accountId}
+          amount={row.paid_amount}
+        />
+      ),
+    },
+    {
+      header: "Compounded",
+      key: "compounded",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={calculation?.account_id ?? calculation?.accountId}
+          amount={row.compounded_amount}
+        />
+      ),
+    },
+    {
+      header: "Outstanding",
+      key: "outstanding",
+      render: (row) => (
+        <AccountCurrencyAmount
+          accountId={calculation?.account_id ?? calculation?.accountId}
+          amount={row.outstanding_amount}
+        />
+      ),
+    },
+    {
+      header: "Status",
+      key: "status",
+      render: (row) => (row.is_paid ? "Paid" : "Unpaid"),
+    },
+    {
+      header: "Compounded Date",
+      key: "compoundedDate",
+      render: (row) => formatDate(row.compounded_at),
+    },
   ];
 
   const historyColumns: Array<DataTableColumn<InterestPaymentHistoryItem>> = [
@@ -807,6 +847,44 @@ function InterestAccrualMobileDetail({
               </strong>
             </div>
           </div>
+          <div className="interest-accrual-mobile-row__settlement">
+            <div>
+              <span>Paid</span>
+              <strong>
+                <AccountCurrencyAmount
+                  accountId={accountId}
+                  amount={row.paid_amount}
+                />
+              </strong>
+            </div>
+            <div>
+              <span>Compounded</span>
+              <strong>
+                <AccountCurrencyAmount
+                  accountId={accountId}
+                  amount={row.compounded_amount}
+                />
+              </strong>
+            </div>
+            <div>
+              <span>Outstanding</span>
+              <strong>
+                <AccountCurrencyAmount
+                  accountId={accountId}
+                  amount={row.outstanding_amount}
+                />
+              </strong>
+            </div>
+            <div>
+              <span>Status</span>
+              <strong>{row.is_paid ? "Paid" : "Unpaid"}</strong>
+            </div>
+          </div>
+          {row.compounded_at && (
+            <div className="interest-accrual-mobile-row__compounded-date">
+              Compounded {formatDate(row.compounded_at)}
+            </div>
+          )}
         </article>
       ))}
       <div className="ui-pagination">

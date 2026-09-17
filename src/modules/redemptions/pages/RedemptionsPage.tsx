@@ -1255,6 +1255,45 @@ function RedemptionSummary({
                 ),
               },
               {
+                header: "Paid",
+                key: "paid",
+                render: (payment) => (
+                  <AccountCurrencyAmount
+                    accountId={
+                      payment.created_account_id ?? payment.createdAccountId
+                    }
+                    amount={payment.paid_amount ?? 0}
+                    fallbackAccountId={slipAccountId}
+                  />
+                ),
+              },
+              {
+                header: "Compounded",
+                key: "compounded",
+                render: (payment) => (
+                  <AccountCurrencyAmount
+                    accountId={
+                      payment.created_account_id ?? payment.createdAccountId
+                    }
+                    amount={payment.compounded_amount ?? 0}
+                    fallbackAccountId={slipAccountId}
+                  />
+                ),
+              },
+              {
+                header: "Outstanding",
+                key: "outstanding",
+                render: (payment) => (
+                  <AccountCurrencyAmount
+                    accountId={
+                      payment.created_account_id ?? payment.createdAccountId
+                    }
+                    amount={payment.outstanding_amount ?? 0}
+                    fallbackAccountId={slipAccountId}
+                  />
+                ),
+              },
+              {
                 header: "Status",
                 key: "status",
                 render: (payment) => (

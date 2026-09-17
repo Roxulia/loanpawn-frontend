@@ -16,6 +16,11 @@ export type InterestBreakdownRow = {
   end_period_at?: string | null;
   period_timezone?: string | null;
   interest_amount: number;
+  paid_amount: number;
+  compounded_amount: number;
+  outstanding_amount: number;
+  is_paid: boolean;
+  compounded_at?: string | null;
 };
 
 export type InterestPaymentPayload = {

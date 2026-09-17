@@ -46,10 +46,14 @@ export type RedemptionInterestPayment = {
   start_period_at?: string | null;
   end_period_at?: string | null;
   interest_amount?: number;
+  paid_amount?: number;
+  compounded_amount?: number;
+  outstanding_amount?: number;
   payment_amount?: number;
   change_amount?: number;
   payment_at?: string | null;
   is_paid?: boolean;
+  compounded_at?: string | null;
   notes?: string | null;
   created_account_id?: number | null;
   createdAccountId?: number | null;
