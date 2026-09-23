@@ -173,7 +173,7 @@ function authOptions(auth: TenantAuth = {}) {
 
 export const slipService = {
   listSlips(
-    params: { page?: number; perPage?: number } = {},
+    params: { page?: number; perPage?: number; search?: string; status?: string; customerCode?: string; nrcCitizen?: string; nrcState?: string; nrcTownship?: string; nrcNumber?: string; fromDate?: string; toDate?: string } = {},
     auth?: TenantAuth,
   ) {
     const searchParams = new URLSearchParams();
@@ -185,6 +185,15 @@ export const slipService = {
     if (params.perPage !== undefined) {
       searchParams.set("per_page", String(params.perPage));
     }
+    if (params.search) searchParams.set("search", params.search);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.customerCode) searchParams.set("customer_code", params.customerCode);
+    if (params.nrcCitizen) searchParams.set("nrc_citizen", params.nrcCitizen);
+    if (params.nrcState) searchParams.set("nrc_state", params.nrcState);
+    if (params.nrcTownship) searchParams.set("nrc_township", params.nrcTownship);
+    if (params.nrcNumber) searchParams.set("nrc_number", params.nrcNumber);
+    if (params.fromDate) searchParams.set("from_date", params.fromDate);
+    if (params.toDate) searchParams.set("to_date", params.toDate);
 
     const query = searchParams.toString();
 

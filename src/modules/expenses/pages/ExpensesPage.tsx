@@ -181,6 +181,16 @@ const config: FinanceResourcePageConfig<TenantExpense, ExpenseForm> = {
     return tenantResourceService.updateExpense(item?.code ?? "", payload);
   },
   searchPlaceholder: "Description, expense type, or amount",
+  filterConfig: {
+    initial: { expense_type_id: "", account_id: "", from_date: "", to_date: "" },
+    render: (filters, update) => <ExpenseListFilters filters={filters} update={update} />,
+    toParams: (filters) => ({
+      typeId: filters.expense_type_id || undefined,
+      accountId: filters.account_id || undefined,
+      fromDate: filters.from_date || undefined,
+      toDate: filters.to_date || undefined,
+    }),
+  },
   subtitle: "Record shop expenses and keep their accounting impact traceable.",
   title: "Expenses",
   totalLabel: "expense",
@@ -394,6 +404,37 @@ function formatExpenseTypeOption(expenseType: ExpenseTypeOption) {
   return expenseType.code
     ? `${expenseType.name} (${expenseType.code})`
     : expenseType.name;
+}
+
+function ExpenseListFilters({
+  filters,
+  update,
+}: {
+  filters: Record<string, string>;
+  update: (key: string, value: string) => void;
+}) {
+  const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeOption[]>([]);
+
+  useEffect(() => {
+    void tenantResourceService.listExpenseTypes().then(setExpenseTypes).catch(() => setExpenseTypes([]));
+  }, []);
+
+  return (
+    <div className="finance-list-filters__grid">
+      <FormField id="expense-filter-type" label="Expense type">
+        <Select id="expense-filter-type" value={filters.expense_type_id} onChange={(event) => update("expense_type_id", event.target.value)}>
+          <option value="">All expense types</option>
+          {expenseTypes.map((type) => <option key={type.id} value={type.id}>{formatExpenseTypeOption(type)}</option>)}
+        </Select>
+      </FormField>
+      <FormField id="expense-filter-from" label="Created from">
+        <Input id="expense-filter-from" type="date" value={filters.from_date} onChange={(event) => update("from_date", event.target.value)} />
+      </FormField>
+      <FormField id="expense-filter-to" label="Created to">
+        <Input id="expense-filter-to" type="date" value={filters.to_date} onChange={(event) => update("to_date", event.target.value)} />
+      </FormField>
+    </div>
+  );
 }
 
 function validate(form: ExpenseForm) {

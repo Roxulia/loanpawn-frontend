@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Badge, Button } from "../../components/atoms";
 import { Alert } from "../../components/feedback";
@@ -51,6 +45,8 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
   list: (params: {
     page: number;
     perPage: number;
+    search?: string;
+    [key: string]: unknown;
   }) => Promise<PaginatedResult<TItem>>;
   listPermission: PermissionCode;
   modalTitle: (mode: "create" | "edit") => string;
@@ -66,6 +62,14 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
     item: TItem | null,
   ) => Promise<unknown>;
   searchPlaceholder: string;
+  filterConfig?: {
+    initial: Record<string, string>;
+    render: (
+      filters: Record<string, string>,
+      update: (key: string, value: string) => void,
+    ) => ReactNode;
+    toParams?: (filters: Record<string, string>) => Record<string, unknown>;
+  };
   subtitle: string;
   title: string;
   totalLabel: string;
@@ -124,6 +128,10 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Record<string, string>>(
+    config.filterConfig?.initial ?? {},
+  );
   const [form, setForm] = useState<TForm>(config.initialForm);
   const [formErrors, setFormErrors] = useState<FinanceFormErrors<TForm>>({});
   const [editingItem, setEditingItem] = useState<TItem | null>(null);
@@ -157,7 +165,12 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
       setError(null);
 
       try {
-        const response = await config.list({ page, perPage });
+        const response = await config.list({
+          page,
+          perPage,
+          search: searchTerm.trim() || undefined,
+          ...(config.filterConfig?.toParams?.(filters) ?? filters),
+        });
         const pageData = response;
 
         setItems(pageData.items);
@@ -176,7 +189,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
         setIsLoading(false);
       }
     },
-    [canList, config],
+    [canList, config, filters, searchTerm],
   );
 
   useEffect(() => {
@@ -187,17 +200,15 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
     return () => window.clearTimeout(loadTimer);
   }, [currentPage, loadItems]);
 
-  const filteredItems = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+  function updateFilter(key: string, value: string) {
+    setCurrentPage(1);
+    setFilters((current) => ({ ...current, [key]: value }));
+  }
 
-    if (!normalizedSearch) {
-      return items;
-    }
-
-    return items.filter((item) =>
-      config.getSearchText(item).toLowerCase().includes(normalizedSearch),
-    );
-  }, [config, items, searchTerm]);
+  function clearFilters() {
+    setCurrentPage(1);
+    setFilters(config.filterConfig?.initial ?? {});
+  }
 
   function openCreateForm() {
     const createPath =
@@ -385,13 +396,41 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
                 <SearchField
                   id={`${config.title.toLowerCase().replace(/\s+/g, "-")}-search`}
                   label={`Filter ${config.title}`}
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onChange={(event) => {
+                    setCurrentPage(1);
+                    setSearchTerm(event.target.value);
+                  }}
                   placeholder={config.searchPlaceholder}
                   value={searchTerm}
                 />
               ) : null
             }
+            filters={
+              canList && config.filterConfig ? (
+                <Button
+                  aria-expanded={showFilters}
+                  onClick={() => {
+                    setShowFilters((current) => {
+                      if (current) clearFilters();
+                      return !current;
+                    });
+                  }}
+                  variant={showFilters ? "primary" : "secondary"}
+                >
+                  {showFilters ? "Hide filters" : "Show filters"}
+                </Button>
+              ) : null
+            }
           />
+
+          {showFilters && config.filterConfig ? (
+            <div className="finance-list-filters">
+              {config.filterConfig.render(filters, updateFilter)}
+              <Button onClick={clearFilters} variant="tertiary">
+                Clear filters
+              </Button>
+            </div>
+          ) : null}
 
           <DataTable
             actions={
@@ -451,7 +490,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
             getItemId={config.getItemId}
             getItemTitle={config.getItemTitle}
             isLoading={isLoading}
-            items={filteredItems}
+            items={items}
             onRowClick={
               config.detailPath
                 ? (item) => navigate(config.detailPath?.(item) ?? "")

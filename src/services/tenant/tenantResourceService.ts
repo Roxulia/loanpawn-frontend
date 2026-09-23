@@ -27,6 +27,17 @@ type ListParams = {
   page?: number;
   perPage?: number;
   search?: string;
+  status?: string;
+  typeId?: number | string;
+  accountId?: number | string;
+  customerCode?: string;
+  nrcCitizen?: string;
+  nrcState?: string;
+  nrcTownship?: string;
+  nrcNumber?: string;
+  applyInterest?: boolean;
+  fromDate?: string;
+  toDate?: string;
 };
 
 type LedgerParams = ListParams & {
@@ -59,6 +70,17 @@ function listOptions(params: ListParams = {}, auth?: TenantAuth) {
       page: params.page,
       per_page: params.perPage,
       search: params.search,
+      status: params.status,
+      type_id: params.typeId,
+      account_id: params.accountId,
+      customer_code: params.customerCode,
+      nrc_citizen: params.nrcCitizen,
+      nrc_state: params.nrcState,
+      nrc_township: params.nrcTownship,
+      nrc_number: params.nrcNumber,
+      apply_interest: params.applyInterest,
+      from_date: params.fromDate,
+      to_date: params.toDate,
     },
   };
 }

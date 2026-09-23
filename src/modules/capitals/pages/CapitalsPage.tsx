@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Badge, Textarea } from "../../../components/atoms";
+import { Badge, Input, Textarea } from "../../../components/atoms";
 import {
   FinancialAmountInput,
   FormField,
@@ -114,6 +114,20 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
         });
   },
   searchPlaceholder: "Description or amount",
+  filterConfig: {
+    initial: { from_date: "", to_date: "" },
+    render: (filters, update) => (
+      <div className="finance-list-filters__grid">
+        <FormField id="capital-filter-from" label="Created from">
+          <Input id="capital-filter-from" type="date" value={filters.from_date} onChange={(event) => update("from_date", event.target.value)} />
+        </FormField>
+        <FormField id="capital-filter-to" label="Created to">
+          <Input id="capital-filter-to" type="date" value={filters.to_date} onChange={(event) => update("to_date", event.target.value)} />
+        </FormField>
+      </div>
+    ),
+    toParams: (filters) => ({ fromDate: filters.from_date || undefined, toDate: filters.to_date || undefined }),
+  },
   subtitle:
     "Record owner or shop capital and keep its accounting impact traceable.",
   title: "Capital Management",

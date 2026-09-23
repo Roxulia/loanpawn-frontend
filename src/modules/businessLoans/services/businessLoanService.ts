@@ -73,12 +73,18 @@ export type BusinessLoanListPage = {
 };
 
 export const businessLoanService = {
-  list(params: { page?: number; perPage?: number; search?: string } = {}) {
+  list(params: { page?: number; perPage?: number; search?: string; status?: string; typeId?: number | string; lenderId?: number | string; applyInterest?: boolean; fromDate?: string; toDate?: string } = {}) {
     return apiClient.get<BusinessLoanListPage>("/tenant/business-loans", {
       params: {
         page: params.page,
         per_page: params.perPage,
         search: params.search,
+        status: params.status,
+        type_id: params.typeId,
+        lender_id: params.lenderId,
+        apply_interest: params.applyInterest,
+        from_date: params.fromDate,
+        to_date: params.toDate,
       },
     });
   },

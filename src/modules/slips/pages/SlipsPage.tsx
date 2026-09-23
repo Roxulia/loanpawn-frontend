@@ -69,6 +69,7 @@ import { ExpenseImageInput } from "../../expenses/components/ExpenseImageInput";
 import { PackItemsEditor } from "../../collateral/components/PackItems";
 import type { PackItemForm } from "../../collateral/types";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
+import { CustomerSearchField } from "../../debts/components/CustomerSearchField";
 import {
   financialAmountToBase,
   type FinancialUnitCode,
@@ -153,6 +154,8 @@ export function SlipsPage() {
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [listFilters, setListFilters] = useState({ status: "", customerCode: "", fromDate: "", toDate: "", nrc: emptyNrcValue });
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [slipToDelete, setSlipToDelete] = useState<LoanContractSlip | null>(
@@ -166,20 +169,6 @@ export function SlipsPage() {
   const customerInfoRequired = isCustomerInfoRequired ?? true;
   const isLoanSlipCreationSettingsLoading =
     canCreate && isCustomerInfoRequired === null;
-
-  const filteredSlips = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-
-    if (!search) {
-      return slips;
-    }
-
-    return slips.filter((slip) =>
-      [slip.slip_no, getSlipCustomerName(slip), slip.status].some((value) =>
-        value.toLowerCase().includes(search),
-      ),
-    );
-  }, [searchTerm, slips]);
 
   const suggestedMinimumRetail = useMemo(
     () =>
@@ -203,7 +192,19 @@ export function SlipsPage() {
       setError(null);
 
       try {
-        const response = await slipService.listSlips({ page, perPage });
+        const response = await slipService.listSlips({
+          page,
+          perPage,
+          search: searchTerm.trim() || undefined,
+          status: listFilters.status || undefined,
+          customerCode: listFilters.customerCode || undefined,
+          fromDate: listFilters.fromDate || undefined,
+          toDate: listFilters.toDate || undefined,
+          nrcCitizen: listFilters.nrc.citizen || undefined,
+          nrcState: listFilters.nrc.state || undefined,
+          nrcTownship: listFilters.nrc.township || undefined,
+          nrcNumber: listFilters.nrc.number || undefined,
+        });
         const pageData = response;
         const nextItems = pageData.items ?? [];
 
@@ -223,7 +224,7 @@ export function SlipsPage() {
         setIsLoading(false);
       }
     },
-    [canList],
+    [canList, listFilters, searchTerm],
   );
 
   useEffect(() => {
@@ -1361,12 +1362,45 @@ export function SlipsPage() {
                 <SearchField
                   id="slip-search"
                   label="Search slips"
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onChange={(event) => {
+                    setCurrentPage(1);
+                    setSearchTerm(event.target.value);
+                  }}
                   placeholder="Slip number, customer, or status"
                   value={searchTerm}
                 />
               }
+              filters={
+                <Button
+                  aria-expanded={showFilters}
+                  onClick={() => {
+                    setShowFilters((current) => !current);
+                    if (showFilters) {
+                      setListFilters({ status: "", customerCode: "", fromDate: "", toDate: "", nrc: emptyNrcValue });
+                      setCurrentPage(1);
+                    }
+                  }}
+                  variant={showFilters ? "primary" : "secondary"}
+                >
+                  {showFilters ? "Hide filters" : "Show filters"}
+                </Button>
+              }
             />
+            {showFilters ? (
+              <div className="finance-list-filters slip-list-filters">
+                <FormField id="slip-filter-customer" label="Customer code">
+                  <CustomerSearchField id="slip-filter-customer" onChange={(value) => { setCurrentPage(1); setListFilters((current) => ({ ...current, customerCode: value })); }} value={listFilters.customerCode} />
+                </FormField>
+                <FormField id="slip-filter-nrc" label="Customer NRC">
+                  <NrcField id="slip-filter-nrc" onChange={(value) => { setCurrentPage(1); setListFilters((current) => ({ ...current, nrc: value })); }} value={listFilters.nrc} />
+                </FormField>
+                <FormField id="slip-filter-status" label="Status">
+                  <Select id="slip-filter-status" value={listFilters.status} onChange={(event) => { setCurrentPage(1); setListFilters((current) => ({ ...current, status: event.target.value })); }}><option value="">All statuses</option><option value="active">Active</option><option value="redeemed">Redeemed</option><option value="expired">Expired</option><option value="confiscated">Confiscated</option></Select>
+                </FormField>
+                <FormField id="slip-filter-from" label="Created from"><Input id="slip-filter-from" type="date" value={listFilters.fromDate} onChange={(event) => { setCurrentPage(1); setListFilters((current) => ({ ...current, fromDate: event.target.value })); }} /></FormField>
+                <FormField id="slip-filter-to" label="Created to"><Input id="slip-filter-to" type="date" value={listFilters.toDate} onChange={(event) => { setCurrentPage(1); setListFilters((current) => ({ ...current, toDate: event.target.value })); }} /></FormField>
+              </div>
+            ) : null}
             <DataTable
               actions={
                 canList || canDelete
@@ -1416,7 +1450,7 @@ export function SlipsPage() {
               getItemId={(slip) => slip.id}
               getItemTitle={(slip) => slip.slip_no}
               isLoading={isLoading}
-              items={filteredSlips}
+              items={slips}
               onRowClick={(slip) =>
                 navigate(routePaths.slipDetail(slip.slip_no))
               }

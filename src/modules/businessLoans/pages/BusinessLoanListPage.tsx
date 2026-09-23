@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
-import { Badge, Button } from "../../../components/atoms";
+import { Badge, Button, Input, Select } from "../../../components/atoms";
 import { Alert } from "../../../components/feedback";
 import {
   CirclePlusIcon,
@@ -10,6 +10,7 @@ import {
 } from "../../../components/icons/icon";
 import {
   Card,
+  FormField,
   SearchField,
   SectionHeader,
   TableToolbar,
@@ -47,6 +48,8 @@ export function BusinessLoanListPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loanToDelete, setLoanToDelete] = useState<BusinessLoan | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ status: "", typeId: "", lenderId: "", fromDate: "", toDate: "" });
 
   const load = useCallback(
     async (page: number) => {
@@ -57,6 +60,11 @@ export function BusinessLoanListPage() {
           page,
           perPage,
           search: debouncedSearch,
+          status: filters.status || undefined,
+          typeId: filters.typeId || undefined,
+          lenderId: filters.lenderId || undefined,
+          fromDate: filters.fromDate || undefined,
+          toDate: filters.toDate || undefined,
         });
         setItems(result.data);
         setCurrentPage(result.current_page);
@@ -72,7 +80,7 @@ export function BusinessLoanListPage() {
         setLoading(false);
       }
     },
-    [debouncedSearch],
+    [debouncedSearch, filters],
   );
 
   useEffect(() => {
@@ -82,6 +90,11 @@ export function BusinessLoanListPage() {
     }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
+
+  function updateFilter(key: string, value: string) {
+    setCurrentPage(1);
+    setFilters((current) => ({ ...current, [key]: value }));
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(currentPage), 0);
@@ -250,7 +263,31 @@ export function BusinessLoanListPage() {
                 value={search}
               />
             }
+            filters={
+              <Button
+                aria-expanded={showFilters}
+                onClick={() => {
+                  setShowFilters((current) => !current);
+                  if (showFilters) {
+                    setFilters({ status: "", typeId: "", lenderId: "", fromDate: "", toDate: "" });
+                    setCurrentPage(1);
+                  }
+                }}
+                variant={showFilters ? "primary" : "secondary"}
+              >
+                {showFilters ? "Hide filters" : "Show filters"}
+              </Button>
+            }
           />
+          {showFilters ? (
+            <div className="finance-list-filters business-loan-list-filters">
+              <FormField id="business-loan-filter-status" label="Status">
+                <Select id="business-loan-filter-status" value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}><option value="">All statuses</option><option value="active">Active</option><option value="settled">Settled</option></Select>
+              </FormField>
+              <FormField id="business-loan-filter-from" label="Created from"><Input id="business-loan-filter-from" type="date" value={filters.fromDate} onChange={(event) => updateFilter("fromDate", event.target.value)} /></FormField>
+              <FormField id="business-loan-filter-to" label="Created to"><Input id="business-loan-filter-to" type="date" value={filters.toDate} onChange={(event) => updateFilter("toDate", event.target.value)} /></FormField>
+            </div>
+          ) : null}
           <DataTable
             actions={actions}
             columns={columns}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
-import { Badge, Button } from "../../../components/atoms";
+import { Badge, Button, Input, Select } from "../../../components/atoms";
 import { Alert } from "../../../components/feedback";
 import {
   CirclePlusIcon,
@@ -9,6 +9,8 @@ import {
 } from "../../../components/icons/icon";
 import {
   Card,
+  FormField,
+  NrcField,
   SearchField,
   SectionHeader,
   TableToolbar,
@@ -28,6 +30,8 @@ import {
   getStringField,
 } from "../../finance/financeFormat";
 import { formatDebtLink } from "../components/debtFormat";
+import { CustomerSearchField } from "../components/CustomerSearchField";
+import { emptyNrcValue, type NrcValue } from "../../../components/molecules/NrcField";
 
 const perPage = 10;
 
@@ -101,6 +105,8 @@ export function DebtsPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [debtToDelete, setDebtToDelete] = useState<TenantDebt | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ status: "", typeId: "", customerCode: "", fromDate: "", toDate: "", nrc: emptyNrcValue as NrcValue });
 
   const legacyParams = new URLSearchParams(location.search);
   const legacyDebtCode = legacyParams.get("debt_code") ?? "";
@@ -116,6 +122,15 @@ export function DebtsPage() {
           page,
           perPage,
           search: debouncedSearch,
+          status: filters.status || undefined,
+          typeId: filters.typeId || undefined,
+          customerCode: filters.customerCode || undefined,
+          fromDate: filters.fromDate || undefined,
+          toDate: filters.toDate || undefined,
+          nrcCitizen: filters.nrc.citizen || undefined,
+          nrcState: filters.nrc.state || undefined,
+          nrcTownship: filters.nrc.township || undefined,
+          nrcNumber: filters.nrc.number || undefined,
         });
         setItems(result.items);
         setCurrentPage(result.current_page);
@@ -129,7 +144,7 @@ export function DebtsPage() {
         setLoading(false);
       }
     },
-    [debouncedSearch],
+    [debouncedSearch, filters],
   );
 
   useEffect(() => {
@@ -140,6 +155,11 @@ export function DebtsPage() {
 
     return () => window.clearTimeout(timer);
   }, [search]);
+
+  function updateFilter(key: string, value: string) {
+    setCurrentPage(1);
+    setFilters((current) => ({ ...current, [key]: value }));
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(currentPage), 0);
@@ -262,7 +282,37 @@ export function DebtsPage() {
                 value={search}
               />
             }
+            filters={
+              <Button
+                aria-expanded={showFilters}
+                onClick={() => {
+                  setShowFilters((current) => !current);
+                  if (showFilters) {
+                    setFilters({ status: "", typeId: "", customerCode: "", fromDate: "", toDate: "", nrc: emptyNrcValue });
+                    setCurrentPage(1);
+                  }
+                }}
+                variant={showFilters ? "primary" : "secondary"}
+              >
+                {showFilters ? "Hide filters" : "Show filters"}
+              </Button>
+            }
           />
+          {showFilters ? (
+            <div className="finance-list-filters debt-list-filters">
+              <FormField id="debt-filter-customer" label="Customer code">
+                <CustomerSearchField id="debt-filter-customer" onChange={(value) => updateFilter("customerCode", value)} value={filters.customerCode} />
+              </FormField>
+              <FormField id="debt-filter-nrc" label="Customer NRC">
+                <NrcField id="debt-filter-nrc" onChange={(value) => { setCurrentPage(1); setFilters((current) => ({ ...current, nrc: value })); }} value={filters.nrc} />
+              </FormField>
+              <FormField id="debt-filter-status" label="Status">
+                <Select id="debt-filter-status" value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}><option value="">All statuses</option><option value="paid">Paid</option><option value="unpaid">Unpaid</option></Select>
+              </FormField>
+              <FormField id="debt-filter-from" label="Created from"><Input id="debt-filter-from" type="date" value={filters.fromDate} onChange={(event) => updateFilter("fromDate", event.target.value)} /></FormField>
+              <FormField id="debt-filter-to" label="Created to"><Input id="debt-filter-to" type="date" value={filters.toDate} onChange={(event) => updateFilter("toDate", event.target.value)} /></FormField>
+            </div>
+          ) : null}
           <DataTable
             actions={actions}
             columns={columns}
