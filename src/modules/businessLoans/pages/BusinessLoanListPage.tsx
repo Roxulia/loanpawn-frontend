@@ -173,6 +173,7 @@ export function BusinessLoanListPage() {
     {
       header: "Outstanding",
       key: "amount",
+      align: "right",
       render: (row) => (
         <strong>
           <AccountCurrencyAmount
@@ -185,6 +186,7 @@ export function BusinessLoanListPage() {
     {
       header: "Interest",
       key: "interest",
+      align: "center",
       render: (row) =>
         row.apply_interest
           ? `${row.interest_rate}% ${row.interest_type_name ?? ""}`
@@ -193,6 +195,7 @@ export function BusinessLoanListPage() {
     {
       header: "Status",
       key: "status",
+      align: "center",
       render: (row) => (
         <Badge tone={row.is_paid ? "success" : "warning"}>
           {row.is_paid ? "Settled" : "Active"}
@@ -202,6 +205,7 @@ export function BusinessLoanListPage() {
     {
       header: "Created",
       key: "created",
+      align: "center",
       render: (row) => formatDate(row.created_at),
     },
   ];

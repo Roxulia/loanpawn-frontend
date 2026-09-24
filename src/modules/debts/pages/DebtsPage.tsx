@@ -36,22 +36,29 @@ import { emptyNrcValue, type NrcValue } from "../../../components/molecules/NrcF
 const perPage = 10;
 
 const columns: Array<DataTableColumn<TenantDebt>> = [
+  { header: "Linked to", key: "link", align: "left", render: (item) => item.customer_name ?? item.customerName ?? "-" },
   {
-    header: "Debt Code",
-    key: "code",
-    render: (item) => <strong>{item.code}</strong>,
-  },
-  { header: "Linked to", key: "link", render: formatDebtLink },
-  {
-    header: "Amount",
-    key: "amount",
+    header: "Original amount",
+    key: "originalAmount",
+    align: "right",
     render: (item) => (
       <strong>
         <AccountCurrencyAmount
           accountId={item.created_account_id ?? item.createdAccountId}
-          amount={
-            item.principal_balance ?? item.principalBalance ?? item.amount
-          }
+          amount={item.amount}
+        />
+      </strong>
+    ),
+  },
+  {
+    header: "Outstanding",
+    key: "outstanding",
+    align: "right",
+    render: (item) => (
+      <strong>
+        <AccountCurrencyAmount
+          accountId={item.created_account_id ?? item.createdAccountId}
+          amount={item.principal_balance ?? item.principalBalance ?? "0"}
         />
       </strong>
     ),
@@ -59,6 +66,7 @@ const columns: Array<DataTableColumn<TenantDebt>> = [
   {
     header: "Interest",
     key: "interest",
+    align: "center",
     render: (item) =>
       (item.apply_interest ?? item.applyInterest) ? (
         <span>
@@ -69,10 +77,11 @@ const columns: Array<DataTableColumn<TenantDebt>> = [
         "-"
       ),
   },
-  { header: "Tag", key: "tag", render: (item) => item.tag || "-" },
+  { header: "Tag", key: "tag", align: "left", render: (item) => item.tag || "-" },
   {
     header: "Status",
     key: "status",
+    align: "center",
     render: (item) => (
       <Badge tone={item.is_paid ? "success" : "warning"}>
         {item.is_paid ? "Paid" : "Unpaid"}
@@ -82,6 +91,7 @@ const columns: Array<DataTableColumn<TenantDebt>> = [
   {
     header: "Created",
     key: "created",
+    align: "center",
     render: (item) =>
       formatDate(getStringField(item, "created_at", "createdAt")),
   },

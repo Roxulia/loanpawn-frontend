@@ -468,7 +468,6 @@ function TransactionDesktopTable({
           <tr>
             <th>Date</th>
             <th>Type</th>
-            <th>Reference</th>
             <th>Note</th>
             <th>Created by</th>
             <th>Direction</th>

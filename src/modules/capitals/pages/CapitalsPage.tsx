@@ -50,11 +50,13 @@ const columns: Array<DataTableColumn<TenantCapital>> = [
   {
     header: "Description",
     key: "description",
+    align: "left",
     render: (item) => <strong>{item.description}</strong>,
   },
   {
     header: "Amount",
     key: "amount",
+    align: "right",
     render: (item) => (
       <AccountCurrencyAmount
         accountId={item.account_id ?? item.accountId}
@@ -70,6 +72,7 @@ const columns: Array<DataTableColumn<TenantCapital>> = [
   {
     header: "Created",
     key: "created",
+    align: "center",
     render: (item) =>
       formatDate(getStringField(item, "created_at", "createdAt")),
   },

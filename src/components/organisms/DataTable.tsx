@@ -9,6 +9,7 @@ export type DataTableColumn<TItem> = {
   key: string;
   render: (item: TItem) => ReactNode;
   mobileLabel?: string;
+  align?: "left" | "center" | "right";
 };
 
 type DataTablePagination = {
@@ -77,7 +78,7 @@ export function DataTable<TItem>({
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.key}>{t(column.header)}</th>
+                <th className={column.align ? `ui-data-table__cell--${column.align}` : undefined} key={column.key}>{t(column.header)}</th>
               ))}
               {actions && <th>{t("Actions")}</th>}
             </tr>
@@ -114,7 +115,7 @@ export function DataTable<TItem>({
                   tabIndex={onRowClick ? 0 : undefined}
                 >
                   {columns.map((column) => (
-                    <td key={column.key}>{column.render(item)}</td>
+                    <td className={column.align ? `ui-data-table__cell--${column.align}` : undefined} key={column.key}>{column.render(item)}</td>
                   ))}
                   {actions && (
                     <td onClick={(event) => event.stopPropagation()}>
