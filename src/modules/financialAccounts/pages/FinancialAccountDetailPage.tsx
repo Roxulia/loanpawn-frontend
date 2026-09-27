@@ -469,7 +469,6 @@ function TransactionDesktopTable({
             <th>Date</th>
             <th>Type</th>
             <th>Note</th>
-            <th>Created by</th>
             <th>Direction</th>
             <th>Amount</th>
           </tr>
@@ -491,7 +490,6 @@ function TransactionDesktopTable({
                 </small>
               </td>
               <td>{item.note ?? "—"}</td>
-              <td>{item.creator?.name ?? "System"}</td>
               <td>
                 <Badge
                   tone={item.direction === "debit" ? "success" : "warning"}
@@ -531,7 +529,7 @@ function TransactionMobileCards({
           <header className="slip-history-mobile-card__header">
             <div>
               <small>
-                {item.creator?.name ?? "System"} · Transaction #{item.id}
+                Transaction #{item.id}
               </small>
               <strong>{typeLabel(item.transaction_type)}</strong>
             </div>

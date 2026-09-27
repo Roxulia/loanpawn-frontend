@@ -58,7 +58,7 @@ const columns: Array<DataTableColumn<TenantDebt>> = [
       <strong>
         <AccountCurrencyAmount
           accountId={item.created_account_id ?? item.createdAccountId}
-          amount={item.principal_balance ?? item.principalBalance ?? "0"}
+          amount={item.is_paid ? item.amount : item.principal_balance ?? item.principalBalance ?? "0"}
         />
       </strong>
     ),
@@ -361,11 +361,7 @@ export function DebtsPage() {
                 amount={
                   <AccountCurrencyAmount
                     accountId={row.created_account_id ?? row.createdAccountId}
-                    amount={
-                      row.principal_balance ??
-                      row.principalBalance ??
-                      row.amount
-                    }
+                    amount={row.is_paid ? row.amount : row.principal_balance ?? row.principalBalance ?? "0"}
                   />
                 }
                 eyebrow={row.code}

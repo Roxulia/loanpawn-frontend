@@ -68,7 +68,6 @@ export type FinancialAccountTransaction = {
   reference_number: string | null;
   reference_type: string | null;
   note: string | null;
-  creator: { id: number; name: string } | null;
   related_transaction_id: number | null;
   reversed_transaction_id: number | null;
   created_at: string | null;
