@@ -52,6 +52,7 @@ import {
   type TenantSettings,
 } from "../services/settingsService";
 import { DashboardFinancialUnitSetting } from "../components/DashboardFinancialUnitSetting";
+import { CatalogTaxonomySettings } from "../../catalog/components/CatalogTaxonomySettings";
 
 type TypeForm = {
   name: string;
@@ -299,6 +300,9 @@ export function SettingsSectionPage({
     tenantResolution,
     "master_data_management",
   );
+  const canManageCatalogTaxonomy =
+    hasEnabledFeature(tenantResolution, "catalog_management") &&
+    hasPermission("manage_catalog_taxonomy");
   const canViewGeneralSettings = hasPermission("manage_slip_document");
   const canManageDebtSettings = hasPermission("manage_debt_settings");
   const canManageBusinessLoanSettings =
@@ -1471,6 +1475,10 @@ export function SettingsSectionPage({
               )}
             </div>
           </Card>
+        )}
+
+        {section === "default-data" && canManageCatalogTaxonomy && (
+          <CatalogTaxonomySettings />
         )}
 
         {section === "finance" && canViewCurrencyPreferences && (
