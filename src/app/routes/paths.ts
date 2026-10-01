@@ -11,6 +11,7 @@ export const routePaths = {
   customerEdit: (customerId: number | string) =>
     `/customers/${customerId}/edit`,
   collateral: "/collateral",
+  inventory: "/inventory",
   collateralDetail: (itemId: number | string) => `/collateral/${itemId}`,
   slips: "/slips",
   slipsForCustomer: (customerCode: string) =>

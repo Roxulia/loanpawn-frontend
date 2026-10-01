@@ -69,6 +69,7 @@ import {
 } from "../../modules/expenses";
 import { InterestPaymentsPage } from "../../modules/interest";
 import { moduleRegistry } from "../../modules/moduleRegistry";
+import { InventoryPage } from "../../modules/inventory";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
   DefaultDataSettingsPage,
@@ -321,6 +322,16 @@ export const router = createBrowserRouter([
           "Financial Accounts",
           <PermissionRoute permission="list_financial_account">
             <FinancialAccountListPage />
+          </PermissionRoute>,
+        ),
+      },
+      {
+        path: routePaths.inventory,
+        element: featureGate(
+          "inventory_management",
+          "Inventory",
+          <PermissionRoute permission="list_inventory">
+            <InventoryPage />
           </PermissionRoute>,
         ),
       },
@@ -678,6 +689,7 @@ export const router = createBrowserRouter([
               "list_interest_type",
               "list_item_category_type",
               "list_expense_type",
+              "manage_catalog_taxonomy",
             ]}
           >
             <Navigate to={routePaths.settingsPersonal} replace />
@@ -704,6 +716,7 @@ export const router = createBrowserRouter([
               "list_interest_type",
               "list_item_category_type",
               "list_expense_type",
+              "manage_catalog_taxonomy",
             ]}
           >
             <PersonalSettingsPage />
@@ -763,6 +776,7 @@ export const router = createBrowserRouter([
               "list_interest_type",
               "list_item_category_type",
               "list_expense_type",
+              "manage_catalog_taxonomy",
             ]}
           >
             <Navigate to={routePaths.settingsPersonal} replace />
@@ -837,6 +851,7 @@ export const router = createBrowserRouter([
               "list_interest_type",
               "list_item_category_type",
               "list_expense_type",
+              "manage_catalog_taxonomy",
             ]}
           >
             <DefaultDataSettingsPage />

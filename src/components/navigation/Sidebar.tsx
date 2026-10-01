@@ -21,6 +21,7 @@ type IconName =
   | "accounting"
   | "currency"
   | "financialAccounts"
+  | "inventory"
   | "capitals"
   | "expenses"
   | "debts"
@@ -147,6 +148,13 @@ const navigationGroups: NavigationGroup[] = [
         permissions: ["list_financial_account"],
       },
       {
+        label: "Inventory",
+        to: routePaths.inventory,
+        icon: "inventory",
+        permissions: ["list_inventory"],
+        features: ["inventory_management"],
+      },
+      {
         label: "Capital Management",
         to: routePaths.capitals,
         icon: "capitals",
@@ -266,6 +274,7 @@ const navigationGroups: NavigationGroup[] = [
           "list_interest_type",
           "list_item_category_type",
           "list_expense_type",
+          "manage_catalog_taxonomy",
         ],
         children: [
           {
@@ -287,6 +296,7 @@ const navigationGroups: NavigationGroup[] = [
               "list_interest_type",
               "list_item_category_type",
               "list_expense_type",
+              "manage_catalog_taxonomy",
             ],
           },
           {
@@ -320,6 +330,7 @@ const navigationGroups: NavigationGroup[] = [
               "list_interest_type",
               "list_item_category_type",
               "list_expense_type",
+              "manage_catalog_taxonomy",
             ],
           },
           {
@@ -471,6 +482,12 @@ function SidebarIcon({ name }: { name: IconName }) {
       "M3 10h18",
       "M7 15h4",
       "M17 3H7a2 2 0 0 0-2 2v1",
+    ],
+    inventory: [
+      "M4 4h16v16H4V4Z",
+      "M8 8h8",
+      "M8 12h8",
+      "M8 16h4",
     ],
     capitals: [
       "M12 2v20",
