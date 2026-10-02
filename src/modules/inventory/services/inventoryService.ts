@@ -13,8 +13,8 @@ export const inventoryService = {
     );
   },
 
-  detail(itemId: number) {
-    return apiClient.get<InventoryItem>(`/tenant/inventory/items/${itemId}`);
+  detail(itemCode: string) {
+    return apiClient.get<InventoryItem>(`/tenant/inventory/items/${encodeURIComponent(itemCode)}`);
   },
 
   locations() {
@@ -25,9 +25,9 @@ export const inventoryService = {
     return apiClient.get<InventoryUnitOption[]>("/tenant/inventory/units");
   },
 
-  movements(itemId: number) {
+  movements(itemCode: string) {
     return apiClient.get<InventoryMovement[]>(
-      `/tenant/inventory/items/${itemId}/movements`,
+      `/tenant/inventory/items/${encodeURIComponent(itemCode)}/movements`,
     );
   },
 

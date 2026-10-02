@@ -1,32 +1,32 @@
 import type { CatalogItem, CatalogTrackingMode, CatalogUnit } from "../catalog/types";
 
 export type InventoryLocation = {
-  id: number;
+  code: string;
   name: string;
   type: "SHOP" | "STORAGE" | "VAULT" | "DISPLAY" | "LENDER" | "OTHER";
   is_active: boolean;
 };
 
 export type InventoryUnit = {
-  id: number;
+  code: string;
   identifier: string | null;
-  location_id: number | null;
+  location_code: string | null;
   location: string | null;
 };
 
 export type InventoryBalance = {
-  location_id: number;
+  location_code: string | null;
   location: string | null;
   quantity: string;
 };
 
 export type InventoryItem = {
-  id: number;
+  code: string;
   name: string;
   description: string | null;
-  catalog_item_id: number | null;
+  catalog_item_code: string | null;
   tracking_mode: CatalogTrackingMode;
-  unit_id: number;
+  unit_code: string;
   unit: string | null;
   total_quantity: string;
   locations: InventoryBalance[];
@@ -34,14 +34,16 @@ export type InventoryItem = {
 };
 
 export type InventoryMovement = {
-  id: number;
+  code: string;
   type: string;
   quantity: string;
+  from_location_code: string | null;
+  to_location_code: string | null;
   from: string | null;
   to: string | null;
   reason: string | null;
   occurred_at: string;
 };
 
-export type InventoryUnitOption = Pick<CatalogUnit, "id" | "name" | "symbol">;
+export type InventoryUnitOption = Pick<CatalogUnit, "code" | "name" | "symbol">;
 export type InventoryCatalogOption = CatalogItem;

@@ -19,6 +19,7 @@ export type CatalogCategory = {
 
 export type CatalogItem = {
   id: number;
+  business_code: string;
   name: string;
   description: string | null;
   category_id: number | null;
@@ -27,6 +28,7 @@ export type CatalogItem = {
   barcode: string | null;
   tracking_mode: CatalogTrackingMode;
   unit_id: number;
+  unit_code: string;
   unit: Pick<CatalogUnit, "id" | "name" | "symbol"> | null;
   is_active: boolean;
   update_key: number;

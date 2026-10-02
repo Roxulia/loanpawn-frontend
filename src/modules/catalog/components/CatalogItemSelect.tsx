@@ -24,7 +24,7 @@ export function CatalogItemSelect({
   const [trackingMode, setTrackingMode] =
     useState<CatalogTrackingMode>("QUANTITY");
   const [error, setError] = useState<string | null>(null);
-  const selected = items.find((item) => String(item.id) === value);
+  const selected = items.find((item) => item.business_code === value);
 
   async function search(query: string) {
     setLoading(true);
@@ -60,9 +60,9 @@ export function CatalogItemSelect({
 
       setItems((current) => [
         item,
-        ...current.filter((entry) => entry.id !== item.id),
+        ...current.filter((entry) => entry.business_code !== item.business_code),
       ]);
-      onChange(String(item.id), item);
+      onChange(item.business_code, item);
       setCreating(false);
       setName("");
       setError(null);
@@ -84,7 +84,7 @@ export function CatalogItemSelect({
         value={value}
         options={items}
         isLoading={loading}
-        getOptionValue={(item) => String(item.id)}
+        getOptionValue={(item) => item.business_code}
         getOptionLabel={(item) => item.name}
         getOptionDescription={(item) =>
           [item.category, item.sku].filter(Boolean).join(" · ")
@@ -92,7 +92,7 @@ export function CatalogItemSelect({
         onChange={(nextId) =>
           onChange(
             nextId,
-            items.find((item) => String(item.id) === nextId) ?? null,
+            items.find((item) => item.business_code === nextId) ?? null,
           )
         }
         onSearchChange={(query) => void search(query)}
