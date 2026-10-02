@@ -93,6 +93,18 @@ export const permissionGroups: PermissionGroup[] = [
     ],
   },
   {
+    label: "Purchasing",
+    permissions: [
+      option("list_supplier", "View suppliers"),
+      option("manage_supplier", "Add and edit suppliers"),
+      option("list_purchase_order", "View purchase orders"),
+      option("manage_purchase_order", "Create and manage purchase orders"),
+      option("manage_purchase_payment", "Record purchase payments and refunds"),
+      option("manage_purchase_receipt", "Record received goods"),
+      option("manage_purchase_return", "Record goods returned to suppliers"),
+    ],
+  },
+  {
     label: "Capital and Debt",
     permissions: [
       option("list_capital", "View capital"),

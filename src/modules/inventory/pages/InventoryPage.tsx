@@ -330,7 +330,7 @@ export function InventoryPage() {
                     type="checkbox"
                     checked={unitCodes.includes(unit.code)}
                     disabled={unit.location_code === null}
-                    onChange={(event) => setUnitIds((current) => event.target.checked
+                    onChange={(event) => setUnitCodes((current) => event.target.checked
                       ? [...current, unit.code]
                       : current.filter((code) => code !== unit.code))}
                   />

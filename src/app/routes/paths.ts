@@ -13,6 +13,10 @@ export const routePaths = {
   collateral: "/collateral",
   inventory: "/inventory",
   ownership: "/ownership",
+  purchasing: "/purchasing",
+  purchasingCreate: "/purchasing/create",
+  purchasingOrder: (code: string) => `/purchasing/${encodeURIComponent(code)}`,
+  purchasingSuppliers: "/purchasing/suppliers",
   collateralDetail: (itemId: number | string) => `/collateral/${itemId}`,
   slips: "/slips",
   slipsForCustomer: (customerCode: string) =>
