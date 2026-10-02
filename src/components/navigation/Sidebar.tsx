@@ -155,6 +155,13 @@ const navigationGroups: NavigationGroup[] = [
         features: ["inventory_management"],
       },
       {
+        label: "Owned Items",
+        to: routePaths.ownership,
+        icon: "inventory",
+        permissions: ["list_owned_item"],
+        features: ["ownership_management", "inventory_management"],
+      },
+      {
         label: "Capital Management",
         to: routePaths.capitals,
         icon: "capitals",

@@ -70,6 +70,7 @@ import {
 import { InterestPaymentsPage } from "../../modules/interest";
 import { moduleRegistry } from "../../modules/moduleRegistry";
 import { InventoryPage } from "../../modules/inventory";
+import { OwnedItemsPage } from "../../modules/ownership";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
   DefaultDataSettingsPage,
@@ -333,6 +334,20 @@ export const router = createBrowserRouter([
           <PermissionRoute permission="list_inventory">
             <InventoryPage />
           </PermissionRoute>,
+        ),
+      },
+      {
+        path: routePaths.ownership,
+        element: featureGate(
+          "ownership_management",
+          "Ownership",
+          featureGate(
+            "inventory_management",
+            "Inventory",
+            <PermissionRoute permission="list_owned_item">
+              <OwnedItemsPage />
+            </PermissionRoute>,
+          ),
         ),
       },
       {
