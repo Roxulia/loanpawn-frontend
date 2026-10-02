@@ -71,6 +71,7 @@ import { InterestPaymentsPage } from "../../modules/interest";
 import { moduleRegistry } from "../../modules/moduleRegistry";
 import { InventoryPage } from "../../modules/inventory";
 import { OwnedItemsPage } from "../../modules/ownership";
+import { PurchaseCreatePage, PurchaseOrderDetailPage, PurchasingPage, PurchaseSuppliersPage } from "../../modules/purchasing/pages/PurchasingPages";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
   DefaultDataSettingsPage,
@@ -349,6 +350,22 @@ export const router = createBrowserRouter([
             </PermissionRoute>,
           ),
         ),
+      },
+      {
+        path: routePaths.purchasing,
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_purchase_order"><PurchasingPage /></PermissionRoute>),
+      },
+      {
+        path: routePaths.purchasingCreate,
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_supplier"><PermissionRoute permission="manage_purchase_order"><PurchaseCreatePage /></PermissionRoute></PermissionRoute>),
+      },
+      {
+        path: "/purchasing/suppliers",
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_supplier"><PurchaseSuppliersPage /></PermissionRoute>),
+      },
+      {
+        path: "/purchasing/:orderCode",
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_purchase_order"><PurchaseOrderDetailPage /></PermissionRoute>),
       },
       {
         path: routePaths.financialAccountCreate,

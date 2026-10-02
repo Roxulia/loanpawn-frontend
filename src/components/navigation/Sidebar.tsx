@@ -22,6 +22,7 @@ type IconName =
   | "currency"
   | "financialAccounts"
   | "inventory"
+  | "purchasing"
   | "capitals"
   | "expenses"
   | "debts"
@@ -160,6 +161,13 @@ const navigationGroups: NavigationGroup[] = [
         icon: "inventory",
         permissions: ["list_owned_item"],
         features: ["ownership_management", "inventory_management"],
+      },
+      {
+        label: "Purchasing",
+        to: routePaths.purchasing,
+        icon: "purchasing",
+        permissions: ["list_purchase_order", "manage_purchase_order"],
+        features: ["purchasing_management"],
       },
       {
         label: "Capital Management",
@@ -496,6 +504,7 @@ function SidebarIcon({ name }: { name: IconName }) {
       "M8 12h8",
       "M8 16h4",
     ],
+    purchasing: ["M3 3h18v18H3V3Z", "M7 7h10", "M7 11h10", "M7 15h6", "M5 3V1", "M19 3V1"],
     capitals: [
       "M12 2v20",
       "M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6",
