@@ -118,6 +118,12 @@ const navigationGroups: NavigationGroup[] = [
         permissions: ["list_accounting"],
       },
       {
+        label: "Obligations",
+        to: routePaths.obligations,
+        icon: "accounting",
+        permissions: ["list_purchase_order", "list_business_loan"],
+      },
+      {
         label: "Currencies",
         to: routePaths.currencies,
         icon: "currency",

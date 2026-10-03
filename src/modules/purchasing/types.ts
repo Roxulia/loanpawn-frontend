@@ -18,7 +18,7 @@ export type PurchaseSupplier = {
   is_active: boolean;
 };
 
-export type PurchaseOrderLine = {
+export type PurchaseOrderItem = {
   code: string;
   catalog_item_code: string | null;
   item_description: string;
@@ -38,8 +38,8 @@ export type PurchaseOrder = {
   ordered_at: string | null;
   note: string | null;
   totals: {
-    line_count: number;
-    fully_received_line_count: number;
+    item_count: number;
+    fully_received_item_count: number;
     amount: string;
     paid_amount: string;
     refunded_amount: string;
@@ -49,7 +49,7 @@ export type PurchaseOrder = {
   receipt_status: DerivedReceiptStatus;
   return_status: "NOT_RETURNED" | "PARTIAL" | "RETURNED";
   created_at: string;
-  lines?: PurchaseOrderLine[];
+  items?: PurchaseOrderItem[];
 };
 
 export type PurchaseRefund = {
@@ -71,29 +71,55 @@ export type PurchasePayment = {
   refunds: PurchaseRefund[];
 };
 
-export type PurchaseReceiptLine = {
+export type PurchaseReceiptItem = {
   code: string;
-  purchase_order_line_code: string;
+  purchase_order_item_code: string;
   quantity: string;
+  inventory_item_code: string;
+  inventory_unit_codes: string[];
+  location_code: string;
+  acquisition_lot_code: string | null;
+  received_value: string;
+  tracking_mode: PurchaseTrackingMode;
 };
 
 export type PurchaseReceipt = {
   code: string;
   received_at: string;
   note: string | null;
-  lines: PurchaseReceiptLine[];
+  supplier_payable_code: string | null;
+  supplier_credit_applied_amount: string;
+  items: PurchaseReceiptItem[];
 };
 
-export type PurchaseReturnLine = {
+export type PurchaseReturnItem = {
   code: string;
-  purchase_receipt_line_code: string;
+  purchase_receipt_item_code: string;
   quantity: string;
+  supplier_credit_code: string | null;
+  supplier_credit_amount: string;
+  supplier_payable_adjusted_amount: string;
+  inventory_unit_codes: string[];
+  cash_refund_amount: string;
 };
-
 export type PurchaseReturn = {
   code: string;
   returned_at: string;
   reason: string | null;
   note: string | null;
-  lines: PurchaseReturnLine[];
+  items: PurchaseReturnItem[];
+};
+
+export type SupplierPayable = {
+  code: string;
+  kind: "SUPPLIER_PAYABLE";
+  supplier_code: string | null;
+  supplier_name: string | null;
+  purchase_order_code: string | null;
+  purchase_receipt_code: string | null;
+  currency_code: string | null;
+  original_amount: string;
+  balance_amount: string;
+  status: "OPEN" | "PARTIAL" | "SETTLED";
+  payments: Array<{ code: string; paid_at: string | null; amount: string }>;
 };

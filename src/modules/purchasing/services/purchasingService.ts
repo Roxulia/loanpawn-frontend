@@ -7,6 +7,7 @@ import type {
   PurchaseSupplier,
   SupplierType,
   PurchaseTrackingMode,
+  SupplierPayable,
 } from "../types";
 
 const writeOptions = () => ({ idempotencyKey: crypto.randomUUID() });
@@ -61,7 +62,7 @@ export const purchasingService = {
     supplier_code: string;
     currency_code: string;
     note?: string | null;
-    lines: Array<{
+    items: Array<{
       catalog_item_code?: string | null;
       item_description?: string;
       tracking_mode?: PurchaseTrackingMode;
@@ -90,7 +91,7 @@ export const purchasingService = {
   },
   recordPayment(
     orderCode: string,
-    payload: { paid_at: string; amount: number; reference?: string | null; note?: string | null },
+    payload: { paid_at: string; amount: number; financial_account_id: number; reference?: string | null; note?: string | null },
   ) {
     return apiClient.post<PurchasePayment>(
       `/tenant/purchasing/orders/${encodeURIComponent(orderCode)}/payments`,
@@ -115,8 +116,9 @@ export const purchasingService = {
   },
   receive(orderCode: string, payload: {
     received_at: string;
+    location_code: string;
     note?: string | null;
-    lines: Array<{ purchase_order_line_code: string; quantity: number }>;
+    items: Array<{ purchase_order_item_code: string; quantity: number; unit_identifiers?: string[] }>;
   }) {
     return apiClient.post<PurchaseReceipt>(
       `/tenant/purchasing/orders/${encodeURIComponent(orderCode)}/receipts`,
@@ -133,12 +135,19 @@ export const purchasingService = {
     returned_at: string;
     reason?: string | null;
     note?: string | null;
-    lines: Array<{ purchase_receipt_line_code: string; quantity: number }>;
+    items: Array<{ purchase_receipt_item_code: string; quantity: number; location_code: string; inventory_unit_codes?: string[]; cash_refund_amount?: number; financial_account_id?: number }>
   }) {
     return apiClient.post<PurchaseReturn>(
       `/tenant/purchasing/orders/${encodeURIComponent(orderCode)}/returns`,
       payload,
       writeOptions(),
     );
+  },
+  payables(orderCode?: string) {
+    const query = orderCode ? `?order_code=${encodeURIComponent(orderCode)}` : "";
+    return apiClient.get<SupplierPayable[]>(`/tenant/purchasing/payables${query}`);
+  },
+  recordPayablePayment(code: string, payload: { paid_at: string; amount: number; financial_account_id: number; reference?: string | null; note?: string | null }) {
+    return apiClient.post(`/tenant/purchasing/payables/${encodeURIComponent(code)}/payments`, payload, writeOptions());
   },
 };
