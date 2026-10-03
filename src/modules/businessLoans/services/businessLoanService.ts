@@ -8,6 +8,7 @@ export type BusinessLoan = {
   lender_code?: string | null;
   lender_name: string;
   receipt_account_id: number;
+  currency_code?: string | null;
   amount: string;
   principal_balance: string;
   apply_interest: boolean;

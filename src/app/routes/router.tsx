@@ -72,6 +72,7 @@ import { moduleRegistry } from "../../modules/moduleRegistry";
 import { InventoryPage } from "../../modules/inventory";
 import { OwnedItemsPage } from "../../modules/ownership";
 import { PurchaseCreatePage, PurchaseOrderDetailPage, PurchasingPage, PurchaseSuppliersPage } from "../../modules/purchasing/pages/PurchasingPages";
+import { ObligationsPage } from "../../modules/purchasing/pages/ObligationsPage";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
   DefaultDataSettingsPage,
@@ -352,6 +353,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: routePaths.obligations,
+        element: <PermissionRoute any={["list_purchase_order", "list_business_loan"]}><ObligationsPage /></PermissionRoute>,
+        },
+        {
         path: routePaths.purchasing,
         element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_purchase_order"><PurchasingPage /></PermissionRoute>),
       },

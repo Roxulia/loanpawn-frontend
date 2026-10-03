@@ -13,6 +13,7 @@ export const routePaths = {
   collateral: "/collateral",
   inventory: "/inventory",
   ownership: "/ownership",
+  obligations: "/obligations",
   purchasing: "/purchasing",
   purchasingCreate: "/purchasing/create",
   purchasingOrder: (code: string) => `/purchasing/${encodeURIComponent(code)}`,

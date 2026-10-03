@@ -2,13 +2,13 @@ export { purchasingService } from "./services/purchasingService";
 export { PurchasingPage, PurchaseCreatePage, PurchaseOrderDetailPage, PurchaseSuppliersPage } from "./pages/PurchasingPages";
 export type {
   PurchaseOrder,
-  PurchaseOrderLine,
+  PurchaseOrderItem,
   PurchasePayment,
   PurchaseReceipt,
-  PurchaseReceiptLine,
+  PurchaseReceiptItem,
   PurchaseRefund,
   PurchaseReturn,
-  PurchaseReturnLine,
+  PurchaseReturnItem,
   PurchaseSupplier,
   PurchaseTrackingMode,
   SupplierType,

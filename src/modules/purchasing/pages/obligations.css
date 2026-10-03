@@ -1,0 +1,8 @@
+﻿.obligation-section { margin-block: 1.5rem; }
+.obligation-section table { width: 100%; border-collapse: collapse; }
+.obligation-section th, .obligation-section td { padding: .75rem; text-align: left; border-bottom: 1px solid var(--border-subtle, #ddd); }
+.obligation-payment { display: grid; gap: .75rem; max-width: 32rem; padding: 1rem; border: 1px solid var(--border-subtle, #ddd); border-radius: .75rem; }
+.obligations-mobile { display: none; }
+.obligation-card { display: grid; gap: .5rem; padding: 1rem; border: 1px solid var(--border-subtle, #ddd); border-radius: .75rem; }
+@media (max-width: 767px) { .obligations-desktop { display: none; } .obligations-mobile { display: grid; gap: .75rem; } }
+@media (min-width: 768px) { .obligations-desktop { display: block; } .obligations-mobile { display: none; } }
