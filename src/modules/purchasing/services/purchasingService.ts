@@ -1,3 +1,4 @@
+import { createIdempotencyKey } from "../../../services/http/idempotency";
 import { apiClient } from "../../../services/http/apiClient";
 import type {
   PurchaseOrder,
@@ -10,7 +11,21 @@ import type {
   SupplierPayable,
 } from "../types";
 
-const writeOptions = () => ({ idempotencyKey: crypto.randomUUID() });
+const writeOptions = () => ({ idempotencyKey: createIdempotencyKey() });
+type PurchaseOrderPayload = {
+  supplier_code: string;
+  currency_code: string;
+  note?: string | null;
+  items: Array<{
+    catalog_item_code?: string | null;
+    item_description?: string;
+    tracking_mode?: PurchaseTrackingMode;
+    unit_label?: string;
+    ordered_quantity: number;
+    unit_price: number;
+  }>;
+};
+
 
 export const purchasingService = {
   suppliers(search = "") {
@@ -58,26 +73,11 @@ export const purchasingService = {
       `/tenant/purchasing/orders/${encodeURIComponent(code)}`,
     );
   },
-  createOrder(payload: {
-    supplier_code: string;
-    currency_code: string;
-    note?: string | null;
-    items: Array<{
-      catalog_item_code?: string | null;
-      item_description?: string;
-      tracking_mode?: PurchaseTrackingMode;
-      unit_label?: string;
-      ordered_quantity: number;
-      unit_price: number;
-    }>;
-  }) {
-    return apiClient.post<PurchaseOrder>(
-      "/tenant/purchasing/orders",
-      payload,
-      writeOptions(),
-    );
-  },
-  orderAction(code: string, action: "order" | "confirm" | "cancel") {
+  createOrder(payload: PurchaseOrderPayload) {
+    return apiClient.post<PurchaseOrder>("/tenant/purchasing/orders", payload, writeOptions());
+  },  updateOrder(code: string, payload: PurchaseOrderPayload) {
+    return apiClient.put<PurchaseOrder>(`/tenant/purchasing/orders/${encodeURIComponent(code)}`, payload);
+  },  orderAction(code: string, action: "order" | "confirm" | "cancel") {
     return apiClient.post<PurchaseOrder>(
       `/tenant/purchasing/orders/${encodeURIComponent(code)}/${action}`,
       {},
@@ -91,7 +91,7 @@ export const purchasingService = {
   },
   recordPayment(
     orderCode: string,
-    payload: { paid_at: string; amount: number; financial_account_id: number; reference?: string | null; note?: string | null },
+    payload: { paid_at: string; amount: number; financial_account_id?: number; reference?: string | null; note?: string | null },
   ) {
     return apiClient.post<PurchasePayment>(
       `/tenant/purchasing/orders/${encodeURIComponent(orderCode)}/payments`,
@@ -147,7 +147,7 @@ export const purchasingService = {
     const query = orderCode ? `?order_code=${encodeURIComponent(orderCode)}` : "";
     return apiClient.get<SupplierPayable[]>(`/tenant/purchasing/payables${query}`);
   },
-  recordPayablePayment(code: string, payload: { paid_at: string; amount: number; financial_account_id: number; reference?: string | null; note?: string | null }) {
+  recordPayablePayment(code: string, payload: { paid_at: string; amount: number; financial_account_id?: number; reference?: string | null; note?: string | null }) {
     return apiClient.post(`/tenant/purchasing/payables/${encodeURIComponent(code)}/payments`, payload, writeOptions());
   },
 };

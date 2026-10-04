@@ -553,7 +553,7 @@ function TransactionRow({
   item: AccountingTransaction;
 }) {
   const transactionType =
-    getStringField(item, "transaction_type", "transactionType") || "incoming";
+    getStringField(item, "transaction_direction", "transactionDirection") || getStringField(item, "transaction_type", "transactionType") || "incoming";
   const isIncoming = transactionType === "incoming";
   const referenceLabel = getStringField(
     item,

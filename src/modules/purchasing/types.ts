@@ -121,5 +121,5 @@ export type SupplierPayable = {
   original_amount: string;
   balance_amount: string;
   status: "OPEN" | "PARTIAL" | "SETTLED";
-  payments: Array<{ code: string; paid_at: string | null; amount: string }>;
+  payments: Array<{ code: string; paid_at: string | null; amount: string; reference?: string | null; note?: string | null }>;
 };

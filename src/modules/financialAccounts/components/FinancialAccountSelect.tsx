@@ -11,6 +11,7 @@ type FinancialAccountSelectProps = {
   id: string;
   locked?: boolean;
   matchAccountId?: number | null;
+  matchCurrencyCode?: string | null;
   onChange: (accountId: string) => void;
   portalMenu?: boolean;
   value: string;
@@ -21,6 +22,7 @@ export function FinancialAccountSelect({
   id,
   locked = false,
   matchAccountId,
+  matchCurrencyCode,
   onChange,
   portalMenu = false,
   value,
@@ -79,14 +81,16 @@ export function FinancialAccountSelect({
     : undefined;
   const options = useMemo(
     () =>
-      matchAccountId == null
-        ? accounts
+      matchCurrencyCode != null
+        ? accounts.filter((account) => account.currency.code.toUpperCase() === matchCurrencyCode.toUpperCase())
+        : matchAccountId == null
+          ? accounts
         : matchingCurrencyId === undefined
           ? []
           : accounts.filter(
               (account) => account.currency.id === matchingCurrencyId,
             ),
-    [accounts, matchAccountId, matchingCurrencyId],
+    [accounts, matchAccountId, matchCurrencyCode, matchingCurrencyId],
   );
 
   useEffect(() => {
