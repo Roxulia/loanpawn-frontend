@@ -42,3 +42,24 @@ export type OwnershipMovement = {
   source_type: string | null;
   occurred_at: string;
 };
+
+export type ExpiredCollateral = {
+  code: string;
+  name: string;
+  type: string;
+  description: string | null;
+  quantity: number;
+  estimated_value: number;
+  item_status: string;
+  inventory_item_code: string | null;
+  ownership_transferred_at: string | null;
+  slip_no: string | null;
+  slip_status: string | null;
+  customer_name: string | null;
+  expire_at: string | null;
+  loan_amount: number;
+  collateral_item_count: number;
+  currency_code: string;
+  recommended_unit_cost_basis: number;
+  estimated_unit_value: number;
+};

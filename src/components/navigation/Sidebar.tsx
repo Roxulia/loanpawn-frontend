@@ -154,27 +154,7 @@ const navigationGroups: NavigationGroup[] = [
         icon: "financialAccounts",
         permissions: ["list_financial_account"],
       },
-      {
-        label: "Inventory",
-        to: routePaths.inventory,
-        icon: "inventory",
-        permissions: ["list_inventory"],
-        features: ["inventory_management"],
-      },
-      {
-        label: "Owned Items",
-        to: routePaths.ownership,
-        icon: "inventory",
-        permissions: ["list_owned_item"],
-        features: ["ownership_management", "inventory_management"],
-      },
-      {
-        label: "Purchasing",
-        to: routePaths.purchasing,
-        icon: "purchasing",
-        permissions: ["list_purchase_order", "manage_purchase_order"],
-        features: ["purchasing_management"],
-      },
+
       {
         label: "Capital Management",
         to: routePaths.capitals,
@@ -254,6 +234,46 @@ const navigationGroups: NavigationGroup[] = [
           "delete_lender",
         ],
         features: ["lender_management"],
+      },
+    ],
+  },
+  {
+    label: "Inventory & Purchasing",
+    items: [
+      {
+        label: "Inventory",
+        to: routePaths.inventory,
+        icon: "inventory",
+        permissions: ["list_inventory"],
+        features: ["inventory_management"],
+        children: [
+          { label: "Item register", to: routePaths.inventory, permissions: ["list_inventory"] },
+          { label: "Receive stock", to: routePaths.inventoryReceive, permissions: ["list_inventory", "receive_inventory"] },
+          { label: "Locations", to: routePaths.inventoryLocations, permissions: ["list_inventory"] },
+        ],
+      },
+      {
+        label: "Ownership",
+        to: routePaths.ownership,
+        icon: "inventory",
+        permissions: ["list_owned_item"],
+        features: ["ownership_management", "inventory_management"],
+        children: [
+          { label: "Owned items", to: routePaths.ownership, permissions: ["list_owned_item"] },
+          { label: "Record acquisition", to: routePaths.ownershipAcquire, permissions: ["create_owned_item"] },
+          { label: "Expired collateral", to: routePaths.ownershipExpiredCollateral, permissions: ["list_owned_item"] },
+        ],
+      },
+      {
+        label: "Purchasing",
+        to: routePaths.purchasing,
+        icon: "purchasing",
+        permissions: ["list_purchase_order"],
+        features: ["purchasing_management"],
+        children: [
+          { label: "Purchase orders", to: routePaths.purchasing, permissions: ["list_purchase_order"] },
+          { label: "Suppliers", to: routePaths.purchasingSuppliers, permissions: ["list_supplier"] },
+        ],
       },
     ],
   },
@@ -442,7 +462,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                                     : "nav-child-link"
                                 }
                                 key={child.to}
-                                end={child.to === item.to}
+                                end
                                 to={child.to}
                                 onClick={onNavigate}
                               >

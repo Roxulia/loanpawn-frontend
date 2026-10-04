@@ -1,7 +1,25 @@
+import { createIdempotencyKey } from "../../../services/http/idempotency";
 import { apiClient } from "../../../services/http/apiClient";
-import type { OwnedItem, OwnershipMovement } from "../types";
+import type { ExpiredCollateral, OwnedItem, OwnershipMovement } from "../types";
 
 export const ownershipService = {
+  expiredCollateral(search = "") {
+    return apiClient.get<ExpiredCollateral[]>(`/tenant/ownership/expired-collateral?search=${encodeURIComponent(search)}`);
+  },
+
+  transferExpiredCollateral(collateralCode: string, payload: {
+    acquired_at: string;
+    unit_cost_basis: number;
+    estimated_unit_value?: number;
+    currency_code: string;
+    description?: string;
+  }) {
+    return apiClient.post<{ collateral_code: string; owned_item: OwnedItem }>(
+      `/tenant/ownership/expired-collateral/${encodeURIComponent(collateralCode)}/transfer`,
+      payload,
+      { idempotencyKey: createIdempotencyKey() },
+    );
+  },
   list(search = "") {
     return apiClient.get<OwnedItem[]>(`/tenant/ownership/items?search=${encodeURIComponent(search)}`);
   },
@@ -28,7 +46,7 @@ export const ownershipService = {
     description?: string;
   }) {
     return apiClient.post<OwnedItem>("/tenant/ownership/acquisitions", payload, {
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: createIdempotencyKey(),
     });
   },
 };

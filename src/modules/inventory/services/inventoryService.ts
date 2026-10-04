@@ -1,3 +1,4 @@
+import { createIdempotencyKey } from "../../../services/http/idempotency";
 import { apiClient } from "../../../services/http/apiClient";
 import type {
   InventoryItem,
@@ -40,25 +41,25 @@ export const inventoryService = {
 
   receive(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/receive", payload, {
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: createIdempotencyKey(),
     });
   },
 
   move(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/move", payload, {
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: createIdempotencyKey(),
     });
   },
 
   issue(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/issue", payload, {
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: createIdempotencyKey(),
     });
   },
 
   adjust(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/adjust", payload, {
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: createIdempotencyKey(),
     });
   },
 };

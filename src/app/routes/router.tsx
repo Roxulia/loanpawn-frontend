@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+﻿import { createBrowserRouter, Navigate } from "react-router";
 import type { ReactNode } from "react";
 import { AppLayout } from "../../layouts/AppLayout";
 import { AuthLayout } from "../../layouts/AuthLayout";
@@ -71,7 +71,7 @@ import { InterestPaymentsPage } from "../../modules/interest";
 import { moduleRegistry } from "../../modules/moduleRegistry";
 import { InventoryPage } from "../../modules/inventory";
 import { OwnedItemsPage } from "../../modules/ownership";
-import { PurchaseCreatePage, PurchaseOrderDetailPage, PurchasingPage, PurchaseSuppliersPage } from "../../modules/purchasing/pages/PurchasingPages";
+import { PurchaseCreatePage, PurchaseOrderDetailPage, PurchasingPage, PurchaseSuppliersPage, PurchaseSupplierFormPage } from "../../modules/purchasing/pages/PurchasingPages";
 import { ObligationsPage } from "../../modules/purchasing/pages/ObligationsPage";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
@@ -339,7 +339,57 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: routePaths.inventoryReceive,
+        element: featureGate(
+          "inventory_management",
+          "Inventory",
+          <PermissionRoute permission="list_inventory">
+            <PermissionRoute permission="receive_inventory">
+              <InventoryPage />
+            </PermissionRoute>
+          </PermissionRoute>,
+        ),
+      },
+      {
+        path: routePaths.inventoryLocations,
+        element: featureGate(
+          "inventory_management",
+          "Inventory",
+          <PermissionRoute permission="list_inventory">
+            <InventoryPage />
+          </PermissionRoute>,
+        ),
+      },
+      {
         path: routePaths.ownership,
+        element: featureGate(
+          "ownership_management",
+          "Ownership",
+          featureGate(
+            "inventory_management",
+            "Inventory",
+            <PermissionRoute permission="list_owned_item">
+              <OwnedItemsPage />
+            </PermissionRoute>,
+          ),
+        ),
+      },
+      {
+        path: routePaths.ownershipAcquire,
+        element: featureGate(
+          "ownership_management",
+          "Ownership",
+          featureGate(
+            "inventory_management",
+            "Inventory",
+            <PermissionRoute permission="create_owned_item">
+              <OwnedItemsPage />
+            </PermissionRoute>,
+          ),
+        ),
+      },
+      {
+        path: routePaths.ownershipExpiredCollateral,
         element: featureGate(
           "ownership_management",
           "Ownership",
@@ -355,8 +405,8 @@ export const router = createBrowserRouter([
       {
         path: routePaths.obligations,
         element: <PermissionRoute any={["list_purchase_order", "list_business_loan"]}><ObligationsPage /></PermissionRoute>,
-        },
-        {
+      },
+      {
         path: routePaths.purchasing,
         element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_purchase_order"><PurchasingPage /></PermissionRoute>),
       },
@@ -365,8 +415,20 @@ export const router = createBrowserRouter([
         element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_supplier"><PermissionRoute permission="manage_purchase_order"><PurchaseCreatePage /></PermissionRoute></PermissionRoute>),
       },
       {
-        path: "/purchasing/suppliers",
+        path: routePaths.purchasingSuppliers,
         element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_supplier"><PurchaseSuppliersPage /></PermissionRoute>),
+      },
+      {
+        path: "/purchasing/:orderCode/edit",
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="manage_purchase_order"><PurchaseCreatePage /></PermissionRoute>),
+      },
+      {
+        path: "/purchasing/suppliers/create",
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="manage_supplier"><PurchaseSupplierFormPage /></PermissionRoute>),
+      },
+      {
+        path: "/purchasing/suppliers/:supplierCode/edit",
+        element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="manage_supplier"><PurchaseSupplierFormPage /></PermissionRoute>),
       },
       {
         path: "/purchasing/:orderCode",
