@@ -26,6 +26,7 @@ export const routePaths = {
   purchasingSupplierCreate: "/purchasing/suppliers/create",
   purchasingSupplierEdit: (code: string) => `/purchasing/suppliers/${encodeURIComponent(code)}/edit`,
   sales: "/sales",
+  deliveries: "/deliveries",
   collateralDetail: (itemId: number | string) => `/collateral/${itemId}`,
   slips: "/slips",
   slipsForCustomer: (customerCode: string) =>

@@ -282,6 +282,13 @@ const navigationGroups: NavigationGroup[] = [
         permissions: ["list_sale"],
         features: ["sales_management"],
       },
+      {
+        label: "Delivery",
+        to: routePaths.deliveries,
+        icon: "purchasing",
+        permissions: ["list_delivery"],
+        features: ["delivery_management"],
+      },
     ],
   },
   {
