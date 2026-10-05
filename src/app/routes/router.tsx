@@ -73,6 +73,7 @@ import { InventoryPage } from "../../modules/inventory";
 import { OwnedItemsPage } from "../../modules/ownership";
 import { PurchaseCreatePage, PurchaseOrderDetailPage, PurchasingPage, PurchaseSuppliersPage, PurchaseSupplierFormPage } from "../../modules/purchasing/pages/PurchasingPages";
 import { SalesPage } from "../../modules/sales/SalesPage";
+import { SalesOrderEditPage } from "../../modules/sales/SalesOrderEditPage";
 import { DeliveryPage } from "../../modules/delivery/DeliveryPage";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
@@ -414,6 +415,10 @@ export const router = createBrowserRouter([
       {
         path: routePaths.sales,
         element: featureGate("sales_management", "Sales", <PermissionRoute permission="list_sale"><SalesPage /></PermissionRoute>),
+      },
+      {
+        path: "/sales/:orderCode/edit",
+        element: featureGate("sales_management", "Sales", <PermissionRoute permission="list_sale"><SalesOrderEditPage /></PermissionRoute>),
       },
       {
         path: routePaths.deliveries,

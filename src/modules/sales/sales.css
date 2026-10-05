@@ -1,0 +1,17 @@
+.sales-quick-form,.sales-order-panel { display:grid; gap:1rem; padding:1.25rem; background:var(--surface,#fff); border:1px solid var(--border,#e5e7eb); border-radius:1rem; }
+.sales-quick-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.sales-quick-form h2,.sales-defer-option,.sales-quick-form button,.sales-receivable-note { grid-column:1/-1; }
+.sales-defer-option { display:flex; align-items:center; gap:.55rem; }
+.sales-receivable-note { color:var(--text-muted,#64748b); }
+.sales-order-layout { display:grid; gap:1rem; }
+.sales-order-actions,.sales-order-history,.sales-return-form { display:grid; gap:.75rem; }
+.sales-order-history article { display:flex; justify-content:space-between; gap:1rem; padding:.65rem 0; border-bottom:1px solid var(--border,#e5e7eb); }
+.sales-order-line-editor { display:grid; grid-template-columns:1.2fr 1.2fr .6fr .8fr auto; gap:.65rem; align-items:end; }
+.sales-return-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.sales-return-form h3,.sales-return-form button { grid-column:1/-1; }
+@media(max-width:700px) {
+  .sales-quick-form,.sales-return-form { grid-template-columns:1fr; }
+  .sales-quick-form h2,.sales-defer-option,.sales-quick-form button,.sales-receivable-note,.sales-return-form h3,.sales-return-form button { grid-column:auto; }
+  .sales-order-line-editor { grid-template-columns:1fr; }
+  .sales-order-history article { flex-direction:column; }
+}

@@ -5,6 +5,7 @@ export type InventoryLocation = {
   name: string;
   type: "SHOP" | "STORAGE" | "VAULT" | "DISPLAY" | "LENDER" | "OTHER";
   is_active: boolean;
+  is_sellable?: boolean;
 };
 
 export type InventoryUnit = {
