@@ -271,6 +271,9 @@ export type TenantDebt = {
   totalOutstanding?: string;
   description: string;
   tag?: string | null;
+  source_type?: string | null;
+  source_code?: string | null;
+  currency_code?: string | null;
   is_paid: boolean;
   created_account_id?: number | null;
   createdAccountId?: number | null;

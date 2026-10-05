@@ -209,7 +209,7 @@ const navigationGroups: NavigationGroup[] = [
         label: "Debts",
         to: routePaths.debts,
         icon: "debts",
-        permissions: ["list_debt", "create_debt", "update_debt", "delete_debt"],
+        permissions: ["list_debt", "create_debt", "update_debt", "delete_debt", "list_sale"],
       },
       {
         label: "Business Loans",
@@ -274,6 +274,13 @@ const navigationGroups: NavigationGroup[] = [
           { label: "Purchase orders", to: routePaths.purchasing, permissions: ["list_purchase_order"] },
           { label: "Suppliers", to: routePaths.purchasingSuppliers, permissions: ["list_supplier"] },
         ],
+      },
+      {
+        label: "Sales",
+        to: routePaths.sales,
+        icon: "purchasing",
+        permissions: ["list_sale"],
+        features: ["sales_management"],
       },
     ],
   },

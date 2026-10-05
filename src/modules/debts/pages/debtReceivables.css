@@ -1,0 +1,7 @@
+/* Keep Tenant Debt and Sales Receivable tabs visually consistent with finance lists. */
+.finance-record-tabs { display: flex; gap: .4rem; margin: 0 0 1rem; border-bottom: 1px solid var(--color-border, #e5e7eb); }
+.finance-record-tabs button { min-height: 2.75rem; padding: .65rem 1rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--color-text-muted, #667085); font: inherit; font-weight: 600; cursor: pointer; }
+.finance-record-tabs button[aria-selected="true"] { color: var(--color-primary, #00677f); border-bottom-color: var(--color-primary, #00677f); }
+.sale-receivables-tab__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.sale-receivable-payment { display: grid; gap: .75rem; max-width: 32rem; margin: 1rem auto; padding: 1.25rem; border: 1px solid var(--border-subtle, #ddd); border-radius: .85rem; background: var(--color-surface, #fff); }
+@media (max-width: 767px) { .finance-record-tabs button { flex: 1; } }

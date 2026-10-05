@@ -105,6 +105,16 @@ export const permissionGroups: PermissionGroup[] = [
     ],
   },
   {
+    label: "Sales",
+    permissions: [
+      option("list_sale", "View sales"),
+      option("manage_sale", "Create and manage sales"),
+      option("manage_sale_payment", "Record sale payments"),
+      option("manage_sale_delivery", "Record sale deliveries"),
+      option("manage_sale_return", "Record sale returns"),
+    ],
+  },
+  {
     label: "Capital and Debt",
     permissions: [
       option("list_capital", "View capital"),

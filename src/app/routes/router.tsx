@@ -72,7 +72,7 @@ import { moduleRegistry } from "../../modules/moduleRegistry";
 import { InventoryPage } from "../../modules/inventory";
 import { OwnedItemsPage } from "../../modules/ownership";
 import { PurchaseCreatePage, PurchaseOrderDetailPage, PurchasingPage, PurchaseSuppliersPage, PurchaseSupplierFormPage } from "../../modules/purchasing/pages/PurchasingPages";
-import { ObligationsPage } from "../../modules/purchasing/pages/ObligationsPage";
+import { SalesPage } from "../../modules/sales/SalesPage";
 import { RedemptionsPage } from "../../modules/redemptions";
 import {
   DefaultDataSettingsPage,
@@ -404,11 +404,15 @@ export const router = createBrowserRouter([
       },
       {
         path: routePaths.obligations,
-        element: <PermissionRoute any={["list_purchase_order", "list_business_loan"]}><ObligationsPage /></PermissionRoute>,
+        element: <PermissionRoute any={["list_purchase_order", "list_business_loan"]}><BusinessLoanListPage initialTab="payables" /></PermissionRoute>,
       },
       {
         path: routePaths.purchasing,
         element: featureGate("purchasing_management", "Purchasing", <PermissionRoute permission="list_purchase_order"><PurchasingPage /></PermissionRoute>),
+      },
+      {
+        path: routePaths.sales,
+        element: featureGate("sales_management", "Sales", <PermissionRoute permission="list_sale"><SalesPage /></PermissionRoute>),
       },
       {
         path: routePaths.purchasingCreate,
@@ -578,15 +582,7 @@ export const router = createBrowserRouter([
       },
       {
         path: routePaths.debts,
-        element: featureGate(
-          "debt_management",
-          "Debts",
-          <PermissionRoute
-            any={["list_debt", "create_debt", "update_debt", "delete_debt"]}
-          >
-            <DebtsPage />
-          </PermissionRoute>,
-        ),
+        element: <PermissionRoute any={["list_debt", "create_debt", "update_debt", "delete_debt", "list_sale"]}><DebtsPage /></PermissionRoute>,
       },
       {
         path: routePaths.debtCreate,

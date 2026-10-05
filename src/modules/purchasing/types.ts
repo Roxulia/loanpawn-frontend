@@ -120,6 +120,9 @@ export type SupplierPayable = {
   currency_code: string | null;
   original_amount: string;
   balance_amount: string;
+  apply_interest?: boolean;
+  interest_rate?: string | null;
+  interest_type_id?: number | null;
   status: "OPEN" | "PARTIAL" | "SETTLED";
   payments: Array<{ code: string; paid_at: string | null; amount: string; reference?: string | null; note?: string | null }>;
 };

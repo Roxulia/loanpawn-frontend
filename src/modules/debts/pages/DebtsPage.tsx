@@ -22,7 +22,7 @@ import {
 } from "../../../components/organisms";
 import type { TenantDebt } from "../../../dataobjects/tenant/finance";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
-import { usePermissions } from "../../auth";
+import { useFeatures, usePermissions } from "../../auth";
 import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
 import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
 import {
@@ -32,6 +32,8 @@ import {
 import { formatDebtLink } from "../components/debtFormat";
 import { CustomerSearchField } from "../components/CustomerSearchField";
 import { emptyNrcValue, type NrcValue } from "../../../components/molecules/NrcField";
+import { SaleReceivablesTab } from "../components/SaleReceivablesTab";
+import "./debtReceivables.css";
 
 const perPage = 10;
 
@@ -101,7 +103,10 @@ export function DebtsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission("create_debt");
+  const { hasEnabledFeature } = useFeatures();
+  const canViewDebts = hasEnabledFeature("debt_management") && hasPermission("list_debt");
+  const canViewSaleReceivables = hasEnabledFeature("sales_management") && hasPermission("list_sale");
+  const canCreate = hasEnabledFeature("debt_management") && hasPermission("create_debt");
   const canUpdate = hasPermission("update_debt");
   const canDelete = hasPermission("delete_debt");
   const [items, setItems] = useState<TenantDebt[]>([]);
@@ -117,6 +122,7 @@ export function DebtsPage() {
   const [debtToDelete, setDebtToDelete] = useState<TenantDebt | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ status: "", typeId: "", customerCode: "", fromDate: "", toDate: "", nrc: emptyNrcValue as NrcValue });
+  const [activeTab, setActiveTab] = useState<"debts" | "sale_receivables">("debts");
 
   const legacyParams = new URLSearchParams(location.search);
   const legacyDebtCode = legacyParams.get("debt_code") ?? "";
@@ -125,6 +131,7 @@ export function DebtsPage() {
 
   const load = useCallback(
     async (page: number) => {
+      if (!canViewDebts) return;
       setLoading(true);
       setError(null);
       try {
@@ -154,7 +161,7 @@ export function DebtsPage() {
         setLoading(false);
       }
     },
-    [debouncedSearch, filters],
+    [canViewDebts, debouncedSearch, filters],
   );
 
   useEffect(() => {
@@ -252,7 +259,11 @@ export function DebtsPage() {
           ) : null
         }
       />
-      <Card
+      {canViewDebts && canViewSaleReceivables && <div className="finance-record-tabs" role="tablist" aria-label="Receivable types">
+        <button type="button" role="tab" aria-selected={activeTab === "debts"} onClick={() => setActiveTab("debts")}>Tenant Debt</button>
+        <button type="button" role="tab" aria-selected={activeTab === "sale_receivables"} onClick={() => setActiveTab("sale_receivables")}>Sale Receivables</button>
+      </div>}
+      {canViewSaleReceivables && (!canViewDebts || activeTab === "sale_receivables") ? <SaleReceivablesTab /> : canViewDebts ? <Card
         title="Debt records"
         description={`${total} total debt${total === 1 ? "" : "s"}`}
         action={<Badge tone="info">Finance</Badge>}
@@ -379,7 +390,7 @@ export function DebtsPage() {
             )}
           />
         </div>
-      </Card>
+      </Card> : <Alert tone="warning" title="Debt records unavailable" message="No enabled receivable record types are available for this account." />}
       <ConfirmDialog
         confirmLabel="Delete Debt"
         isLoading={deleting}
