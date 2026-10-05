@@ -242,6 +242,7 @@ export function DebtDetailPage() {
         <LoadingState rows={6} />
       ) : debt && calculation ? (
         <>
+          {debt.source_type === "SALE" && <Alert tone="info" title="Sale receivable" message={`This interest-free customer balance is linked to sale ${debt.source_code ?? ""}.`} />}
           <FinanceDetailHeader
             actions={
               !debt.is_paid &&

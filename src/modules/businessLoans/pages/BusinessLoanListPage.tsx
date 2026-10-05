@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
 import { Badge, Button, Input, Select } from "../../../components/atoms";
 import { Alert } from "../../../components/feedback";
@@ -20,10 +20,14 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/organisms";
-import { usePermissions } from "../../auth";
+import { useFeatures, usePermissions } from "../../auth";
 import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
 import { FinanceHistoryMobileCard } from "../../finance/FinanceHistoryMobileCard";
 import { formatDate } from "../../finance/financeFormat";
+import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
+import { purchasingService } from "../../purchasing/services/purchasingService";
+import type { SupplierPayable } from "../../purchasing/types";
+import "./businessLoanList.css";
 import {
   businessLoanService,
   type BusinessLoan,
@@ -31,9 +35,15 @@ import {
 
 const perPage = 10;
 
-export function BusinessLoanListPage() {
+export function BusinessLoanListPage({ initialTab = "loans" }: { initialTab?: "loans" | "payables" }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { hasPermission } = usePermissions();
+  const { hasEnabledFeature } = useFeatures();
+  const canSeeLoans = hasEnabledFeature("business_loan_management") && hasPermission("list_business_loan");
+  const canSeePayables = hasEnabledFeature("purchasing_management") && hasPermission("list_purchase_order");
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"loans" | "payables">(requestedTab === "payables" ? "payables" : initialTab);
   const canCreate = hasPermission("create_business_loan");
   const canUpdate = hasPermission("update_business_loan");
   const canDelete = hasPermission("delete_business_loan");
@@ -53,6 +63,7 @@ export function BusinessLoanListPage() {
 
   const load = useCallback(
     async (page: number) => {
+      if (!canSeeLoans) { setLoading(false); return; }
       setLoading(true);
       setError(null);
       try {
@@ -80,7 +91,7 @@ export function BusinessLoanListPage() {
         setLoading(false);
       }
     },
-    [debouncedSearch, filters],
+    [canSeeLoans, debouncedSearch, filters],
   );
 
   useEffect(() => {
@@ -210,13 +221,15 @@ export function BusinessLoanListPage() {
     },
   ];
 
+  const selectedTab = canSeeLoans ? activeTab : "payables";
+
   return (
     <section className="page business-loan-registry-page">
       <SectionHeader
-        title="Business Loans"
-        subtitle="Track lender funding, interest expense, and repayments."
+        title={selectedTab === "payables" ? "Supplier Payables" : "Business Loans"}
+        subtitle={selectedTab === "payables" ? "Review purchase balances and record supplier payments." : "Track lender funding, interest expense, and repayments."}
         action={
-          canCreate ? (
+          selectedTab === "loans" && canSeeLoans && canCreate ? (
             <Button
               variant="primary"
               leftIcon={<CirclePlusIcon />}
@@ -227,6 +240,11 @@ export function BusinessLoanListPage() {
           ) : null
         }
       />
+      {canSeeLoans && canSeePayables && <div className="obligations-tabs" role="tablist" aria-label="Business obligations">
+        <button type="button" role="tab" aria-selected={selectedTab === "loans"} className={selectedTab === "loans" ? "obligations-tab obligations-tab--active" : "obligations-tab"} onClick={() => setActiveTab("loans")}>Business Loans</button>
+        <button type="button" role="tab" aria-selected={selectedTab === "payables"} className={selectedTab === "payables" ? "obligations-tab obligations-tab--active" : "obligations-tab"} onClick={() => setActiveTab("payables")}>Supplier Payables</button>
+      </div>}
+      {selectedTab === "payables" && canSeePayables ? <SupplierPayablesPanel /> : canSeeLoans ? <>
       <Card
         title="Business loan records"
         description={`${total} total business loan${total === 1 ? "" : "s"}`}
@@ -363,6 +381,62 @@ export function BusinessLoanListPage() {
         onConfirm={() => void remove()}
         title="Confirm business loan deletion"
       />
+      </> : <Alert tone="warning" title="Business obligations unavailable" message="Your account does not have access to either obligation type." />}
     </section>
   );
+}
+
+// Show purchasing-owned supplier balances inside the shared obligations registry.
+function SupplierPayablesPanel() {
+  const { hasPermission } = usePermissions();
+  const canPay = hasPermission("manage_purchase_payment");
+  const [rows, setRows] = useState<SupplierPayable[]>([]);
+  const [selected, setSelected] = useState<SupplierPayable | null>(null);
+  const [amount, setAmount] = useState("");
+  const [paidAt, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
+  const [accountId, setAccountId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  // Load payable records and keep refresh actions scoped to this tab.
+  async function load() {
+    setLoading(true);
+    try { setRows(await purchasingService.payables()); setError(""); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Supplier payables could not be loaded."); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { queueMicrotask(() => { void load(); }); }, []);
+
+  // Record a settlement against the selected supplier payable.
+  async function pay(event: FormEvent) {
+    event.preventDefault();
+    if (!selected || !accountId || Number(amount) <= 0) return;
+    setSaving(true);
+    try {
+      await purchasingService.recordPayablePayment(selected.code, { paid_at: paidAt, amount: Number(amount), financial_account_id: Number(accountId) });
+      setSelected(null); setAmount(""); setAccountId(""); await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Supplier payment could not be saved."); }
+    finally { setSaving(false); }
+  }
+
+  const columns: Array<DataTableColumn<SupplierPayable>> = [
+    { header: "Supplier", key: "supplier", render: row => row.supplier_name ?? "-" },
+    { header: "Purchase / Receipt", key: "purchase", render: row => row.purchase_order_code ?? row.purchase_receipt_code ?? "-" },
+    { header: "Original", key: "original", align: "right", render: row => `${row.original_amount} ${row.currency_code ?? ""}` },
+    { header: "Balance", key: "balance", align: "right", render: row => <strong>{row.balance_amount} {row.currency_code ?? ""}</strong> },
+    { header: "Status", key: "status", render: row => <Badge>{row.status}</Badge> },
+  ];
+
+  return <Card title="Supplier Payables" description={`${rows.length} supplier balances`} action={<Badge tone="info">Purchasing</Badge>}>
+    {error && <Alert tone="danger" title="Supplier payable action failed" message={error} />}
+    <DataTable columns={columns} items={rows} isLoading={loading} getItemId={row => row.code} getItemTitle={row => row.code} emptyTitle="No supplier payables" emptyDescription="Unpaid received purchase amounts will appear here." actions={canPay ? row => Number(row.balance_amount) > 0 ? <Button onClick={() => { setSelected(row); setAmount(row.balance_amount); }} variant="secondary">Pay</Button> : null : undefined} />
+    {selected && <form className="obligation-payment" onSubmit={pay}>
+      <h2>Record supplier payment</h2>
+      <FormField id="payable-date" label="Payment date"><Input id="payable-date" required type="date" value={paidAt} onChange={event => setPaidAt(event.target.value)} /></FormField>
+      <FormField id="payable-amount" label="Amount"><Input id="payable-amount" required type="number" min="0.01" max={selected.balance_amount} step="0.01" value={amount} onChange={event => setAmount(event.target.value)} /></FormField>
+      <FinancialAccountSelect id="payable-account" value={accountId} onChange={setAccountId} matchCurrencyCode={selected.currency_code} />
+      <Button type="button" variant="tertiary" onClick={() => setSelected(null)}>Cancel</Button><Button type="submit" disabled={saving || !accountId}>{saving ? "Saving…" : "Record payment"}</Button>
+    </form>}
+  </Card>;
 }
