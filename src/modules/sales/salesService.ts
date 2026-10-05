@@ -12,7 +12,6 @@ export const salesService = {
   create: (payload: unknown) => apiClient.post<SaleOrder>("/tenant/sales/orders", payload, writeOptions()),
   action: (code: string, action: "confirm" | "cancel") => apiClient.post<SaleOrder>(`/tenant/sales/orders/${encodeURIComponent(code)}/${action}`, {}, writeOptions()),
   payment: (code: string, payload: unknown) => apiClient.post<SaleOrder>(`/tenant/sales/orders/${encodeURIComponent(code)}/payments`, payload, writeOptions()),
-  delivery: (code: string, payload: unknown) => apiClient.post<SaleOrder>(`/tenant/sales/orders/${encodeURIComponent(code)}/deliveries`, payload, writeOptions()),
   receivables: () => apiClient.get<SaleReceivable[]>("/tenant/sales/receivables"),
   collectReceivable: (code: string, payload: unknown) => apiClient.post<SaleReceivable>(`/tenant/sales/receivables/${encodeURIComponent(code)}/payments`, payload, writeOptions()),
 };

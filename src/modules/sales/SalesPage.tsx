@@ -22,7 +22,6 @@ export function SalesPage() {
   const [itemCode, setItemCode] = useState("");
   const [ownedCode, setOwnedCode] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [deliverQuantity, setDeliverQuantity] = useState("1");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("");
   const [customer, setCustomer] = useState("");
@@ -72,16 +71,10 @@ export function SalesPage() {
         const paymentOrder = await salesService.payment(created.code, { financial_account_id: Number(account), amount: Number(deposit), paid_at: deliveryDate });
         if (totalChange(paymentOrder) > 0) setProgress(`Deposit recorded. Change returned: ${totalChange(paymentOrder).toFixed(2)} ${paymentOrder.currency_code}.`);
       }
-      if (Number(deliverQuantity) > 0) {
-        setProgress("Deposit recorded. Delivering the selected quantity...");
-        await salesService.delivery(created.code, {
-          delivered_at: deliveryDate,
-          items: [{ sales_order_line_code: created.items[0].code, quantity: Number(deliverQuantity) }],
-        });
-      }
+      setProgress("Order confirmed. Schedule fulfillment in the standalone Delivery module.");
       const finalOrder = await salesService.order(created.code);
       const change = totalChange(finalOrder);
-      setProgress(change > 0 ? `Quick sale completed. Change returned: ${change.toFixed(2)} ${finalOrder.currency_code}.` : "Quick sale completed. No change was due.");
+      setProgress(change > 0 ? `Sale confirmed. Change returned: ${change.toFixed(2)} ${finalOrder.currency_code}.` : "Sale confirmed. Schedule fulfillment in Delivery when ready.");
       await refresh(created.code);
     } catch (reason) {
       setError(message(reason));
@@ -114,30 +107,25 @@ export function SalesPage() {
     {progress && <Alert tone="info" title="Sale progress" message={progress} />}
     <form onSubmit={create} className="purchasing-form">
       <h2>Quick sale</h2>
-      <label><input type="checkbox" checked={deliverNow} onChange={event => setDeliverNow(event.target.checked)} /> Deliver now</label>
+      <label><input type="checkbox" checked={deliverNow} onChange={event => setDeliverNow(event.target.checked)} /> Confirm order</label>
       <FormField id="sale-customer" label="Customer code (optional)"><Input id="sale-customer" value={customer} onChange={event => setCustomer(event.target.value)} /></FormField>
       <FormField id="sale-currency" label="Currency code"><Input id="sale-currency" required value={currency} onChange={event => setCurrency(event.target.value.toUpperCase())} /></FormField>
       <FormField id="sale-item" label="Inventory item code"><Input id="sale-item" required value={itemCode} onChange={event => setItemCode(event.target.value)} /></FormField>
       <FormField id="sale-owned" label="Owned item code"><Input id="sale-owned" required value={ownedCode} onChange={event => setOwnedCode(event.target.value)} /></FormField>
-      <FormField id="sale-quantity" label="Order quantity"><Input id="sale-quantity" required type="number" min="0.001" step="0.001" value={quantity} onChange={event => { setQuantity(event.target.value); if (deliverQuantity === quantity) setDeliverQuantity(event.target.value); }} /></FormField>
-      {deliverNow && <FormField id="sale-deliver-quantity" label="Deliver now quantity"><Input id="sale-deliver-quantity" required type="number" min="0.001" max={quantity} step="0.001" value={deliverQuantity} onChange={event => setDeliverQuantity(event.target.value)} /></FormField>}
+      <FormField id="sale-quantity" label="Order quantity"><Input id="sale-quantity" required type="number" min="0.001" step="0.001" value={quantity} onChange={event => { setQuantity(event.target.value); }} /></FormField>
       <FormField id="sale-price" label="Unit price"><Input id="sale-price" required type="number" min="0" step="0.01" value={price} onChange={event => setPrice(event.target.value)} /></FormField>
       <FormField id="sale-date" label="Sale date"><Input id="sale-date" required type="date" value={deliveryDate} onChange={event => setDeliveryDate(event.target.value)} /></FormField>
-      {deliverNow && <>
-        <FormField id="sale-deposit" label="Amount tendered (optional)"><Input id="sale-deposit" type="number" min="0" step="0.01" value={deposit} onChange={event => setDeposit(event.target.value)} /></FormField>
-        {Number(deposit) > 0 && <FinancialAccountSelect id="sale-account" value={account} onChange={setAccount} matchCurrencyCode={currency} />}
-      </>}
-      <Button type="submit" variant="primary" disabled={saving}>{saving ? "Processing…" : deliverNow ? "Create and deliver" : "Save draft sale"}</Button>
+      {deliverNow && <><FormField id="sale-deposit" label="Amount tendered (optional)"><Input id="sale-deposit" type="number" min="0" step="0.01" value={deposit} onChange={event => setDeposit(event.target.value)} /></FormField>{Number(deposit)>0 && <FinancialAccountSelect id="sale-account" value={account} onChange={setAccount} matchCurrencyCode={currency} />}</>}
+
+
+      <Button type="submit" variant="primary" disabled={saving}>{saving ? "Processing…" : deliverNow ? "Create and confirm" : "Save draft sale"}</Button>
     </form>
     <DataTable columns={columns} items={orders} isLoading={loading} getItemId={order => order.code} getItemTitle={order => order.code} onRowClick={row => void refresh(row.code)} emptyTitle="No sales yet" emptyDescription="Create a quick sale or save a draft to begin." />
     {selected && <section className="purchasing-form">
       <h2>{selected.code} · {selected.status}</h2>
       <p>{selected.totals.delivered_value} delivered · {selected.totals.paid_amount} paid · {selected.totals.receivable_amount} receivable · {selected.totals.undelivered_quantity} units remain in inventory</p>
       {selected.status === "DRAFT" && <Button onClick={async () => { await salesService.action(selected.code, "confirm"); await refresh(selected.code); }}>Confirm and reserve FIFO stock</Button>}
-      {selected.status === "CONFIRMED" && selected.items.some(item => Number(item.ordered_quantity) > Number(item.delivered_quantity)) && <div className="purchase-item">
-        <FormField id="sale-followup-quantity" label="Deliver quantity"><Input id="sale-followup-quantity" type="number" min="0.001" step="0.001" value={deliverQuantity} onChange={event => setDeliverQuantity(event.target.value)} /></FormField>
-        <Button onClick={async () => { await salesService.delivery(selected.code, { delivered_at: today(), items: [{ sales_order_line_code: selected.items[0].code, quantity: Number(deliverQuantity) }] }); await refresh(selected.code); }}>Record delivery</Button>
-      </div>}
+      {selected.status === "CONFIRMED" && <p>Schedule this order in the Delivery module to fulfill inventory.</p>}
       {!['CANCELLED'].includes(selected.status) && <div className="purchase-item">
         <FinancialAccountSelect id="sale-account-followup" value={account} onChange={setAccount} matchCurrencyCode={selected.currency_code} />
         <FormField id="sale-pay-amount" label="Amount tendered"><Input id="sale-pay-amount" type="number" min="0.01" step="0.01" value={deposit} onChange={event => setDeposit(event.target.value)} /></FormField>
