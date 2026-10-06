@@ -27,7 +27,30 @@ type PurchaseOrderPayload = {
 };
 
 
+export type QuickPurchasePayload = {
+  supplier_code?: string;
+  new_supplier?: { type: SupplierType; name: string; phone?: string | null };
+  currency_code: string;
+  purchase_date: string;
+  location_code: string;
+  note?: string;
+  items: Array<PurchaseOrderPayload['items'][number] & { unit_identifiers?: string[] }>;
+  tender_amount: number;
+  financial_account_id?: number;
+  payment_reference?: string;
+  payment_note?: string;
+};
+
+export type QuickPurchaseResult = {
+  order: PurchaseOrder;
+  payment: PurchasePayment | null;
+  receipt: PurchaseReceipt;
+};
+
 export const purchasingService = {
+  quickPurchase(payload: QuickPurchasePayload) {
+    return apiClient.post<QuickPurchaseResult>("/tenant/purchasing/quick", payload, writeOptions());
+  },
   suppliers(search = "") {
     return apiClient.get<PurchaseSupplier[]>(
       `/tenant/purchasing/suppliers?search=${encodeURIComponent(search)}`,
