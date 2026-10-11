@@ -5,7 +5,7 @@ import { Alert } from "../../../components/feedback";
 import { SectionHeader } from "../../../components/molecules";
 import { routePaths } from "../../../app/routes/paths";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import { DebtForm } from "../components/DebtForm";
 import {
   debtFormToPayload,
@@ -21,7 +21,7 @@ export function DebtCreatePage() {
   const [errors, setErrors] = useState<DebtFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const createIdempotencyKeyRef = useRef<string | null>(null);
+  const createIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
 
   function updateField<TField extends keyof DebtFormState>(
     field: TField,
@@ -34,7 +34,7 @@ export function DebtCreatePage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (createIdempotencyKeyRef.current !== null) {
+    if (isSaving) {
       return;
     }
 
@@ -47,12 +47,12 @@ export function DebtCreatePage() {
 
     setIsSaving(true);
     setError(null);
-    createIdempotencyKeyRef.current = createIdempotencyKey();
+    const payload = debtFormToPayload(form);
+    const idempotencyKey = idempotencyKeyForPayload(createIdempotencyKeyRef, payload);
 
     try {
-      await tenantResourceService.createDebt(debtFormToPayload(form), {
-        idempotencyKey: createIdempotencyKeyRef.current,
-      });
+      await tenantResourceService.createDebt(payload, { idempotencyKey });
+      clearIdempotencyKey(createIdempotencyKeyRef);
       setForm(emptyDebtForm);
       setErrors({});
       navigate(routePaths.debts);
@@ -63,7 +63,6 @@ export function DebtCreatePage() {
           : "Unable to create debt.",
       );
     } finally {
-      createIdempotencyKeyRef.current = null;
       setIsSaving(false);
     }
   }

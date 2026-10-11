@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
 import { Button } from "../../../components/atoms";
@@ -6,6 +6,7 @@ import { Alert, LoadingState } from "../../../components/feedback";
 import { ActionBar, Card, SectionHeader } from "../../../components/molecules";
 import type { TenantCapital } from "../../../dataobjects/tenant/finance";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import type { FinanceFormErrors } from "../../finance/FinanceResourcePage";
 import { getNumberField } from "../../finance/financeFormat";
 import {
@@ -33,6 +34,7 @@ function CapitalFormPage({ mode }: { mode: "create" | "edit" }) {
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const createIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
 
   useEffect(() => {
     if (mode !== "edit" || !capitalCode) return;
@@ -73,6 +75,7 @@ function CapitalFormPage({ mode }: { mode: "create" | "edit" }) {
   }
 
   async function save() {
+    if (saving) return;
     const nextErrors = validateCapitalForm(form);
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
@@ -81,8 +84,13 @@ function CapitalFormPage({ mode }: { mode: "create" | "edit" }) {
     setSaving(true);
     setError(null);
     try {
-      if (mode === "create")
-        await tenantResourceService.createCapital(capitalPayload(form));
+      if (mode === "create") {
+        const payload = capitalPayload(form);
+        await tenantResourceService.createCapital(payload, {
+          idempotencyKey: idempotencyKeyForPayload(createIdempotencyKeyRef, payload),
+        });
+        clearIdempotencyKey(createIdempotencyKeyRef);
+      }
       else
         await tenantResourceService.updateCapital(capitalCode, {
           ...capitalPayload(form),

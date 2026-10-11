@@ -29,7 +29,7 @@ import {
   type DataTableColumn,
 } from "../../../components/organisms";
 import { LocalizedText, useUiLocale } from "../../../locales/UiLocale";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import {
   formatDate,
   formatMoney,
@@ -122,7 +122,7 @@ export function RedemptionsPage() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const redemptionIdempotencyKeyRef = useRef<string | null>(null);
+  const redemptionIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
 
   const totalToPay = calculation?.total_amount_to_pay ?? 0;
   const receivedAmount = financialAmountToBase({
@@ -228,7 +228,7 @@ export function RedemptionsPage() {
   async function handleRedeem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (redemptionIdempotencyKeyRef.current !== null) {
+    if (isRedeeming) {
       return;
     }
 
@@ -244,35 +244,30 @@ export function RedemptionsPage() {
 
     setIsRedeeming(true);
     setError(null);
-    redemptionIdempotencyKeyRef.current = createIdempotencyKey();
-
     try {
       const debts = getUnpaidDebts(calculation).map(toRedemptionDebtPayload);
+      const payload = {
+        ...(accountId ? { account_id: Number(accountId) } : {}),
+        ...(reportingExchangeRate ? { reporting_exchange_rate: Number(reportingExchangeRate), reporting_exchange_rate_inversed: reportingExchangeRateInversed } : {}),
+        slip_no: calculation.slip.slip_no,
+        calculated_total: totalToPay,
+        payment_amount: Number(paymentAmount),
+        payment_amount_unit: paymentAmountUnit,
+        interest_row_versions: calculation.interest_row_versions ?? getInterestPayments(calculation).map((row) => ({ id: row.id, update_key: getInterestUpdateKey(row) ?? 0 })),
+        debts,
+        redemption_at: redemptionDate || undefined,
+        notes: notes.trim() || undefined,
+      };
       const response = await redemptionService.create(
-        {
-          ...(accountId ? { account_id: Number(accountId) } : {}),
-          ...(reportingExchangeRate
-            ? {
-                reporting_exchange_rate: Number(reportingExchangeRate),
-                reporting_exchange_rate_inversed: reportingExchangeRateInversed,
-              }
-            : {}),
-          slip_no: calculation.slip.slip_no,
-          calculated_total: totalToPay,
-          payment_amount: Number(paymentAmount),
-          payment_amount_unit: paymentAmountUnit,
-          interest_row_versions: calculation.interest_row_versions ?? getInterestPayments(calculation).map((row) => ({ id: row.id, update_key: getInterestUpdateKey(row) ?? 0 })),
-          debts,
-          redemption_at: redemptionDate || undefined,
-          notes: notes.trim() || undefined,
-        },
+        payload,
         undefined,
         {
-          idempotencyKey: redemptionIdempotencyKeyRef.current,
+          idempotencyKey: idempotencyKeyForPayload(redemptionIdempotencyKeyRef, payload),
         },
       );
 
       setNotice("Pawn redemption created successfully.");
+      clearIdempotencyKey(redemptionIdempotencyKeyRef);
       setRedemptionResult(response);
       resetRedemptionForm();
       if (activeTab === "history") {
@@ -285,7 +280,6 @@ export function RedemptionsPage() {
           : "Unable to redeem slip.",
       );
     } finally {
-      redemptionIdempotencyKeyRef.current = null;
       setIsRedeeming(false);
     }
   }

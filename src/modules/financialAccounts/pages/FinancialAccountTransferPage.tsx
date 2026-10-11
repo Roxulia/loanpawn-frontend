@@ -12,7 +12,7 @@ import {
   KeyValueList,
   SectionHeader,
 } from "../../../components/molecules";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import { formatDate, formatMoney } from "../../finance/financeFormat";
 import { financialAmountToBase } from "../../finance/financialUnits";
 import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateField";
@@ -57,7 +57,7 @@ export function FinancialAccountTransferPage() {
     tone: "danger" | "success";
     text: string;
   } | null>(null);
-  const idempotency = useRef<string | null>(null);
+  const idempotency = useRef<IdempotencyKeyState>(null);
 
   async function load() {
     setLoading(true);
@@ -132,31 +132,27 @@ export function FinancialAccountTransferPage() {
       });
       return;
     }
-    if (idempotency.current) return;
-    idempotency.current = createIdempotencyKey();
+    if (saving) return;
+    const payload = {
+      from_account_id: from.id, to_account_id: to.id, from_amount: Number(form.amount),
+      from_amount_unit: form.amountUnit, exchange_rate: form.rate ? Number(form.rate) : undefined,
+      exchange_rate_inversed: form.rate ? form.rateInversed : undefined,
+      fee_amount: Number(form.fee || 0), fee_amount_unit: form.feeUnit,
+      fee_reporting_exchange_rate: form.feeReportingRate ? Number(form.feeReportingRate) : undefined,
+      fee_reporting_exchange_rate_inversed: form.feeReportingRate ? form.feeReportingRateInversed : undefined,
+      note: form.note.trim() || undefined,
+    };
+    const idempotencyKey = idempotencyKeyForPayload(idempotency, payload);
     setSaving(true);
     setMessage(null);
     try {
       await financialAccountService.transfer(
         {
-          from_account_id: from.id,
-          to_account_id: to.id,
-          from_amount: Number(form.amount),
-          from_amount_unit: form.amountUnit,
-          exchange_rate: form.rate ? Number(form.rate) : undefined,
-          exchange_rate_inversed: form.rate ? form.rateInversed : undefined,
-          fee_amount: Number(form.fee || 0),
-          fee_amount_unit: form.feeUnit,
-          fee_reporting_exchange_rate: form.feeReportingRate
-            ? Number(form.feeReportingRate)
-            : undefined,
-          fee_reporting_exchange_rate_inversed: form.feeReportingRate
-            ? form.feeReportingRateInversed
-            : undefined,
-          note: form.note.trim() || undefined,
+          ...payload,
         },
-        idempotency.current,
+        idempotencyKey,
       );
+      clearIdempotencyKey(idempotency);
       setForm((current) => ({
         ...current,
         to: "",
@@ -182,7 +178,6 @@ export function FinancialAccountTransferPage() {
             : "Unable to complete transfer.",
       });
     } finally {
-      idempotency.current = null;
       setSaving(false);
     }
   }

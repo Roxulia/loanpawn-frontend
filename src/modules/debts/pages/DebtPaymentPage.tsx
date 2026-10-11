@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
 import { Button, Select } from "../../../components/atoms";
@@ -18,7 +18,7 @@ import type {
   DebtInterestCalculation,
   DebtPaymentHistoryItem,
 } from "../../../dataobjects/tenant/finance";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
 import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
@@ -106,6 +106,7 @@ export function DebtPaymentPage() {
     enteredAmount: string;
     enteredUnit: FinancialUnitCode;
   } | null>(null);
+  const idempotency = useRef<IdempotencyKeyState>(null);
 
   const load = useCallback(async () => {
     if (!debtCode) return;
@@ -139,6 +140,7 @@ export function DebtPaymentPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (loading) return;
     if (!calculation) return;
     const paymentAmount = calculation.allow_partial_payments
       ? Number(amount)
@@ -149,9 +151,7 @@ export function DebtPaymentPage() {
     try {
       const enteredAmount = amount;
       const enteredUnit = calculation.allow_partial_payments ? unit : "UNIT";
-      const result = await tenantResourceService.payDebt(
-        calculation.debt_code,
-        {
+      const payload = {
           amount_paid: paymentAmount,
           amount_paid_unit: calculation.allow_partial_payments ? unit : "UNIT",
           allocation_order: calculation.allow_partial_payments
@@ -166,9 +166,11 @@ export function DebtPaymentPage() {
                   reportingExchangeRateInversed,
               }
             : {}),
-        },
-        { idempotencyKey: createIdempotencyKey() },
-      );
+        };
+      const result = await tenantResourceService.payDebt(calculation.debt_code, payload, {
+        idempotencyKey: idempotencyKeyForPayload(idempotency, { debt_code: calculation.debt_code, ...payload }),
+      });
+      clearIdempotencyKey(idempotency);
       setPaymentResult({
         result,
         enteredAmount,

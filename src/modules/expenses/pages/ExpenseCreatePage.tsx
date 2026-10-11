@@ -5,7 +5,7 @@ import { Alert } from "../../../components/feedback";
 import { SectionHeader } from "../../../components/molecules";
 import { routePaths } from "../../../app/routes/paths";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import type { ExpenseTypeOption } from "../../../dataobjects/tenant/finance";
 import { ExpenseForm } from "../components/ExpenseForm";
 import {
@@ -24,7 +24,7 @@ export function ExpenseCreatePage() {
   const [isLoadingExpenseTypes, setIsLoadingExpenseTypes] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const createIdempotencyKeyRef = useRef<string | null>(null);
+  const createIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -68,7 +68,7 @@ export function ExpenseCreatePage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (createIdempotencyKeyRef.current !== null) {
+    if (isSaving) {
       return;
     }
 
@@ -81,12 +81,12 @@ export function ExpenseCreatePage() {
 
     setIsSaving(true);
     setError(null);
-    createIdempotencyKeyRef.current = createIdempotencyKey();
+    const payload = expenseFormToPayload(form);
+    const idempotencyKey = idempotencyKeyForPayload(createIdempotencyKeyRef, payload);
 
     try {
-      await tenantResourceService.createExpense(expenseFormToPayload(form), {
-        idempotencyKey: createIdempotencyKeyRef.current,
-      });
+      await tenantResourceService.createExpense(payload, { idempotencyKey });
+      clearIdempotencyKey(createIdempotencyKeyRef);
       navigate(routePaths.expenses);
     } catch (saveError) {
       setError(
@@ -95,7 +95,6 @@ export function ExpenseCreatePage() {
           : "Unable to create expense.",
       );
     } finally {
-      createIdempotencyKeyRef.current = null;
       setIsSaving(false);
     }
   }

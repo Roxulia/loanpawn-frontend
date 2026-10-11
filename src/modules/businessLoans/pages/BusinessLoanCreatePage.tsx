@@ -1,9 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
 import { Alert } from "../../../components/feedback";
 import { SectionHeader } from "../../../components/molecules";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import {
   BusinessLoanForm,
   businessLoanPayload,
@@ -21,6 +21,7 @@ export function BusinessLoanCreatePage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const idempotency = useRef<IdempotencyKeyState>(null);
   function change<K extends keyof BusinessLoanFormState>(
     field: K,
     value: BusinessLoanFormState[K],
@@ -29,13 +30,13 @@ export function BusinessLoanCreatePage() {
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     setSaving(true);
     setError(null);
     try {
-      const loan = await businessLoanService.create(
-        businessLoanPayload(form),
-        createIdempotencyKey(),
-      );
+      const payload = businessLoanPayload(form);
+      const loan = await businessLoanService.create(payload, idempotencyKeyForPayload(idempotency, payload));
+      clearIdempotencyKey(idempotency);
       navigate(routePaths.businessLoanDetail(loan.code));
     } catch (reason) {
       setError(
