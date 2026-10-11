@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 import { routePaths } from "../../../app/routes/paths";
 import { Button, Select } from "../../../components/atoms";
 import { Alert, LoadingState } from "../../../components/feedback";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import {
   ActionBar,
   Card,
@@ -13,7 +14,6 @@ import {
   SectionHeader,
 } from "../../../components/molecules";
 import { DataTable, type DataTableColumn } from "../../../components/organisms";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
 import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
 import type { FinancialUnitCode } from "../../finance/financialUnits";
@@ -67,6 +67,7 @@ export function BusinessLoanPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const idempotency = useRef<IdempotencyKeyState>(null);
   async function load() {
     if (!loanCode) return;
     setLoading(true);
@@ -93,6 +94,7 @@ export function BusinessLoanPaymentPage() {
   if (!loanCode) return <Navigate replace to={routePaths.businessLoans} />;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (loading) return;
     if (!calculation) return;
     const paymentAmount = calculation.allow_partial_payments
       ? Number(amount)
@@ -100,9 +102,7 @@ export function BusinessLoanPaymentPage() {
     setLoading(true);
     setError(null);
     try {
-      await businessLoanService.pay(
-        loanCode,
-        {
+      const payload = {
           amount_paid: paymentAmount,
           amount_paid_unit: calculation.allow_partial_payments ? unit : "UNIT",
           allocation_order: order,
@@ -110,9 +110,9 @@ export function BusinessLoanPaymentPage() {
           payment_account_id: accountId ? Number(accountId) : undefined,
           reporting_exchange_rate: rate ? Number(rate) : undefined,
           reporting_exchange_rate_inversed: inversed,
-        },
-        createIdempotencyKey(),
-      );
+        };
+      await businessLoanService.pay(loanCode, payload, idempotencyKeyForPayload(idempotency, payload));
+      clearIdempotencyKey(idempotency);
       setNotice("Business loan payment recorded.");
       setAmount("");
       await load();

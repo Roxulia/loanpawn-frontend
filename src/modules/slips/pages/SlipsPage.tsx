@@ -46,7 +46,7 @@ import {
   type DataTableColumn,
 } from "../../../components/organisms";
 import { LocalizedText, useUiLocale } from "../../../locales/UiLocale";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import { ResourceUsageBadge, usePermissions } from "../../auth";
 import { customerService } from "../../customers/services/customerService";
 import { settingsService } from "../../settings/services/settingsService";
@@ -165,7 +165,7 @@ export function SlipsPage() {
   const [printingSlipId, setPrintingSlipId] = useState<number | null>(null);
   const [paperType, setPaperType] = useState("A4");
   const [shouldPrintAfterCreate, setShouldPrintAfterCreate] = useState(false);
-  const createIdempotencyKeyRef = useRef<string | null>(null);
+  const createIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
   const customerInfoRequired = isCustomerInfoRequired ?? true;
   const isLoanSlipCreationSettingsLoading =
     canCreate && isCustomerInfoRequired === null;
@@ -376,7 +376,7 @@ export function SlipsPage() {
       return;
     }
 
-    if (createIdempotencyKeyRef.current !== null) {
+    if (isCreating) {
       return;
     }
 
@@ -395,11 +395,8 @@ export function SlipsPage() {
 
     setIsCreating(true);
     setError(null);
-    createIdempotencyKeyRef.current = createIdempotencyKey();
-
     try {
-      const response = await slipService.createSlip(
-        {
+      const payload = {
           ...(loan.account_id ? { account_id: Number(loan.account_id) } : {}),
           ...(loan.reporting_exchange_rate
             ? {
@@ -426,14 +423,17 @@ export function SlipsPage() {
           expiry_quota: Number(loan.expiry_quota),
           expiry_quota_type: loan.expiry_quota_type,
           notes: loan.notes.trim() || undefined,
-        },
+        };
+      const response = await slipService.createSlip(
+        payload,
         undefined,
         {
-          idempotencyKey: createIdempotencyKeyRef.current,
+          idempotencyKey: idempotencyKeyForPayload(createIdempotencyKeyRef, payload),
         },
       );
 
       resetForm();
+      clearIdempotencyKey(createIdempotencyKeyRef);
       setNotice(`Loan slip ${response.slip_no} created successfully.`);
 
       if (shouldPrintAfterCreate) {
@@ -446,7 +446,6 @@ export function SlipsPage() {
           : "Unable to create loan slip.",
       );
     } finally {
-      createIdempotencyKeyRef.current = null;
       setIsCreating(false);
     }
   }

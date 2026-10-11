@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Badge, Button } from "../../components/atoms";
 import { Alert } from "../../components/feedback";
@@ -20,6 +20,7 @@ import {
   type DataTableColumn,
 } from "../../components/organisms";
 import type { PaginatedResult } from "../../dataobjects/common/api";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../services/http/idempotency";
 import { usePermissions, type PermissionCode } from "../auth";
 
 type FinanceFormValue = string | boolean | File | null;
@@ -60,6 +61,7 @@ export type FinanceResourcePageConfig<TItem, TForm extends FinanceFormState> = {
     mode: "create" | "edit",
     form: TForm,
     item: TItem | null,
+    idempotencyKey?: string,
   ) => Promise<unknown>;
   searchPlaceholder: string;
   filterConfig?: {
@@ -139,6 +141,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const createIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(() =>
@@ -263,12 +266,16 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
     }
 
     const mode = editingItem ? "edit" : "create";
+    if (isSaving) return;
+    const idempotencyKey = mode === "create"
+      ? idempotencyKeyForPayload(createIdempotencyKeyRef, form)
+      : undefined;
     setIsSaving(true);
     setError(null);
     setNotice(null);
 
     try {
-      const response = await config.save(mode, form, editingItem);
+      const response = await config.save(mode, form, editingItem, idempotencyKey);
       const savedItem = response as TItem | null;
 
       if (savedItem) {
@@ -283,6 +290,7 @@ export function FinanceResourcePage<TItem, TForm extends FinanceFormState>({
       setNotice(
         `${config.title} ${mode === "create" ? "created" : "updated"} successfully.`,
       );
+      if (mode === "create") clearIdempotencyKey(createIdempotencyKeyRef);
       closeForm();
     } catch (saveError) {
       setError(

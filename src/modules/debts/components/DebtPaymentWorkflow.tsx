@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Button, Input, Select } from "../../../components/atoms";
 import { Alert } from "../../../components/feedback";
 import {
@@ -15,7 +15,7 @@ import type {
   DebtPaymentHistoryItem,
 } from "../../../dataobjects/tenant/finance";
 import { tenantResourceService } from "../../../services/tenant/tenantResourceService";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import { AccountCurrencyAmount } from "../../finance/AccountCurrencyAmount";
 import { ReportingExchangeRateField } from "../../finance/ReportingExchangeRateField";
 import { FinancialAccountSelect } from "../../financialAccounts/components/FinancialAccountSelect";
@@ -93,6 +93,7 @@ export function DebtPaymentWorkflow({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const idempotency = useRef<IdempotencyKeyState>(null);
 
   const loadDebt = useCallback(async (code: string) => {
     const normalizedCode = code.trim();
@@ -129,6 +130,7 @@ export function DebtPaymentWorkflow({
 
   async function pay(event: FormEvent) {
     event.preventDefault();
+    if (isLoading) return;
     if (!calculation) return;
     const paymentAmount = calculation.allow_partial_payments
       ? Number(amount)
@@ -137,9 +139,7 @@ export function DebtPaymentWorkflow({
     setIsLoading(true);
     setError(null);
     try {
-      const result = await tenantResourceService.payDebt(
-        calculation.debt_code,
-        {
+      const payload = {
           amount_paid: paymentAmount,
           amount_paid_unit: calculation.allow_partial_payments ? unit : "UNIT",
           allocation_order: calculation.allow_partial_payments
@@ -153,9 +153,11 @@ export function DebtPaymentWorkflow({
                 reporting_exchange_rate_inversed: reportingExchangeRateInversed,
               }
             : {}),
-        },
-        { idempotencyKey: createIdempotencyKey() },
-      );
+        };
+      const result = await tenantResourceService.payDebt(calculation.debt_code, payload, {
+        idempotencyKey: idempotencyKeyForPayload(idempotency, { debt_code: calculation.debt_code, ...payload }),
+      });
+      clearIdempotencyKey(idempotency);
       setNotice(
         `Principal paid: ${result.principal_paid}; interest paid: ${result.interest_paid}; change: ${result.change_amount}.`,
       );

@@ -106,10 +106,10 @@ const config: FinanceResourcePageConfig<TenantCapital, CapitalForm> = {
   modalTitle: (mode) => (mode === "create" ? "Add capital" : "Edit capital"),
   onDelete: (item) => tenantResourceService.deleteCapital(item.code),
   renderForm,
-  save: (mode, form, item) => {
+  save: (mode, form, item, idempotencyKey) => {
     const payload = capitalPayload(form);
     return mode === "create"
-      ? tenantResourceService.createCapital(payload)
+      ? tenantResourceService.createCapital(payload, { idempotencyKey })
       : tenantResourceService.updateCapital(item?.code ?? "", {
           ...payload,
           update_key:

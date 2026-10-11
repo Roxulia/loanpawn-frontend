@@ -24,7 +24,7 @@ import {
   type DataTableColumn,
 } from "../../../components/organisms";
 import { LocalizedText, useUiLocale } from "../../../locales/UiLocale";
-import { createIdempotencyKey } from "../../../services/http/idempotency";
+import { clearIdempotencyKey, idempotencyKeyForPayload, type IdempotencyKeyState } from "../../../services/http/idempotency";
 import { formatDate } from "../../slips/slipFormat";
 import {
   interestService,
@@ -79,7 +79,7 @@ export function InterestPaymentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmDebt, setConfirmDebt] = useState(false);
-  const paymentIdempotencyKeyRef = useRef<string | null>(null);
+  const paymentIdempotencyKeyRef = useRef<IdempotencyKeyState>(null);
   const autoCalculatedSlipRef = useRef<string | null>(null);
 
   const rows = getBreakdown(calculation);
@@ -188,7 +188,7 @@ export function InterestPaymentsPage() {
   }
 
   async function submitPayment(forceDebt = recordDebt) {
-    if (paymentIdempotencyKeyRef.current !== null) {
+    if (isPaying) {
       return;
     }
 
@@ -217,33 +217,28 @@ export function InterestPaymentsPage() {
 
     setIsPaying(true);
     setError(null);
-    paymentIdempotencyKeyRef.current = createIdempotencyKey();
+    const payload = {
+      ...(acceptAccountId ? { accept_account_id: Number(acceptAccountId) } : {}),
+      ...(reportingExchangeRate ? { reporting_exchange_rate: Number(reportingExchangeRate), reporting_exchange_rate_inversed: reportingExchangeRateInversed } : {}),
+      slip_update_key: slipUpdateKey,
+      payment_amount: Number(paymentAmount),
+      payment_amount_unit: paymentAmountUnit,
+      record_debt: forceDebt,
+      interest_row_versions: calculation.interest_row_versions ?? rows.map((row) => ({ id: row.id, update_key: getRowUpdateKey(row) ?? 0 })),
+    };
+    const idempotencyKey = idempotencyKeyForPayload(paymentIdempotencyKeyRef, { slip_no: normalizedSlipNo, ...payload });
 
     try {
       const response = await interestService.pay(
         normalizedSlipNo,
-        {
-          ...(acceptAccountId
-            ? { accept_account_id: Number(acceptAccountId) }
-            : {}),
-          ...(reportingExchangeRate
-            ? {
-                reporting_exchange_rate: Number(reportingExchangeRate),
-                reporting_exchange_rate_inversed: reportingExchangeRateInversed,
-              }
-            : {}),
-          slip_update_key: slipUpdateKey,
-          payment_amount: Number(paymentAmount),
-          payment_amount_unit: paymentAmountUnit,
-          record_debt: forceDebt,
-          interest_row_versions: calculation.interest_row_versions ?? rows.map((row) => ({ id: row.id, update_key: getRowUpdateKey(row) ?? 0 })),
-        },
+        payload,
         undefined,
         {
-          idempotencyKey: paymentIdempotencyKeyRef.current,
+          idempotencyKey,
         },
       );
       setConfirmDebt(false);
+      clearIdempotencyKey(paymentIdempotencyKeyRef);
       setSlipNo("");
       setPaymentAmount("");
       setAcceptAccountId("");
@@ -266,7 +261,6 @@ export function InterestPaymentsPage() {
           : "Unable to record interest payment.",
       );
     } finally {
-      paymentIdempotencyKeyRef.current = null;
       setIsPaying(false);
     }
   }
