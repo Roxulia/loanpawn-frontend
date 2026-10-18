@@ -23,6 +23,7 @@ Only do the following if user didn't give you reference UI or UI description.
    - API response shape
    - permission/feature flag behavior
    - current user workflow
+   - Fully generated HTML for every condition , i.e, when pressing certain toggle certain UIs appear so we must include such hidden htmls
 
 3. Build a Stitch design prompt containing:
    - current UI composition detail
@@ -32,6 +33,7 @@ Only do the following if user didn't give you reference UI or UI description.
    - layout requirements
    - design style
    - responsive behavior
+   - generated HTML codes
 
 4. Use Stitch MCP to generate the redesigned UI.
 
