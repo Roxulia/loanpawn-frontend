@@ -2,6 +2,7 @@ import type { CatalogItem, CatalogTrackingMode, CatalogUnit } from "../catalog/t
 
 export type InventoryLocation = {
   code: string;
+  update_key: number;
   name: string;
   type: "SHOP" | "STORAGE" | "VAULT" | "DISPLAY" | "LENDER" | "OTHER";
   is_active: boolean;
@@ -23,6 +24,7 @@ export type InventoryBalance = {
 
 export type InventoryItem = {
   code: string;
+  update_key: number;
   name: string;
   description: string | null;
   catalog_item_code: string | null;
@@ -49,3 +51,14 @@ export type InventoryMovement = {
 
 export type InventoryMeasurementUnitOption = Pick<CatalogUnit, "code" | "name" | "symbol">;
 export type InventoryCatalogOption = CatalogItem;
+
+// Affected references returned by the activated receipt and move workflows.
+export type InventoryMutationResult = {
+  inventory_item_code: string;
+  update_key: number;
+  quantity: string;
+  movement_codes: string[];
+  serialized_item_codes: string[];
+  reservation_code: string | null;
+  remaining_quantity: string | null;
+};

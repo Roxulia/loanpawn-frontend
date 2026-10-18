@@ -2,6 +2,7 @@ import { createIdempotencyKey } from "../../../services/http/idempotency";
 import { apiClient } from "../../../services/http/apiClient";
 import type {
   InventoryItem,
+  InventoryMutationResult,
   InventoryLocation,
   InventoryMovement,
   InventoryMeasurementUnitOption,
@@ -40,13 +41,13 @@ export const inventoryService = {
   },
 
   receive(payload: Record<string, unknown>) {
-    return apiClient.post<InventoryItem>("/tenant/inventory/receive", payload, {
+    return apiClient.post<InventoryMutationResult>("/tenant/inventory/receive", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
   },
 
   moveStock(payload: Record<string, unknown>) {
-    return apiClient.post<InventoryItem>("/tenant/inventory/move", payload, {
+    return apiClient.post<InventoryMutationResult>("/tenant/inventory/move", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
   },
