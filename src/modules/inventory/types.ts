@@ -8,7 +8,7 @@ export type InventoryLocation = {
   is_sellable?: boolean;
 };
 
-export type InventoryUnit = {
+export type InventorySerializedItem = {
   code: string;
   identifier: string | null;
   location_code: string | null;
@@ -31,7 +31,8 @@ export type InventoryItem = {
   unit: string | null;
   total_quantity: string;
   locations: InventoryBalance[];
-  units: InventoryUnit[];
+  // Individually tracked physical items, separate from measurement-unit options.
+  serialized_items: InventorySerializedItem[];
 };
 
 export type InventoryMovement = {
@@ -46,5 +47,5 @@ export type InventoryMovement = {
   occurred_at: string;
 };
 
-export type InventoryUnitOption = Pick<CatalogUnit, "code" | "name" | "symbol">;
+export type InventoryMeasurementUnitOption = Pick<CatalogUnit, "code" | "name" | "symbol">;
 export type InventoryCatalogOption = CatalogItem;

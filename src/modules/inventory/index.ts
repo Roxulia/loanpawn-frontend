@@ -4,5 +4,5 @@ export type {
   InventoryItem,
   InventoryLocation,
   InventoryMovement,
-  InventoryUnit,
+  InventorySerializedItem,
 } from "./types";
