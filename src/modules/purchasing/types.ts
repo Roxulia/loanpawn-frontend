@@ -76,7 +76,7 @@ export type PurchaseReceiptItem = {
   purchase_order_item_code: string;
   quantity: string;
   inventory_item_code: string;
-  inventory_unit_codes: string[];
+  serialized_item_codes: string[];
   location_code: string;
   acquisition_lot_code: string | null;
   received_value: string;
@@ -99,7 +99,7 @@ export type PurchaseReturnItem = {
   supplier_credit_code: string | null;
   supplier_credit_amount: string;
   supplier_payable_adjusted_amount: string;
-  inventory_unit_codes: string[];
+  serialized_item_codes: string[];
   cash_refund_amount: string;
 };
 export type PurchaseReturn = {

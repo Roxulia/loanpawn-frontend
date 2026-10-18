@@ -34,7 +34,7 @@ export type QuickPurchasePayload = {
   purchase_date: string;
   location_code: string;
   note?: string;
-  items: Array<PurchaseOrderPayload['items'][number] & { unit_identifiers?: string[] }>;
+  items: Array<PurchaseOrderPayload['items'][number] & { serialized_item_identifiers?: string[] }>;
   tender_amount: number;
   financial_account_id?: number;
   payment_reference?: string;
@@ -141,7 +141,7 @@ export const purchasingService = {
     received_at: string;
     location_code: string;
     note?: string | null;
-    items: Array<{ purchase_order_item_code: string; quantity: number; unit_identifiers?: string[] }>;
+    items: Array<{ purchase_order_item_code: string; quantity: number; serialized_item_identifiers?: string[] }>;
   }) {
     return apiClient.post<PurchaseReceipt>(
       `/tenant/purchasing/orders/${encodeURIComponent(orderCode)}/receipts`,
@@ -158,7 +158,7 @@ export const purchasingService = {
     returned_at: string;
     reason?: string | null;
     note?: string | null;
-    items: Array<{ purchase_receipt_item_code: string; quantity: number; location_code: string; inventory_unit_codes?: string[]; cash_refund_amount?: number; financial_account_id?: number }>
+    items: Array<{ purchase_receipt_item_code: string; quantity: number; location_code: string; serialized_item_codes?: string[]; cash_refund_amount?: number; financial_account_id?: number }>
   }) {
     return apiClient.post<PurchaseReturn>(
       `/tenant/purchasing/orders/${encodeURIComponent(orderCode)}/returns`,

@@ -50,8 +50,8 @@ export function InventoryPage() {
   const [locationCode, setLocationCode] = useState("");
   const [fromLocationCode, setFromLocationCode] = useState("");
   const [toLocationCode, setToLocationCode] = useState("");
-  const [unitIdentifiers, setUnitIdentifiers] = useState("");
-  const [unitCodes, setUnitCodes] = useState<string[]>([]);
+  const [serializedItemIdentifiers, setSerializedItemIdentifiers] = useState("");
+  const [serializedItemCodes, setSerializedItemCodes] = useState<string[]>([]);
   const [reason, setReason] = useState("");
   const [direction, setDirection] = useState<"IN" | "OUT">("IN");
   const [locationName, setLocationName] = useState("");
@@ -87,7 +87,7 @@ export function InventoryPage() {
     try {
       const history = await inventoryService.movements(item.code);
       setMovements(history);
-      setUnitCodes([]);
+      setSerializedItemCodes([]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to load movement history.");
     }
@@ -117,10 +117,10 @@ export function InventoryPage() {
         unit_code: receiveItemCode ? undefined : unitCode || undefined,
         location_code: locationCode,
         quantity: Number(quantity),
-        unit_identifiers: (receiveItemCode
+        serialized_item_identifiers: (receiveItemCode
           ? items.find((item) => item.code === receiveItemCode)?.tracking_mode
           : trackingMode) === "SERIALIZED"
-          ? unitIdentifiers.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+          ? serializedItemIdentifiers.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
           : undefined,
       });
       setNotice("Inventory received.");
@@ -128,7 +128,7 @@ export function InventoryPage() {
       setDescription("");
       setCatalogCode("");
       setReceiveItemCode("");
-      setUnitIdentifiers("");
+      setSerializedItemIdentifiers("");
       await loadData();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to receive inventory.");
@@ -140,12 +140,12 @@ export function InventoryPage() {
   async function moveStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected) return;
-    await performMovement(() => inventoryService.move({
+    await performMovement(() => inventoryService.moveStock({
       inventory_item_code: selected.code,
       from_location_code: fromLocationCode,
       to_location_code: toLocationCode,
       quantity: Number(quantity),
-      inventory_unit_codes: unitCodes,
+      serialized_item_codes: serializedItemCodes,
       reason: reason.trim() || undefined,
     }));
   }
@@ -153,11 +153,11 @@ export function InventoryPage() {
   async function issueStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected) return;
-    await performMovement(() => inventoryService.issue({
+    await performMovement(() => inventoryService.issueStock({
       inventory_item_code: selected.code,
       location_code: locationCode,
       quantity: Number(quantity),
-      inventory_unit_codes: unitCodes,
+      serialized_item_codes: serializedItemCodes,
       reason: reason.trim() || undefined,
     }));
   }
@@ -165,14 +165,14 @@ export function InventoryPage() {
   async function adjustStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected) return;
-    await performMovement(() => inventoryService.adjust({
+    await performMovement(() => inventoryService.adjustStock({
       inventory_item_code: selected.code,
       location_code: locationCode,
       quantity: Number(quantity),
       direction,
-      inventory_unit_codes: unitCodes,
-      unit_identifiers: direction === "IN"
-        ? unitIdentifiers.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+      serialized_item_codes: serializedItemCodes,
+      serialized_item_identifiers: direction === "IN"
+        ? serializedItemIdentifiers.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
         : undefined,
       reason: reason.trim(),
     }));
@@ -281,10 +281,10 @@ export function InventoryPage() {
             <label>Tracking mode<Select value={trackingMode} disabled={Boolean(receiveItemCode || catalogCode)} onChange={(event) => setTrackingMode(event.target.value as InventoryItem["tracking_mode"])}>
               <option value="UNIQUE">Unique</option><option value="SERIALIZED">Serialized</option><option value="QUANTITY">Quantity</option>
             </Select></label>
-            <label>Unit<UnitSelect unitCode={unitCode} onChange={setUnitCode} disabled={Boolean(receiveItemCode || catalogCode)} /></label>
+            <label>Measurement unit<MeasurementUnitSelect unitCode={unitCode} onChange={setUnitCode} disabled={Boolean(receiveItemCode || catalogCode)} /></label>
             <label>Location<LocationSelect locations={locations} value={locationCode} onChange={setLocationCode} /></label>
             <label>Quantity<Input type="number" min="0.001" step="0.001" value={quantity} onChange={(event) => setQuantity(event.target.value)} required /></label>
-            {trackingMode === "SERIALIZED" && <label className="inventory-form__wide">Serial or IMEI identifiers, one per line<textarea value={unitIdentifiers} onChange={(event) => setUnitIdentifiers(event.target.value)} rows={3} /></label>}
+            {trackingMode === "SERIALIZED" && <label className="inventory-form__wide">Serial or IMEI identifiers, one per line<textarea value={serializedItemIdentifiers} onChange={(event) => setSerializedItemIdentifiers(event.target.value)} rows={3} /></label>}
             <div className="inventory-form__wide"><Button type="submit" variant="primary" isLoading={working}>Receive stock</Button></div>
           </form>
         </Card>
@@ -320,12 +320,12 @@ export function InventoryPage() {
           </Card>
           {selected && <Card title={selected.name} description={`${selected.tracking_mode.replaceAll("_", " ")} · ${selected.total_quantity} ${selected.unit ?? ""} on hand`}>
             <div className="inventory-location-breakdown">{selected.locations.map((row) => <div key={row.location_code ?? row.location}><span>{row.location ?? "Unassigned"}</span><strong>{row.quantity} {selected.unit ?? ""}</strong></div>)}</div>
-            {selected.units.length > 0 && <details className="inventory-unit-list"><summary>Serialized units ({selected.units.length})</summary><div>{selected.units.map((unit) => <label key={unit.code}><input type="checkbox" checked={unitCodes.includes(unit.code)} disabled={unit.location_code === null} onChange={(event) => setUnitCodes((current) => event.target.checked ? [...current, unit.code] : current.filter((code) => code !== unit.code))} />{unit.identifier || `Unit ${unit.code}`} · {unit.location ?? "Issued"}</label>)}</div></details>}
+            {selected.serialized_items.length > 0 && <details className="inventory-serialized-item-list"><summary>Serialized items ({selected.serialized_items.length})</summary><div>{selected.serialized_items.map((unit) => <label key={unit.code}><input type="checkbox" checked={serializedItemCodes.includes(unit.code)} disabled={unit.location_code === null} onChange={(event) => setSerializedItemCodes((current) => event.target.checked ? [...current, unit.code] : current.filter((code) => code !== unit.code))} />{unit.identifier || `Serialized item ${unit.code}`} · {unit.location ?? "Issued"}</label>)}</div></details>}
             {availableActions.length > 0 && <div className="inventory-action-area">
               <div className="inventory-action-picker" role="group" aria-label="Stock action">{availableActions.map((action) => <Button key={action} type="button" variant={selectedAction === action ? "primary" : "tertiary"} onClick={() => setActiveAction(action)}>{action === "move" ? "Move" : action === "issue" ? "Issue" : "Adjust"}</Button>)}</div>
               {selectedAction === "move" && <form className="inventory-single-action" onSubmit={(event) => void moveStock(event)}><h3>Move stock</h3><label>From<LocationSelect locations={locations} value={fromLocationCode} onChange={setFromLocationCode} /></label><label>To<LocationSelect locations={locations} value={toLocationCode} onChange={setToLocationCode} /></label><label>Quantity<QuantityInput value={quantity} onChange={setQuantity} /></label><label>Reason<Input aria-label="Movement reason" placeholder="Optional" value={reason} onChange={(event) => setReason(event.target.value)} /></label><Button type="submit" isLoading={working}>Record move</Button></form>}
               {selectedAction === "issue" && <form className="inventory-single-action" onSubmit={(event) => void issueStock(event)}><h3>Issue stock</h3><label>From location<LocationSelect locations={locations} value={locationCode} onChange={setLocationCode} /></label><label>Quantity<QuantityInput value={quantity} onChange={setQuantity} /></label><label>Reason<Input aria-label="Issue reason" placeholder="Optional" value={reason} onChange={(event) => setReason(event.target.value)} /></label><Button type="submit" isLoading={working}>Record issue</Button></form>}
-              {selectedAction === "adjust" && <form className="inventory-single-action" onSubmit={(event) => void adjustStock(event)}><h3>Stock adjustment</h3><label>Direction<Select value={direction} onChange={(event) => setDirection(event.target.value as "IN" | "OUT")}><option value="IN">Add stock</option><option value="OUT">Remove stock</option></Select></label><label>Location<LocationSelect locations={locations} value={locationCode} onChange={setLocationCode} /></label><label>Quantity<QuantityInput value={quantity} onChange={setQuantity} /></label>{selected.tracking_mode === "SERIALIZED" && direction === "IN" && <label>Serial or IMEI identifiers<textarea aria-label="Unit identifiers" placeholder="One identifier per line" value={unitIdentifiers} onChange={(event) => setUnitIdentifiers(event.target.value)} rows={2} /></label>}<label>Reason<Input aria-label="Adjustment reason" placeholder="Required" value={reason} onChange={(event) => setReason(event.target.value)} required /></label><Button type="submit" isLoading={working}>Record adjustment</Button></form>}
+              {selectedAction === "adjust" && <form className="inventory-single-action" onSubmit={(event) => void adjustStock(event)}><h3>Stock adjustment</h3><label>Direction<Select value={direction} onChange={(event) => setDirection(event.target.value as "IN" | "OUT")}><option value="IN">Add stock</option><option value="OUT">Remove stock</option></Select></label><label>Location<LocationSelect locations={locations} value={locationCode} onChange={setLocationCode} /></label><label>Quantity<QuantityInput value={quantity} onChange={setQuantity} /></label>{selected.tracking_mode === "SERIALIZED" && direction === "IN" && <label>Serial or IMEI identifiers<textarea aria-label="Serialized item identifiers" placeholder="One identifier per line" value={serializedItemIdentifiers} onChange={(event) => setSerializedItemIdentifiers(event.target.value)} rows={2} /></label>}<label>Reason<Input aria-label="Adjustment reason" placeholder="Required" value={reason} onChange={(event) => setReason(event.target.value)} required /></label><Button type="submit" isLoading={working}>Record adjustment</Button></form>}
             </div>}
             <section className="inventory-history"><h3>Movement history</h3><DataTable items={movements} columns={[
               { header: "Date", key: "occurred_at", render: (movement) => new Date(movement.occurred_at).toLocaleString() },
@@ -359,7 +359,7 @@ function LocationSelect({
   );
 }
 
-function UnitSelect({
+function MeasurementUnitSelect({
   unitCode,
   onChange,
   disabled,
@@ -370,7 +370,7 @@ function UnitSelect({
 }) {
   const [units, setUnits] = useState<Array<{ code: string; name: string; symbol: string | null }>>([]);
   useEffect(() => {
-    void inventoryService.units().then(setUnits).catch(() => setUnits([]));
+    void inventoryService.measurementUnits().then(setUnits).catch(() => setUnits([]));
   }, []);
 
   return (

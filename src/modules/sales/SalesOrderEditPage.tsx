@@ -33,7 +33,7 @@ export function SalesOrderEditPage() {
   const [returnAllocation, setReturnAllocation] = useState("");
   const [returnQuantity, setReturnQuantity] = useState("");
   const [returnLocation, setReturnLocation] = useState("");
-  const [returnUnitCodes, setReturnUnitCodes] = useState("");
+  const [returnSerializedItemCodes, setReturnSerializedItemCodes] = useState("");
   const [returnNote, setReturnNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -99,11 +99,11 @@ export function SalesOrderEditPage() {
         items: [{
           delivery_allocation_code: allocation.code, location_code: location.code,
           quantity: Number(returnQuantity), disposition: location.is_sellable ? "RESTOCK" : "QUARANTINE",
-          inventory_unit_codes: returnUnitCodes ? returnUnitCodes.split(",").map(code => code.trim()).filter(Boolean) : undefined,
+          serialized_item_codes: returnSerializedItemCodes ? returnSerializedItemCodes.split(",").map(code => code.trim()).filter(Boolean) : undefined,
         }],
       });
       setNotice("Return recorded. Any refund due was recorded against the selected account.");
-      setReturnQuantity(""); setReturnUnitCodes(""); setReturnNote(""); await refresh();
+      setReturnQuantity(""); setReturnSerializedItemCodes(""); setReturnNote(""); await refresh();
     } catch (reason) { setError(errorText(reason)); }
     finally { setBusy(false); }
   }
@@ -150,7 +150,7 @@ export function SalesOrderEditPage() {
         <FormField id="return-allocation" label="Fulfilled item"><Select id="return-allocation" value={returnAllocation} onChange={event => { setReturnAllocation(event.target.value); setReturnQuantity(""); }}><option value="">Select item</option>{order.return_allocations.filter(row => Number(row.quantity) > Number(row.returned_quantity)).map(row => <option key={row.code} value={row.code}>{row.item_description} · {row.code} · remaining {Number(row.quantity) - Number(row.returned_quantity)}</option>)}</Select></FormField>
         <FormField id="return-quantity" label={`Return quantity (up to ${remainingReturn})`}><Input id="return-quantity" type="number" min={selectedAllocation?.tracking_mode === "SERIALIZED" ? 1 : 0.001} step={selectedAllocation?.tracking_mode === "SERIALIZED" ? 1 : 0.001} max={remainingReturn} value={returnQuantity} onChange={event => setReturnQuantity(event.target.value)} required /></FormField>
         <FormField id="return-location" label="Return inventory location"><Select id="return-location" value={returnLocation} onChange={event => setReturnLocation(event.target.value)} required><option value="">Select location</option>{locations.map(location => <option key={location.code} value={location.code}>{location.name}{location.is_sellable ? " · sellable" : " · quarantine"}</option>)}</Select></FormField>
-        {selectedAllocation?.tracking_mode === "SERIALIZED" && <FormField id="return-unit-codes" label={`Unit codes (comma separated; available: ${(selectedAllocation.unit_codes ?? []).join(", ")})`}><Input id="return-unit-codes" value={returnUnitCodes} onChange={event => setReturnUnitCodes(event.target.value)} /></FormField>}
+        {selectedAllocation?.tracking_mode === "SERIALIZED" && <FormField id="return-unit-codes" label={`Serialized item codes (comma separated; available: ${(selectedAllocation.unit_codes ?? []).join(", ")})`}><Input id="return-unit-codes" value={returnSerializedItemCodes} onChange={event => setReturnSerializedItemCodes(event.target.value)} /></FormField>}
         <FormField id="return-note" label="Return note"><Input id="return-note" value={returnNote} onChange={event => setReturnNote(event.target.value)} /></FormField>
         {selectedLocation?.is_sellable === false && <p>Returned goods will be quarantined at this location.</p>}
         <FinancialAccountSelect id="return-refund-account" value={accountId} onChange={setAccountId} matchCurrencyCode={order.currency_code} />

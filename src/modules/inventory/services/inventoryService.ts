@@ -4,7 +4,7 @@ import type {
   InventoryItem,
   InventoryLocation,
   InventoryMovement,
-  InventoryUnitOption,
+  InventoryMeasurementUnitOption,
 } from "../types";
 
 export const inventoryService = {
@@ -22,8 +22,8 @@ export const inventoryService = {
     return apiClient.get<InventoryLocation[]>("/tenant/inventory/locations");
   },
 
-  units() {
-    return apiClient.get<InventoryUnitOption[]>("/tenant/inventory/units");
+  measurementUnits() {
+    return apiClient.get<InventoryMeasurementUnitOption[]>("/tenant/inventory/measurement-units");
   },
 
   movements(itemCode: string) {
@@ -45,19 +45,19 @@ export const inventoryService = {
     });
   },
 
-  move(payload: Record<string, unknown>) {
+  moveStock(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/move", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
   },
 
-  issue(payload: Record<string, unknown>) {
+  issueStock(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/issue", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
   },
 
-  adjust(payload: Record<string, unknown>) {
+  adjustStock(payload: Record<string, unknown>) {
     return apiClient.post<InventoryItem>("/tenant/inventory/adjust", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
