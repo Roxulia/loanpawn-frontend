@@ -144,6 +144,7 @@ export function InventoryPage() {
       inventory_item_code: selected.code,
       from_location_code: fromLocationCode,
       to_location_code: toLocationCode,
+      update_key: selected.update_key,
       quantity: Number(quantity),
       serialized_item_codes: serializedItemCodes,
       reason: reason.trim() || undefined,
@@ -178,7 +179,7 @@ export function InventoryPage() {
     }));
   }
 
-  async function performMovement(operation: () => Promise<InventoryItem>) {
+  async function performMovement(operation: () => Promise<unknown>) {
     setWorking(true);
     setError(null);
     try {
