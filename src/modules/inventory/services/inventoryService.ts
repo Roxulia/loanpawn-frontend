@@ -53,7 +53,8 @@ export const inventoryService = {
   },
 
   issueStock(payload: Record<string, unknown>) {
-    return apiClient.post<InventoryItem>("/tenant/inventory/issue", payload, {
+    // Issue returns only this operation's affected stock records and final version.
+    return apiClient.post<InventoryMutationResult>("/tenant/inventory/issue", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
   },
