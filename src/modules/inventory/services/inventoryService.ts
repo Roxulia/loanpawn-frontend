@@ -60,7 +60,8 @@ export const inventoryService = {
   },
 
   adjustStock(payload: Record<string, unknown>) {
-    return apiClient.post<InventoryItem>("/tenant/inventory/adjust", payload, {
+    // Adjustments return affected movements/identities and the final item version.
+    return apiClient.post<InventoryMutationResult>("/tenant/inventory/adjust", payload, {
       idempotencyKey: createIdempotencyKey(),
     });
   },
