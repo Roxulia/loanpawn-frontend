@@ -21,6 +21,24 @@
 .inventory-single-action h3 { grid-column: 1 / -1; margin: 0; }
 .inventory-history { margin-top: 1.25rem; }
 .inventory-history h3 { margin: 0 0 .6rem; }
+/* Consistent photo space makes visually similar inventory easier to distinguish. */
+.inventory-item-identity-desktop { display: flex; align-items: center; gap: .75rem; }
+.inventory-item-identity-desktop > div { min-width: 0; }
+.inventory-item-image { display: inline-flex; flex-shrink: 0; width: 3.25rem; height: 3.25rem; overflow: hidden; border: 1px solid var(--color-border, #e5e7eb); border-radius: .6rem; background: var(--color-surface-muted, #f6f8fa); }
+.inventory-item-image a, .inventory-item-image img { display: block; width: 100%; height: 100%; }
+.inventory-item-image img { object-fit: contain; }
+.inventory-item-image .inventory-item-image__default { object-fit: cover; }
+.inventory-item-image--detail { width: 12rem; height: 10rem; }
+.inventory-item-photo-desktop { margin-bottom: 1rem; }
+@media (max-width: 760px) {
+  .inventory-item-identity-mobile { align-items: flex-start; gap: .5rem; }
+  .inventory-item-photo-mobile .inventory-item-image--detail { width: 100%; max-width: 18rem; height: 12rem; }
+}
+/* Keep identity filters independently adjustable for desktop and mobile layouts. */
+.inventory-unit-filters-desktop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+@media (max-width: 760px) {
+  .inventory-unit-filters-mobile { display: flex; flex-direction: column; align-items: stretch; }
+}
 @media (max-width: 1000px) { .inventory-workspace, .inventory-location-layout { grid-template-columns: 1fr; } }
 @media (max-width: 760px) {
   .inventory-toolbar, .inventory-location-list li { align-items: stretch; flex-direction: column; }
