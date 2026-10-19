@@ -248,7 +248,7 @@ const navigationGroups: NavigationGroup[] = [
         features: ["inventory_management"],
         children: [
           { label: "Item register", to: routePaths.inventory, permissions: ["list_inventory"] },
-          { label: "Receive stock", to: routePaths.inventoryReceive, permissions: ["list_inventory", "receive_inventory"] },
+          { label: "Receive stock", to: routePaths.inventoryReceive, permissions: ["list_inventory", "receive_inventory"], features: ["inventory_manual_operations"] },
           { label: "Locations", to: routePaths.inventoryLocations, permissions: ["list_inventory"] },
         ],
       },

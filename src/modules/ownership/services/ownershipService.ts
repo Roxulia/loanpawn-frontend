@@ -24,8 +24,9 @@ export const ownershipService = {
     return apiClient.get<OwnedItem[]>(`/tenant/ownership/items?search=${encodeURIComponent(search)}`);
   },
 
-  inventoryOptions(search = "") {
-    return apiClient.get<import("../../inventory/types").InventoryItem[]>(`/tenant/ownership/inventory-options?search=${encodeURIComponent(search)}`);
+  inventoryOptions(search = "", page = 1) {
+    // Acquisition options use the bounded Inventory summary contract.
+    return apiClient.get<import("../../../dataobjects/common/api").PaginatedResult<import("../../inventory/types").InventoryItemSummary>>(`/tenant/ownership/inventory-options?search=${encodeURIComponent(search)}&page=${page}&per_page=25`);
   },
 
   detail(ownedItemCode: string) {

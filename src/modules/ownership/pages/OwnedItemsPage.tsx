@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "react-router";
 import { Button, Input, Select } from "../../../components/atoms";
 import { routePaths } from "../../../app/routes/paths";
@@ -7,7 +7,7 @@ import { Card, SearchField, SectionHeader } from "../../../components/molecules"
 import { ModuleNavigation } from "../../../components/molecules/ModuleNavigation";
 import { DataTable, type DataTableColumn } from "../../../components/organisms";
 import { usePermissions } from "../../auth";
-import type { InventoryItem } from "../../inventory/types";
+import type { InventoryItemSummary } from "../../inventory/types";
 import { ownershipService } from "../services/ownershipService";
 import type { ExpiredCollateral, OwnedItem, OwnershipMovement } from "../types";
 import "../ownership.css";
@@ -18,7 +18,14 @@ export function OwnedItemsPage() {
   const isAcquisitionView = location.pathname === routePaths.ownershipAcquire;
   const isExpiredCollateralView = location.pathname === routePaths.ownershipExpiredCollateral;
   const [items, setItems] = useState<OwnedItem[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItemSummary[]>([]);
+  // The acquisition selector has independent paging so every Inventory item is reachable.
+  const [inventorySearch, setInventorySearch] = useState("");
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const [inventoryLastPage, setInventoryLastPage] = useState(1);
+  const loadRequest = useRef(0);
+  // Invalidate pending requests on filter changes and effect teardown.
+  const invalidateLoad = useCallback(() => { ++loadRequest.current; }, []);
   const [expiredCollateral, setExpiredCollateral] = useState<ExpiredCollateral[]>([]);
   const [selectedTransfer, setSelectedTransfer] = useState<ExpiredCollateral | null>(null);
   const [movements, setMovements] = useState<OwnershipMovement[]>([]);
@@ -37,33 +44,45 @@ export function OwnedItemsPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    // Ignore superseded search/page requests, including errors and loading state.
+    const request = ++loadRequest.current;
     setLoading(true);
     setError(null);
     try {
       if (isExpiredCollateralView) {
-        setExpiredCollateral(await ownershipService.expiredCollateral(search.trim()));
+        const expired = await ownershipService.expiredCollateral(search.trim());
+        if (request !== loadRequest.current) return;
+        setExpiredCollateral(expired);
         setInventoryItems([]);
         setItems([]);
       } else {
-        const physicalItems = await ownershipService.inventoryOptions();
-        setInventoryItems(physicalItems);
+        if (isAcquisitionView) {
+          const physicalItems = await ownershipService.inventoryOptions(inventorySearch.trim(), inventoryPage);
+          if (request !== loadRequest.current) return;
+          if (inventoryPage > physicalItems.last_page) { setInventoryPage(physicalItems.last_page); return; }
+          setInventoryItems(physicalItems.items);
+          setInventoryLastPage(physicalItems.last_page);
+        }
         if (isAcquisitionView) {
           setItems([]);
         } else {
-          setItems(await ownershipService.list(search.trim()));
+          const ownedItems = await ownershipService.list(search.trim());
+          if (request !== loadRequest.current) return;
+          setItems(ownedItems);
         }
       }
     } catch (cause) {
+      if (request !== loadRequest.current) return;
       setError(cause instanceof Error ? cause.message : "Unable to load ownership data.");
     } finally {
-      setLoading(false);
+      if (request === loadRequest.current) setLoading(false);
     }
-  }, [isAcquisitionView, isExpiredCollateralView, search]);
+  }, [isAcquisitionView, isExpiredCollateralView, search, inventorySearch, inventoryPage]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadData(), 200);
-    return () => window.clearTimeout(timer);
-  }, [loadData]);
+    return () => { invalidateLoad(); window.clearTimeout(timer); };
+  }, [loadData, invalidateLoad]);
 
   async function selectOwnedItem(item: OwnedItem) {
     setSelected(item);
@@ -179,6 +198,12 @@ export function OwnedItemsPage() {
         <Card title="New acquisition" description="Choose an Inventory item and record its quantity, cost, and currency as a separate lot.">
           <p className="ownership-lot-help">Each acquisition keeps its own cost and currency for accurate history.</p>
           <form className="ownership-form" onSubmit={(event) => void createAcquisition(event)}>
+            <div className="ownership-form__wide">
+              <SearchField id="ownership-inventory-search" label="Search inventory" value={inventorySearch} onChange={(event) => { setInventorySearch(event.target.value); setInventoryPage(1); setInventoryItemCode(""); }} />
+              <Button type="button" disabled={loading || inventoryPage <= 1} onClick={() => { setInventoryItemCode(""); setInventoryPage((page) => page - 1); }}>Previous</Button>
+              <span>{inventoryPage} / {inventoryLastPage}</span>
+              <Button type="button" disabled={loading || inventoryPage >= inventoryLastPage} onClick={() => { setInventoryItemCode(""); setInventoryPage((page) => page + 1); }}>Next</Button>
+            </div>
             <label>Inventory item<Select value={inventoryItemCode} onChange={(event) => setInventoryItemCode(event.target.value)} required>
               <option value="">Select an item</option>
               {inventoryItems.map((item) => <option key={item.code} value={item.code}>{item.name} ({item.tracking_mode.replaceAll("_", " ")})</option>)}

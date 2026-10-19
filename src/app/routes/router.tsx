@@ -345,11 +345,12 @@ export const router = createBrowserRouter([
         element: featureGate(
           "inventory_management",
           "Inventory",
+          featureGate("inventory_manual_operations", "Inventory manual operations",
           <PermissionRoute permission="list_inventory">
             <PermissionRoute permission="receive_inventory">
               <InventoryPage />
             </PermissionRoute>
-          </PermissionRoute>,
+          </PermissionRoute>),
         ),
       },
       {
