@@ -252,6 +252,7 @@ export function BusinessLoanPaymentPage() {
                     <FinancialAccountSelect
                       id="business-loan-payment-account"
                       matchAccountId={calculation.account_id}
+                      portalMenu
                       onChange={setAccountId}
                       value={accountId}
                     />

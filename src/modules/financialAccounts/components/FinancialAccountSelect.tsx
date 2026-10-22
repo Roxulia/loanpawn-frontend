@@ -37,6 +37,8 @@ export function FinancialAccountSelect({
     featureEnabled && hasPermission("list_financial_account");
   const lockedValue = locked ? value : "";
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
+  const [knownAccounts, setKnownAccounts] = useState<FinancialAccount[]>([]);
+  const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [isEditingSearch, setIsEditingSearch] = useState(false);
@@ -48,11 +50,17 @@ export function FinancialAccountSelect({
       return;
     }
     let isCurrent = true;
+    setIsLoading(true);
 
-    void financialAccountService
-      .list({ perPage: 100, assignedOnly: true })
+    const timer = window.setTimeout(() => {
+      void financialAccountService
+      .list({ perPage: 100, assignedOnly: true, search: search.trim() || undefined })
       .then((page) => {
         if (!isCurrent) return;
+        setKnownAccounts((previous) => [
+          ...previous.filter((account) => !page.items.some((item) => item.id === account.id)),
+          ...page.items,
+        ]);
         setAccounts(
           page.items.filter(
             (account) =>
@@ -63,19 +71,24 @@ export function FinancialAccountSelect({
         setLoadError(false);
       })
       .catch(() => {
-        if (isCurrent) setLoadError(true);
+        if (isCurrent) {
+          setAccounts([]);
+          setLoadError(true);
+        }
       })
       .finally(() => {
         if (isCurrent) setIsLoading(false);
       });
+    }, search ? 300 : 0);
 
     return () => {
       isCurrent = false;
+      window.clearTimeout(timer);
     };
-  }, [canSelectAccount, locked, lockedValue]);
+  }, [canSelectAccount, locked, lockedValue, search]);
 
   const matchingCurrencyId = matchAccountId
-    ? accounts.find((account) => account.id === matchAccountId)?.currency.id
+    ? knownAccounts.find((account) => account.id === matchAccountId)?.currency.id
     : undefined;
   const options = useMemo(
     () =>
@@ -91,6 +104,7 @@ export function FinancialAccountSelect({
 
   useEffect(() => {
     if (locked) return;
+    if (isEditingSearch) return;
     if (isLoading || options.some((account) => String(account.id) === value))
       return;
 
@@ -98,8 +112,6 @@ export function FinancialAccountSelect({
       if (value) onChange("");
       return;
     }
-
-    if (isEditingSearch) return;
 
     const preferred =
       options.find(
@@ -121,7 +133,9 @@ export function FinancialAccountSelect({
   ]);
 
   function handleAccountChange(accountId: string) {
-    if (accountId) setIsEditingSearch(false);
+    if (accountId) {
+      setIsEditingSearch(false);
+    }
     else if (!locked) setIsEditingSearch(true);
     onChange(accountId);
   }
@@ -152,7 +166,10 @@ export function FinancialAccountSelect({
       loadingMessage="Loading accounts..."
       menuPortal={portalMenu}
       onChange={handleAccountChange}
-      onSearchChange={() => setIsEditingSearch(true)}
+      onSearchChange={(query) => {
+        setIsEditingSearch(true);
+        setSearch(query);
+      }}
       options={options}
       placeholder="Search financial accounts"
       value={value}
