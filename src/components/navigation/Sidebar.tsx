@@ -260,7 +260,7 @@ const navigationGroups: NavigationGroup[] = [
         features: ["ownership_management", "inventory_management"],
         children: [
           { label: "Owned items", to: routePaths.ownership, permissions: ["list_owned_item"] },
-          { label: "Record acquisition", to: routePaths.ownershipAcquire, permissions: ["create_owned_item"] },
+          { label: "Record acquisition", to: routePaths.ownershipAcquire, permissions: ["create_owned_item"], features: ["ownership_manual_acquisition"] },
           { label: "Expired collateral", to: routePaths.ownershipExpiredCollateral, permissions: ["list_owned_item"] },
         ],
       },

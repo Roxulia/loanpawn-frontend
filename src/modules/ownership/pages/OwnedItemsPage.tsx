@@ -6,7 +6,7 @@ import { Alert } from "../../../components/feedback";
 import { Card, SearchField, SectionHeader } from "../../../components/molecules";
 import { ModuleNavigation } from "../../../components/molecules/ModuleNavigation";
 import { DataTable, type DataTableColumn } from "../../../components/organisms";
-import { usePermissions } from "../../auth";
+import { useFeatures, usePermissions } from "../../auth";
 import type { InventoryItemSummary } from "../../inventory/types";
 import { ownershipService } from "../services/ownershipService";
 import type { ExpiredCollateral, OwnedItem, OwnershipMovement } from "../types";
@@ -14,6 +14,9 @@ import "../ownership.css";
 
 export function OwnedItemsPage() {
   const { hasPermission } = usePermissions();
+  // Require the deferred feature as well as the existing acquisition permission.
+  const { hasEnabledFeature } = useFeatures();
+  const canAcquire = hasEnabledFeature("ownership_manual_acquisition") && hasPermission("create_owned_item");
   const location = useLocation();
   const isAcquisitionView = location.pathname === routePaths.ownershipAcquire;
   const isExpiredCollateralView = location.pathname === routePaths.ownershipExpiredCollateral;
@@ -95,6 +98,8 @@ export function OwnedItemsPage() {
 
   async function createAcquisition(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Recheck current access before submitting a form rendered earlier.
+    if (!canAcquire) return;
     setWorking(true);
     setError(null);
     setNotice(null);
@@ -178,7 +183,7 @@ export function OwnedItemsPage() {
   // Keep acquisition entry separate from the owned item register.
   const ownershipNavigation = [
     { label: "Owned items", to: routePaths.ownership },
-    ...(hasPermission("create_owned_item") ? [{ label: "Record acquisition", to: routePaths.ownershipAcquire }] : []),
+    ...(canAcquire ? [{ label: "Record acquisition", to: routePaths.ownershipAcquire }] : []),
     ...(hasPermission("list_owned_item") ? [{ label: "Expired collateral", to: routePaths.ownershipExpiredCollateral }] : []),
   ];
 
@@ -194,7 +199,7 @@ export function OwnedItemsPage() {
       {error && <Alert message={error} onDismiss={() => setError(null)} title="Ownership action failed" tone="danger" />}
       {notice && <Alert message={notice} onDismiss={() => setNotice(null)} title="Ownership updated" tone="success" />}
 
-      {isAcquisitionView && hasPermission("create_owned_item") && (
+      {isAcquisitionView && canAcquire && (
         <Card title="New acquisition" description="Choose an Inventory item and record its quantity, cost, and currency as a separate lot.">
           <p className="ownership-lot-help">Each acquisition keeps its own cost and currency for accurate history.</p>
           <form className="ownership-form" onSubmit={(event) => void createAcquisition(event)}>

@@ -385,9 +385,11 @@ export const router = createBrowserRouter([
           featureGate(
             "inventory_management",
             "Inventory",
-            <PermissionRoute permission="create_owned_item">
-              <OwnedItemsPage />
-            </PermissionRoute>,
+            featureGate("ownership_manual_acquisition", "Ownership manual acquisition",
+              <PermissionRoute permission="create_owned_item">
+                <OwnedItemsPage />
+              </PermissionRoute>,
+            ),
           ),
         ),
       },
