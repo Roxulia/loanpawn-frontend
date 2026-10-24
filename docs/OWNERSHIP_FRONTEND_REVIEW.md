@@ -1,5 +1,7 @@
 # Ownership frontend integration (OWN-31)
 
+Review accepted by the user ("done review"); OWN-31a-h are marked complete. Browser confirmation remains Stage 6; OWN-30 remains deferred.
+
 OWN-29 was marked accepted at the user's request. The user then limited implementation to frontend work, allowing server additions only for missing API capabilities. All required reads and receipt linking are available in the current APIs; no server API, route or business caller was changed. OWN-30 remains deferred. This does not complete broader Purchasing, Sales or Pawn workflows or convert legacy receipt-sourced acquisitions into paid purchase-source lots.
 
 ## Implemented behavior
