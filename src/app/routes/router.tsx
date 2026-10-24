@@ -377,36 +377,9 @@ export const router = createBrowserRouter([
           ),
         ),
       },
-      {
-        path: routePaths.ownershipAcquire,
-        element: featureGate(
-          "ownership_management",
-          "Ownership",
-          featureGate(
-            "inventory_management",
-            "Inventory",
-            featureGate("ownership_manual_acquisition", "Ownership manual acquisition",
-              <PermissionRoute permission="create_owned_item">
-                <OwnedItemsPage />
-              </PermissionRoute>,
-            ),
-          ),
-        ),
-      },
-      {
-        path: routePaths.ownershipExpiredCollateral,
-        element: featureGate(
-          "ownership_management",
-          "Ownership",
-          featureGate(
-            "inventory_management",
-            "Inventory",
-            <PermissionRoute permission="list_owned_item">
-              <OwnedItemsPage />
-            </PermissionRoute>,
-          ),
-        ),
-      },
+      // Deferred acquisition/Pawn screens cannot mount their old write forms through direct URLs.
+      { path: routePaths.ownershipAcquire, element: <Navigate to={routePaths.ownership} replace /> },
+      { path: routePaths.ownershipExpiredCollateral, element: <Navigate to={routePaths.ownership} replace /> },
       {
         path: routePaths.obligations,
         element: <PermissionRoute any={["list_purchase_order", "list_business_loan"]}><BusinessLoanListPage initialTab="payables" /></PermissionRoute>,

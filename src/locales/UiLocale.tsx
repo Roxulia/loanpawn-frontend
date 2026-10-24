@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ownershipMmTranslations } from "../modules/ownership/ownershipTranslations";
 import { useTenantSession } from "../contexts/useTenantSession";
 import type { ModuleDefinition } from "../modules/moduleRegistry";
 
@@ -115,6 +116,7 @@ const purchasingMmTranslations: Record<string, string> = {
 };
 
 const mmTranslations: Record<string, string> = {
+  ...ownershipMmTranslations,
   "Default item image": "မူလပစ္စည်းပုံ",
   "View image": "ပုံကြည့်ရန်",
   "Loading item details...": "ပစ္စည်းအသေးစိတ် ရယူနေသည်...",
